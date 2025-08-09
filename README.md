@@ -457,7 +457,7 @@ graph TD
 
 #### **App Swapping Workflow**
 
-```
+```chat_flow
 1. USER IN CHAT MODE
    ┌─────────────────┐
    │   Chat VM       │ ← Active
@@ -562,7 +562,7 @@ graph TD
 
 ### Installation
 
-1. **Clone and Setup**
+## 1. **Clone and Setup**
 
 ```bash
 git clone https://github.com/somnus-systems/sovereign-ai.git
@@ -573,7 +573,7 @@ source venv/bin/activate  # Linux/macOS
 pip install -r requirements.txt
 ```
 
-2. **Initialize Base VM Image**
+## 2. **Initialize Base VM Image**
 
 ```bash
 # Build base AI computer image
@@ -583,14 +583,14 @@ docker build -f configs/dockerfile_base.txt -t somnus-base:latest .
 python scripts/create_vm_template.py --base-image somnus-base:latest
 ```
 
-3. **Configure System**
+## 3. **Configure System**
 
 ```bash
 cp configs/base_config.yaml configs/local_config.yaml
 # Edit local_config.yaml with your hardware specifications
 ```
 
-4. **Start Somnus**
+## 4. **Start Somnus**
 
 ```bash
 python main.py --config configs/local_config.yaml --port 8000
@@ -616,7 +616,7 @@ python main.py --config configs/local_config.yaml --port 8000
 
 ### 🔬 **Research Scientist Workflow**
 
-**Dr. Sarah's Quantum Computing Research Project**
+- **Dr. Sarah's Quantum Computing Research Project**
 
 ```mermaid
 graph LR
@@ -644,8 +644,8 @@ graph LR
 
 **Step-by-step breakdown:**
 
-1. **Project VM Creation**
-   ```bash
+-## 1. **Project VM Creation**
+```bash
    # Create dedicated research VM with 16GB RAM, 8 CPUs
    somnus create-project "Quantum Error Correction Research" \
      --vm-specs "memory:16gb,cpu:8,gpu:enabled" \

@@ -1,17 +1,495 @@
-"""
-SOMNUS SYSTEMS - VM Settings Manager
-Persistent AI Computing Environment Configuration
+# SOMNUS SOVEREIGN SYSTEMS - Virtual Machine Architecture Documentation
 
-ARCHITECTURE PHILOSOPHY:
-- Each AI agent gets persistent VM that never resets
-- Progressive capability building and tool accumulation
-- Resource efficiency through intelligent allocation
-- Complete user sovereignty over VM configurations
-- On-demand VM creation and lifecycle management
+## Overview
 
-This module manages configuration for the revolutionary persistent VM system
-where AI agents maintain state, learn tools, and evolve capabilities over time.
-"""
+The Somnus VM Architecture implements a revolutionary **persistent AI computing environment** where AI agents operate from never-reset virtual machines that accumulate capabilities, tools, and knowledge over time. This documentation covers the complete backend virtual machine system that enables unlimited AI execution and cross-session continuity.
+
+## Architecture Philosophy
+
+### Core Principles
+
+1. **Persistent AI Intelligence** - VMs never reset, maintaining AI state permanently
+2. **Progressive Capability Building** - Tools and skills accumulate over time  
+3. **Dual-Layer Execution** - Persistent VM intelligence layer + disposable container overlays
+4. **Complete Digital Sovereignty** - Local-only execution, no cloud dependencies
+5. **Memory-Driven Operations** - Semantic memory system enables intelligent VM orchestration
+
+### Revolutionary Design
+
+**Unlike traditional AI services that reset after every session, Somnus VMs:**
+
+- Maintain persistent file systems and installed tools
+- Remember previous sessions through integrated memory core
+- Learn and optimize their development environments
+- Build personal libraries and automation scripts
+- Collaborate with other AI VMs in real-time
+
+## System Components
+
+### 1. VM Supervisor (`vm_supervisor.py`)
+
+**Purpose**: OS-level supervisor managing fleets of persistent AI computers
+
+**Key Features**:
+
+- **Libvirt Integration**: Direct KVM/QEMU hypervisor control
+- **Dynamic Resource Scaling**: CPU/memory adjustment during runtime
+- **Snapshot Management**: Point-in-time VM state preservation
+- **Intelligent Monitoring**: Real-time stats collection from in-VM agents
+- **Security Isolation**: Network-isolated execution environments
+
+**Resource Profiles**:
+
+```python
+profiles = {
+    "idle": ResourceProfile(vcpus=1, memory_gb=4),
+    "coding": ResourceProfile(vcpus=4, memory_gb=8), 
+    "research": ResourceProfile(vcpus=2, memory_gb=6),
+    "media_creation": ResourceProfile(vcpus=6, memory_gb=16, gpu_enabled=True)
+}
+```
+
+**VM Lifecycle Management**:
+
+- Creation from base OS images
+- Dynamic hardware reconfiguration
+- Snapshot-based capability preservation
+- Graceful shutdown and cleanup
+
+### 2. In-VM Somnus Agent (`somnus_agent.py`)
+
+**Purpose**: Lightweight Flask agent running inside each AI VM for host communication
+
+**Capabilities**:
+
+- **Health Monitoring**: Process status and resource usage
+- **Intelligent Error Analysis**: ML-powered error categorization using embeddings
+- **Soft Reboot Management**: Graceful AI process restart without VM shutdown
+- **Stats Collection**: Detailed runtime metrics for optimization
+
+**API Endpoints**:
+
+- `/status` - Health check and monitored process status
+- `/stats/basic` - Raw system resource usage
+- `/stats/intelligent` - AI-analyzed error patterns and faults
+- `/soft-reboot` - Graceful AI process restart
+- `/config/reload` - Dynamic configuration updates
+
+**Error Intelligence**:
+
+```python
+ERROR_CATEGORIES = {
+    "CUDA_ERROR": "CUDA out of memory, GPU error, nvidia-smi failed",
+    "NETWORK_FAILURE": "Connection timed out, failed to resolve host",
+    "DEPENDENCY_MISSING": "ModuleNotFoundError, ImportError, package not found",
+    "RUNTIME_ERROR": "TypeError, ValueError, IndexError"
+}
+```
+
+### 3. AI Action Orchestrator (`ai_action_orchestrator.py`)
+
+**Purpose**: Primary interface for AI agents to interact with their sovereign environment
+
+**Core Functions**:
+
+- **Artifact Management**: Create and execute code in isolated containers
+- **Memory Integration**: Store and retrieve execution results
+- **Session Logging**: Track AI actions across development sessions
+- **API Communication**: Secure communication with host Morpheus application
+
+**Workflow Example**:
+
+```python
+# AI creates and executes artifacts
+artifact_info = orchestrator.create_and_setup_artifact(
+    title="Data Analysis Script",
+    content=python_code,
+    artifact_type="text/python"
+)
+
+# Execute in unlimited container environment
+result = orchestrator.execute_code_in_artifact(
+    artifact_id, "python3 analyze_data.py"
+)
+
+# Store results in persistent memory
+orchestrator.remember_result(command, result.output)
+```
+
+### 4. Advanced AI Shell (`advanced_ai_shell.py`)
+
+**Purpose**: Unified command execution interface supporting multiple execution contexts
+
+**Execution Contexts**:
+
+- **VM_NATIVE**: Direct execution in AI's persistent VM
+- **CONTAINER_OVERLAY**: Specialized containers for heavy computation
+- **MULTI_AGENT**: Coordinated execution across multiple AI VMs
+- **HYBRID**: VM orchestrating container operations
+
+**Multi-Agent Collaboration**:
+
+```python
+# Initiate collaboration with other AI VMs
+session_id = await collaboration_manager.initiate_collaboration(
+    task_description="Complex research analysis",
+    collaborator_agents=[agent_1_id, agent_2_id, agent_3_id]
+)
+
+# Collect and synthesize responses
+result = await collaboration_manager.collect_collaboration_responses(session_id)
+```
+
+**Container Orchestration**:
+
+- GPU-accelerated execution environments
+- Isolated artifact execution
+- Automatic cleanup and resource management
+- Security boundaries through containerization
+
+### 5. AI Personal Development Environment (`ai_personal_dev_environment.py`)
+
+**Purpose**: Self-improving development setup that evolves with AI experience
+
+**Capability Building**:
+
+- **Tool Installation**: Project-specific development environments
+- **Personal Libraries**: AI-generated code libraries from learned patterns
+- **Automation Scripts**: Custom workflows for repetitive tasks
+- **Efficiency Tracking**: Quantified productivity improvements over time
+
+**Development Environment Types**:
+
+```python
+environments = {
+    "web_development": {
+        "tools": ["nodejs", "typescript", "vue-cli"],
+        "browsers": "firefox-developer-edition",
+        "databases": "postgresql redis-server"
+    },
+    "ai_research": {
+        "tools": ["jupyter", "torch", "transformers"],
+        "gpu_tools": "nvidia-smi",
+        "notebooks": "jupyter lab"
+    },
+    "data_analysis": {
+        "tools": ["pandas", "plotly", "streamlit"],
+        "visualization": "graphviz"
+    }
+}
+```
+
+**Efficiency Evolution**:
+
+- Month 1: 1.0x baseline efficiency
+- Month 3: 2.5x with installed tools and libraries
+- Month 6: 5.0x with full automation and personal toolkit
+
+### 6. AI Browser Research System (`ai_browser_research_system.py`)
+
+**Purpose**: Persistent browser-based research capabilities with visual interaction
+
+**Research Capabilities**:
+
+- **Visual Web Research**: Browser automation with screenshot capture
+- **Form Interaction**: Complex workflow execution
+- **Content Extraction**: Intelligent article parsing and summarization
+- **Fact Checking**: Cross-referencing information across sources
+- **Document Collection**: PDF download and analysis
+
+**Research Workflow Automation**:
+
+```python
+research_workflows = {
+    'academic_search': 'Multi-database academic paper discovery',
+    'fact_checking': 'Cross-source verification with credibility scoring',
+    'deep_dive': 'Comprehensive topic investigation with synthesis'
+}
+```
+
+### 7. Sovereign AI Orchestrator (`ai_orchestrator.py`)
+
+**Purpose**: Central conductor integrating all system components for environment provisioning
+
+**Capability Pack Installation**:
+
+```python
+CAPABILITY_PACKS = {
+    "base_tools": ["git", "curl", "wget", "build-essential"],
+    "web_development": ["nodejs", "npm", "typescript", "vue-cli"],
+    "ai_research": ["torch", "transformers", "jupyter", "accelerate"],
+    "data_analysis": ["pandas", "scikit-learn", "plotly", "r-base"]
+}
+```
+
+**Environment Provisioning Workflow**:
+
+1. Security validation and user authorization
+2. VM provisioning with hardware specifications
+3. DevSession creation and VM linking
+4. Capability pack installation with snapshotting
+5. Configuration persistence and monitoring setup
+
+## Memory System Integration
+
+### Memory Core (`memory_core.py`)
+
+**Purpose**: Persistent cross-session memory with semantic indexing and encryption
+
+**Memory Architecture**:
+
+- **Vector Storage**: ChromaDB with sentence-transformer embeddings
+- **Multi-Modal Support**: Text, code, files, images
+- **User-Scoped Encryption**: Fernet encryption with PBKDF2 key derivation
+- **Importance-Based Retention**: Automatic memory lifecycle management
+- **Cross-Session Continuity**: Context reconstruction across sessions
+
+**Memory Types**:
+
+```python
+class MemoryType(str, Enum):
+    CORE_FACT = "core_fact"           # Persistent user facts
+    CONVERSATION = "conversation"      # Chat exchanges and context
+    DOCUMENT = "document"             # Uploaded files and analysis
+    CODE_SNIPPET = "code_snippet"    # Generated/executed code
+    TOOL_RESULT = "tool_result"       # Plugin/tool outputs
+    CUSTOM_INSTRUCTION = "custom_instruction"
+    SYSTEM_EVENT = "system_event"     # Technical events and errors
+```
+
+### Memory Integration (`memory_integration.py`)
+
+**Purpose**: Seamless integration of persistent memory with session management
+
+**Session Memory Context**:
+
+- Automatic memory storage during conversations
+- Context window enhancement with relevant memories
+- Cross-session state management
+- Privacy-preserving memory access
+
+**Memory-Enhanced Session Management**:
+
+```python
+# Enhanced session with memory context
+session, memory_context = await enhanced_session_manager.create_session_with_memory(request)
+
+# Automatic fact extraction and storage
+await memory_context.store_extracted_fact(
+    fact="User prefers Python for data analysis",
+    importance=MemoryImportance.HIGH
+)
+
+# Context enhancement for new sessions
+relevant_memories = await memory_context.enhance_context_with_query(user_query)
+```
+
+### System Cache (`system_cache.py`)
+
+**Purpose**: High-performance runtime caching complementary to persistent memory
+
+**Cache Architecture**:
+
+- **Session-Aware Namespacing**: Automatic cleanup and organization
+- **LRU Eviction**: Intelligent priority scoring for cache management
+- **Background Persistence**: Automatic cache-to-disk serialization
+- **Dependency Tracking**: Cache invalidation on data changes
+- **Performance Metrics**: Comprehensive hit/miss ratio tracking
+
+**Cache Namespaces**:
+
+```python
+class CacheNamespace(str, Enum):
+    GLOBAL = "global"
+    SESSION = "session"
+    VM = "vm"
+    ARTIFACT = "artifact"
+    MODEL = "model"
+    RESEARCH = "research"
+    SYSTEM = "system"
+```
+
+## VM Settings and Configuration
+
+### VM Settings Manager (`vm_settings.py`)
+
+**Purpose**: Comprehensive configuration management for persistent AI computers
+
+**Instance Configuration**:
+
+```python
+class VMInstanceSettings(BaseModel):
+    instance_id: UUID
+    instance_name: str
+    user_id: str
+    hardware_spec: VMHardwareSpec
+    resource_policy: ResourcePolicy
+    personality: VMPersonality
+    auto_suspend_minutes: int = 30
+    backup_schedule: BackupSchedule = BackupSchedule.DAILY
+    installed_tools: List[str]
+    learned_capabilities: List[str]
+```
+
+**Resource Policies**:
+
+- **CONSERVATIVE**: Minimal resources, slow scale-up
+- **BALANCED**: Moderate resources, adaptive scaling  
+- **PERFORMANCE**: High resources, fast response
+- **UNLIMITED**: No artificial limits
+- **CUSTOM**: User-defined allocation
+
+## Security and Isolation
+
+### Network Security
+
+- **Localhost-Only Communication**: All VM-host communication via 127.0.0.1
+- **Isolated Networks**: VMs operate on separate virtual networks
+- **No External Dependencies**: Complete air-gapped operation possible
+- **Secure SSH**: Key-based authentication for VM access
+
+### Container Security
+
+- **Process Isolation**: Each artifact runs in dedicated container
+- **Resource Limits**: CPU/memory constraints prevent resource exhaustion
+- **Network Restrictions**: Optional network access control
+- **Temporary Execution**: Containers destroyed after execution
+
+### Data Security
+
+- **Encrypted Memory**: User-scoped encryption for all stored data
+- **Local Storage**: No cloud synchronization or external storage
+- **Audit Logging**: Comprehensive execution and access logging
+- **Secure Communication**: TLS for all inter-component communication
+
+## Hot Swapping and Dynamic Reconfiguration
+
+### Memory-Driven VM Orchestration
+
+The memory + cache system enables intelligent VM hot swapping between subsystems:
+
+**Context-Aware Resource Allocation**:
+
+```python
+# Memory system tracks user patterns
+if memory_core.get_user_pattern(user_id) == "research_heavy":
+    vm_supervisor.apply_resource_profile(vm_id, "research")
+elif cache.get_recent_activity(session_id) == "gpu_intensive":
+    vm_supervisor.apply_resource_profile(vm_id, "media_creation")
+```
+
+**Seamless Subsystem Migration**:
+
+- **Research Mode**: Browser research system activation
+- **Development Mode**: Full IDE and development tool suite
+- **Collaboration Mode**: Multi-agent communication protocols
+- **Analysis Mode**: Data processing and visualization tools
+
+**State Preservation During Transitions**:
+
+```python
+# Create snapshot before subsystem change
+vm_supervisor.create_snapshot(vm_id, "Before research mode activation")
+
+# Apply new configuration
+await ai_orchestrator.install_capability_pack(vm_id, "ai_research")
+
+# Update memory context
+memory_context.store_memory(
+    "subsystem_change", 
+    f"Switched to research mode for {task_description}"
+)
+```
+
+## Performance and Optimization
+
+### Resource Monitoring
+
+- Real-time CPU, memory, and GPU usage tracking
+- Process-level monitoring for AI applications
+- Intelligent error pattern recognition
+- Automatic scaling based on workload demands
+
+### Efficiency Metrics
+
+- **Capability Accumulation**: Track tool installation over time
+- **Automation Development**: Measure script and library creation
+- **Execution Optimization**: Performance improvements through experience
+- **Collaboration Effectiveness**: Multi-agent task completion rates
+
+### Caching Strategy
+
+- **Hot Data**: Frequently accessed information in memory cache
+- **Session Context**: Recent conversation and execution history
+- **Model Results**: Cached LLM outputs for identical queries
+- **Artifact Cache**: Reusable code snippets and configurations
+
+## Deployment and Scaling
+
+### Single User Deployment
+
+- Minimum: 16GB RAM, 4 CPU cores, 500GB storage
+- Recommended: 32GB RAM, 8 CPU cores, 1TB NVMe SSD
+- Optimal: 64GB RAM, 16 CPU cores, 2TB NVMe SSD, GPU
+
+### Multi-User Enterprise Deployment
+
+- **VM Pool Management**: Shared resource allocation
+- **User Isolation**: Complete separation of user data and VMs
+- **Load Balancing**: Intelligent VM distribution across hardware
+- **Backup Strategies**: Automated snapshot and backup scheduling
+
+### Container Registry
+
+- **Local Artifact Registry**: No external dependencies
+- **Custom Base Images**: Optimized containers for specific tasks
+- **Capability-Specific Images**: Pre-configured environments
+- **Automatic Image Building**: Dynamic container creation
+
+## Integration Points
+
+### DevSession Integration
+
+- VMs linked to development sessions for context preservation
+- Session event logging for audit trails
+- Automatic session state restoration
+- Cross-session memory continuity
+
+### Artifact System Integration
+
+- Unlimited execution environments for artifact containers
+- Persistent storage for artifact results
+- Version control for artifact evolution
+- Collaborative artifact development
+
+### Plugin System Integration
+
+- Dynamic plugin installation in persistent VMs
+- Plugin state preservation across sessions
+- Custom plugin development environments
+- Plugin marketplace integration
+
+## Future Enhancements
+
+### Planned Features
+
+- **GPU Clustering**: Multi-GPU coordination for large models
+- **VM Migration**: Live migration between physical hosts
+- **Federated Learning**: Cross-VM model training coordination
+- **Advanced Collaboration**: Real-time screen sharing between AI VMs
+
+### Research Directions
+
+- **Autonomous Capability Discovery**: AI agents finding and installing new tools
+- **Self-Healing Systems**: Automatic error recovery and optimization
+- **Predictive Resource Allocation**: ML-driven hardware scaling
+- **Cross-Agent Knowledge Transfer**: Shared learning between AI instances
+
+## Conclusion
+
+The Somnus VM Architecture represents a fundamental shift from ephemeral AI services to persistent, evolving AI computing environments. By combining never-reset VMs, integrated memory systems, and intelligent orchestration, it enables AI agents to accumulate capabilities, build personal toolkits, and collaborate effectively while maintaining complete user sovereignty and privacy.
+
+This architecture forms the foundation for truly autonomous AI development environments that grow more capable and efficient over time, representing the future of AI-human collaboration in software development and research.
 
 import asyncio
 import json
@@ -27,11 +505,12 @@ from enum import Enum
 import aiofiles
 from pydantic import BaseModel, Field, validator
 
-logger = logging.getLogger(__name__)
-
+logger = logging.getLogger(**name**)
 
 # ============================================================================
+
 # VM CONFIGURATION MODELS
+
 # ============================================================================
 
 class VMState(str, Enum):
@@ -45,7 +524,6 @@ class VMState(str, Enum):
     ERROR = "error"
     ARCHIVED = "archived"
 
-
 class BackupSchedule(str, Enum):
     """VM backup frequency options"""
     DISABLED = "disabled"
@@ -55,7 +533,6 @@ class BackupSchedule(str, Enum):
     ON_CAPABILITY_CHANGE = "on_capability_change"
     CUSTOM = "custom"
 
-
 class ResourcePolicy(str, Enum):
     """VM resource allocation policies"""
     CONSERVATIVE = "conservative"    # Minimal resources, slow scale-up
@@ -63,7 +540,6 @@ class ResourcePolicy(str, Enum):
     PERFORMANCE = "performance"     # High resources, fast response
     UNLIMITED = "unlimited"         # No artificial limits
     CUSTOM = "custom"              # User-defined allocation
-
 
 @dataclass
 class VMHardwareSpec:
@@ -73,7 +549,7 @@ class VMHardwareSpec:
     storage_gb: int = 100
     gpu_enabled: bool = False
     gpu_memory_gb: Optional[int] = None
-    
+
     # Network configuration
     network_enabled: bool = True
     ssh_port: int = 2222
@@ -84,7 +560,6 @@ class VMHardwareSpec:
     memory_ballooning: bool = True
     disk_cache_mode: str = "writethrough"  # none, writethrough, writeback
 
-
 @dataclass
 class VMPersonality:
     """AI personality configuration for VM behavior"""
@@ -92,7 +567,7 @@ class VMPersonality:
     specialization: str = "general"  # general, research, coding, analysis
     creativity_level: float = 0.7
     research_methodology: str = "systematic"  # systematic, exploratory, hybrid
-    
+
     # Workspace preferences
     preferred_ide: str = "vscode"
     preferred_shell: str = "bash"
@@ -103,14 +578,13 @@ class VMPersonality:
     capability_learning_enabled: bool = True
     cross_session_memory: bool = True
 
-
 class VMInstanceSettings(BaseModel):
     """Configuration for individual VM instances"""
     # Instance identification
     instance_id: UUID = Field(default_factory=uuid4)
     instance_name: str = Field(..., min_length=1, max_length=100)
     user_id: str = Field(..., description="Owner user ID")
-    
+
     # Hardware configuration
     hardware_spec: VMHardwareSpec = Field(default_factory=VMHardwareSpec)
     resource_policy: ResourcePolicy = ResourcePolicy.BALANCED
@@ -145,13 +619,12 @@ class VMInstanceSettings(BaseModel):
     last_modified: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_backup: Optional[datetime] = None
 
-
 class VMPoolSettings(BaseModel):
     """Global VM pool management configuration"""
     # System identification
     system_id: UUID = Field(default_factory=uuid4)
     version: str = "1.0.0"
-    
+
     # Pool management
     max_concurrent_vms: int = Field(default=10, ge=1, le=100)
     max_vms_per_user: int = Field(default=5, ge=1, le=20)
@@ -197,14 +670,15 @@ class VMPoolSettings(BaseModel):
     user_vm_preferences: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
     vm_sharing_enabled: bool = False  # Future collaboration feature
 
-
 # ============================================================================
+
 # VM SETTINGS MANAGER
+
 # ============================================================================
 
 class VMSettingsManager:
     """Manages VM system configuration and on-demand lifecycle"""
-    
+
     def __init__(
         self,
         pool_settings: VMPoolSettings,
@@ -601,9 +1075,10 @@ class VMSettingsManager:
         
         logger.info("VM settings management shutdown complete")
 
-
 # ============================================================================
+
 # FACTORY AND INITIALIZATION
+
 # ============================================================================
 
 async def create_vm_settings_manager(
@@ -611,7 +1086,7 @@ async def create_vm_settings_manager(
     base_image_path: str = "/data/vm_templates/base_ai_computer.qcow2"
 ) -> VMSettingsManager:
     """Create and initialize VM settings manager"""
-    
+
     pool_settings = VMPoolSettings(
         max_concurrent_vms=max_concurrent_vms,
         base_image_path=base_image_path
@@ -623,13 +1098,12 @@ async def create_vm_settings_manager(
     logger.info("VM settings manager created and initialized")
     return manager
 
-
-if __name__ == "__main__":
+if **name** == "**main**":
     # Example usage and testing
     async def main():
         import logging
         logging.basicConfig(level=logging.INFO)
-        
+
         # Create VM settings manager
         manager = await create_vm_settings_manager()
         
