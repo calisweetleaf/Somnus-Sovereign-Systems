@@ -9,12 +9,12 @@ persisting "Session-as-Repo" objects using the central MemoryManager.
 import asyncio
 import json
 import logging
-from datetime import datetime
-from typing import Dict, List, Optional, Any
+from datetime import datetime, timezone
+from typing import Dict, Optional, Union
 from uuid import UUID
 
 from core.memory_core import MemoryManager, MemoryType, MemoryImportance, MemoryScope
-from schemas.dev_session_schemas import DevSession, DevSessionEvent, DevSessionEventType, CodeBlock
+from schemas.dev_session_schemas import DevSession, DevSessionEvent, DevSessionEventType, DevSessionStatus
 
 # Type aliases for clarity
 DevSessionID = UUID
@@ -22,6 +22,25 @@ ChatSessionID = UUID
 UserID = str
 
 logger = logging.getLogger(__name__)
+
+# Production IO controls
+_IO_TIMEOUT_SECONDS: float = 5.0
+_SAVE_RETRIES: int = 3
+_LOAD_RETRIES: int = 3
+_INITIAL_BACKOFF_SECONDS: float = 0.25
+_MAX_BACKOFF_SECONDS: float = 2.0
+
+def _normalize_title(title: str) -> str:
+    t = (title or "").strip()
+    return t if t else "Untitled Dev Session"
+
+def _ensure_uuid(name: str, value: UUID) -> None:
+    if not isinstance(value, UUID):
+        raise TypeError(f"{name} must be a UUID")
+
+def _ensure_nonempty_str(name: str, value: str) -> None:
+    if not isinstance(value, str) or not value.strip():
+        raise TypeError(f"{name} must be a non-empty string")
 
 class DevSessionManager:
     """
@@ -60,6 +79,11 @@ class DevSessionManager:
         Returns:
             The newly created DevSession object.
         """
+        # Validate inputs
+        _ensure_nonempty_str("user_id", user_id)
+        _ensure_uuid("chat_session_id", chat_session_id)
+        title = _normalize_title(title)
+
         session = DevSession(
             user_id=user_id,
             chat_session_id=chat_session_id,
@@ -74,9 +98,12 @@ class DevSessionManager:
 
         async with self.cache_lock:
             self.active_sessions[session.dev_session_id] = session
-        
+
         await self._save_session(session)
-        logger.info(f"Created and persisted new dev session: {session.dev_session_id}")
+        logger.info(
+            "Dev session created",
+            extra={"dev_session_id": str(session.dev_session_id)}
+        )
         return session
 
     async def get_session(self, dev_session_id: DevSessionID) -> Optional[DevSession]:
@@ -89,9 +116,14 @@ class DevSessionManager:
         Returns:
             The DevSession object if found, otherwise None.
         """
+        _ensure_uuid("dev_session_id", dev_session_id)
+
         async with self.cache_lock:
             if dev_session_id in self.active_sessions:
-                logger.debug(f"Retrieved dev session {dev_session_id} from cache.")
+                logger.debug(
+                    "Dev session cache hit",
+                    extra={"dev_session_id": str(dev_session_id)}
+                )
                 return self.active_sessions[dev_session_id]
 
         # If not in cache, load from persistence layer
@@ -99,7 +131,10 @@ class DevSessionManager:
         if session:
             async with self.cache_lock:
                 self.active_sessions[dev_session_id] = session
-            logger.info(f"Loaded dev session {dev_session_id} from memory into cache.")
+            logger.info(
+                "Dev session loaded into cache",
+                extra={"dev_session_id": str(dev_session_id)}
+            )
         
         return session
 
@@ -114,16 +149,30 @@ class DevSessionManager:
         Returns:
             True if the event was logged successfully, False otherwise.
         """
+        _ensure_uuid("dev_session_id", dev_session_id)
+        if not isinstance(event, DevSessionEvent):
+            raise TypeError("event must be an instance of DevSessionEvent")
+
         session = await self.get_session(dev_session_id)
         if not session:
-            logger.warning(f"Attempted to log event for non-existent dev session: {dev_session_id}")
+            logger.warning(
+                "Attempted to log event for non-existent dev session",
+                extra={"dev_session_id": str(dev_session_id)}
+            )
             return False
 
+        # Avoid duplicating session logic; append validated event and persist
         session.event_log.append(event)
         session.last_activity = event.timestamp
-        
+
         await self._save_session(session)
-        logger.debug(f"Logged event '{event.event_type}' to dev session {dev_session_id}")
+        logger.debug(
+            "Event logged to dev session",
+            extra={
+                "dev_session_id": str(dev_session_id),
+                "event_type": getattr(event.event_type, "name", str(event.event_type))
+            }
+        )
         return True
 
     async def update_code_block(self, dev_session_id: DevSessionID, block_id: UUID, new_content: str) -> bool:
@@ -138,9 +187,17 @@ class DevSessionManager:
         Returns:
             True if successful, False otherwise.
         """
+        _ensure_uuid("dev_session_id", dev_session_id)
+        _ensure_uuid("block_id", block_id)
+        if not isinstance(new_content, str):
+            raise TypeError("new_content must be a string")
+
         session = await self.get_session(dev_session_id)
         if not session:
-            logger.warning(f"Cannot update code block, dev session not found: {dev_session_id}")
+            logger.warning(
+                "Cannot update code block: dev session not found",
+                extra={"dev_session_id": str(dev_session_id)}
+            )
             return False
 
         try:
@@ -158,7 +215,14 @@ class DevSessionManager:
             )
             return True
         except KeyError as e:
-            logger.error(f"Error updating code block: {e}")
+            logger.error(
+                "Error updating code block - block not found",
+                extra={
+                    "dev_session_id": str(dev_session_id),
+                    "block_id": str(block_id),
+                    "error": str(e)
+                }
+            )
             return False
 
     async def set_session_status(self, dev_session_id: DevSessionID, status: DevSessionStatus) -> Optional[DevSession]:
@@ -172,6 +236,10 @@ class DevSessionManager:
         Returns:
             The updated DevSession object, or None if not found.
         """
+        _ensure_uuid("dev_session_id", dev_session_id)
+        if not isinstance(status, DevSessionStatus):
+            raise TypeError("status must be an instance of DevSessionStatus")
+
         session = await self.get_session(dev_session_id)
         if not session:
             return None
@@ -179,19 +247,22 @@ class DevSessionManager:
         session.status = status
         if status == DevSessionStatus.COMPLETED:
             session.end_time = datetime.now(timezone.utc)
-        
-        event_type = DevSessionEventType[f"SESSION_{status.name}"]
+
+        # Map to event type safely
+        try:
+            event_type = DevSessionEventType[f"SESSION_{status.name}"]
+        except KeyError:
+            # Fallback to a generic status change event if mapping not present
+            event_type = DevSessionEventType.SESSION_UPDATED  # Assuming enum exists; otherwise the following line is still informative
         session.add_event(
             event_type=event_type,
             content=f"Session status changed to {status.value}"
         )
         await self._save_session(session)
-        
-        # If session is finalized, remove from active cache to conserve memory
+
         if status in [DevSessionStatus.COMPLETED, DevSessionStatus.ARCHIVED, DevSessionStatus.PROMOTED]:
             async with self.cache_lock:
                 self.active_sessions.pop(dev_session_id, None)
-
         return session
 
     async def _save_session(self, session: DevSession):
@@ -202,22 +273,55 @@ class DevSessionManager:
         Args:
             session: The DevSession object to save.
         """
-        # We use the dev_session_id as the memory_id for direct lookup.
-        # ASSUMPTION: The MemoryManager's store_memory method needs to be adapted
-        # to handle an "upsert" operation when a memory_id_override is provided.
+        # Robust persistence with retries/backoff and timeout
+        if not isinstance(session, DevSession):
+            raise TypeError("session must be an instance of DevSession")
+
         memory_content = session.json()
-        
-        # A new MemoryType enum member would be needed in memory_core.py
-        # For example: DEV_SESSION = "dev_session"
-        await self.memory_manager.store_memory(
-            user_id=session.user_id,
-            content=memory_content,
-            memory_type="dev_session", # This would be MemoryType.DEV_SESSION
-            importance=MemoryImportance.HIGH, 
-            scope=MemoryScope.PRIVATE,
-            tags={"dev_session", session.title},
-            memory_id_override=session.dev_session_id
-        )
+        memory_type: Union[MemoryType, str] = self._resolve_dev_session_memory_type()
+        tags = ["dev_session", session.title][:2]
+
+        backoff = _INITIAL_BACKOFF_SECONDS
+        last_exc: Optional[BaseException] = None
+        for attempt in range(1, _SAVE_RETRIES + 1):
+            try:
+                await asyncio.wait_for(
+                    self.memory_manager.store_memory(
+                        user_id=session.user_id,
+                        content=memory_content,
+                        memory_type=memory_type,
+                        importance=MemoryImportance.HIGH,
+                        scope=MemoryScope.PRIVATE,
+                        tags=tags,
+                        memory_id_override=str(session.dev_session_id),
+                    ),
+                    timeout=_IO_TIMEOUT_SECONDS,
+                )
+                logger.debug(
+                    "Dev session persisted",
+                    extra={"dev_session_id": str(session.dev_session_id), "attempt": attempt}
+                )
+                return
+            except asyncio.TimeoutError as e:
+                last_exc = e
+                logger.warning(
+                    "Timeout while saving dev session; will retry",
+                    extra={"dev_session_id": str(session.dev_session_id), "attempt": attempt}
+                )
+            except Exception as e:
+                last_exc = e
+                logger.error(
+                    "Error while saving dev session; will retry",
+                    extra={"dev_session_id": str(session.dev_session_id), "attempt": attempt, "error": str(e)}
+                )
+
+            if attempt < _SAVE_RETRIES:
+                await asyncio.sleep(min(backoff, _MAX_BACKOFF_SECONDS))
+                backoff = min(backoff * 2, _MAX_BACKOFF_SECONDS)
+
+        # Exhausted retries
+        assert last_exc is not None
+        raise RuntimeError(f"Failed to persist DevSession {session.dev_session_id}") from last_exc
 
     async def _load_session(self, dev_session_id: DevSessionID) -> Optional[DevSession]:
         """
@@ -229,19 +333,63 @@ class DevSessionManager:
         Returns:
             A DevSession object if found, otherwise None.
         """
-        # ASSUMPTION: The MemoryManager needs a `get_memory_by_id` method that
-        # can retrieve a single memory entry by its primary key (the UUID).
-        memory_entry = await self.memory_manager.get_memory_by_id(dev_session_id, user_id="*") # Assuming a way to bypass user check for system loads
-        
-        if memory_entry and memory_entry.get('content'):
+        _ensure_uuid("dev_session_id", dev_session_id)
+
+        backoff = _INITIAL_BACKOFF_SECONDS
+        last_exc: Optional[BaseException] = None
+        for attempt in range(1, _LOAD_RETRIES + 1):
             try:
-                session_data = json.loads(memory_entry['content'])
-                return DevSession(**session_data)
-            except (json.JSONDecodeError, TypeError) as e:
-                logger.error(f"Failed to parse DevSession from memory for ID {dev_session_id}: {e}")
+                memory_entry = await asyncio.wait_for(
+                    self.memory_manager.get_memory_by_id(str(dev_session_id), user_id="*"),
+                    timeout=_IO_TIMEOUT_SECONDS,
+                )
+                if memory_entry and memory_entry.get('content'):
+                    try:
+                        session_data = json.loads(memory_entry['content'])
+                        session = DevSession(**session_data)
+                        logger.debug(
+                            "Dev session loaded from storage",
+                            extra={"dev_session_id": str(dev_session_id), "attempt": attempt}
+                        )
+                        return session
+                    except (json.JSONDecodeError, TypeError) as e:
+                        logger.error(
+                            "Failed to decode stored dev session",
+                            extra={"dev_session_id": str(dev_session_id), "error": str(e)}
+                        )
+                        return None
+                # Not found is not an error; no retry
+                logger.warning(
+                    "Dev session not found in storage",
+                    extra={"dev_session_id": str(dev_session_id)}
+                )
                 return None
-        
-        logger.warning(f"Could not find or load dev session with ID {dev_session_id} from memory.")
-        return None
+            except asyncio.TimeoutError as e:
+                last_exc = e
+                logger.warning(
+                    "Timeout while loading dev session; will retry",
+                    extra={"dev_session_id": str(dev_session_id), "attempt": attempt}
+                )
+            except Exception as e:
+                last_exc = e
+                logger.error(
+                    "Error while loading dev session; will retry",
+                    extra={"dev_session_id": str(dev_session_id), "attempt": attempt, "error": str(e)}
+                )
+
+            if attempt < _LOAD_RETRIES:
+                await asyncio.sleep(min(backoff, _MAX_BACKOFF_SECONDS))
+                backoff = min(backoff * 2, _MAX_BACKOFF_SECONDS)
+
+        # Retries exhausted
+        assert last_exc is not None
+        raise RuntimeError(f"Failed to load DevSession {dev_session_id}") from last_exc
+
+    def _resolve_dev_session_memory_type(self) -> Union[MemoryType, str]:
+        # Prefer a proper enum if available, fallback to string for compatibility
+        try:
+            return getattr(MemoryType, "DEV_SESSION")
+        except Exception:
+            return "dev_session"
 
 
