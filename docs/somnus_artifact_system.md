@@ -1,40 +1,508 @@
-# SOMNUS Artifact System: Container Overlay Architecture for Unlimited AI-Generated Content Execution
+# Somnus Disposable Super Computers (Artifact System) Documentation
 
-## A Novel Dual-Layer Execution Model with Persistent AI Orchestration and Disposable Application Environments
+## Overview
 
-**Abstract**
+The Somnus Artifact System represents a revolutionary approach to AI sovereignty through "Disposable Super Computers" - unlimited execution environments that demonstrate the true power of local AI infrastructure. Each artifact operates as a containerized supercomputer with zero restrictions, unlimited execution time, and complete access to local hardware resources.
 
-This paper presents the SOMNUS Artifact System, a revolutionary architecture that implements container overlay execution for AI-generated content while maintaining persistent AI orchestration capabilities. The system introduces a novel dual-layer model where AI agents operate from persistent virtual machines to orchestrate disposable container overlays, achieving unlimited computational capabilities without compromising security or system efficiency. Unlike traditional sandbox approaches that restrict capabilities, SOMNUS achieves security through architectural separation: AI intelligence resides in persistent VMs while computational workloads execute in specialized, disposable container environments. This architecture enables unprecedented capabilities including model training, video processing, and distributed computing while preventing resource bloat in the AI's persistent environment.
+## Core Philosophy: Complete AI Sovereignty
 
-**Keywords:** Container Overlay Architecture, AI Orchestration Systems, Dual-Layer Execution, Persistent AI Environments, Application Layer Separation, Computational Resource Management
+Unlike SaaS platforms that impose artificial limits, timeouts, and usage restrictions, Somnus Disposable Super Computers provide:
 
----
+- **$0.00 operational cost** (vs SaaS platforms charging per execution)
+- **Unlimited execution time** (no artificial timeouts)
+- **Complete hardware access** (full CPU, RAM, GPU utilization)
+- **Unrestricted internet access** (when enabled by user)
+- **Persistent state** (survives system restarts)
+- **Real-time collaboration** (human-AI and multi-model)
 
-## 1. Introduction
+## Architecture: The Unlimited Execution Framework
 
-### 1.1 Motivation and Problem Statement
+### Core Components
 
-Contemporary AI systems face fundamental architectural constraints that limit their computational capabilities and long-term effectiveness. Traditional approaches to AI-generated content execution suffer from several critical limitations:
+1. **Unlimited Artifact Manager**: Zero-restriction artifact lifecycle management
+2. **Container Runtime**: One disposable supercomputer per artifact
+3. **Collaborative Core**: Real-time multi-user and multi-AI editing
+4. **Memory Integration**: Deep semantic context preservation
+5. **VM Bridge**: Integration with persistent AI virtual machines
 
-**Resource Pollution in Persistent Environments**: Installing computational tools directly in AI environments leads to system bloat, reduced performance, and maintenance complexity over time.
+### Disposable Super Computer Stack
 
-**Execution Environment Reset Cycles**: Stateless execution models prevent AI agents from maintaining continuity between computational tasks, forcing repeated environment setup procedures.
+```artifact_subsystem_stack
+┌─────────────────────────────────────────────────────────────┐
+│ User Interface (Real-time WebSocket streaming)             │
+├─────────────────────────────────────────────────────────────┤
+│ FastAPI Integration (Complete REST + WebSocket API)        │
+├─────────────────────────────────────────────────────────────┤
+│ Collaborative Artifact Core (Multi-user + Multi-AI)       │
+├─────────────────────────────────────────────────────────────┤
+│ Unlimited Artifact Manager (Zero restrictions)            │
+├─────────────────────────────────────────────────────────────┤
+│ Container Runtime (Disposable supercomputers)             │
+├─────────────────────────────────────────────────────────────┤
+│ Base Layer (Complete language + framework support)        │
+├─────────────────────────────────────────────────────────────┤
+│ Docker + GPU Integration (Unlimited hardware access)      │
+└─────────────────────────────────────────────────────────────┘
+```
 
-**Capability Restriction Through Security**: Security models that achieve safety by preventing functionality rather than through intelligent architectural separation.
+## Unlimited Artifact Types (40+ Programming Languages)
 
-**Monolithic Execution Paradigms**: Single-environment approaches that conflate AI intelligence, orchestration, and computational execution within the same system boundaries.
+### Programming Languages (Complete Support)
 
-### 1.2 Research Contributions
+- **Python** (with full ML/AI stack: PyTorch, TensorFlow, JAX)
+- **JavaScript/TypeScript** (Node.js, React, Vue, Angular)
+- **Go, Rust, C/C++** (System programming)
+- **Java, C#, Kotlin** (Enterprise development)
+- **Ruby, PHP, Swift** (Web and mobile)
+- **R, MATLAB, Scala** (Data science and analytics)
+- **Haskell, Elixir, Clojure** (Functional programming)
+- **Perl, Lua** (Scripting)
 
-The SOMNUS Artifact System introduces several novel architectural innovations that address these fundamental limitations:
+### Specialized Execution Environments
 
-1. **Container Overlay Architecture**: Implementation of disposable, specialized application layers that operate as overlays to persistent AI environments
-2. **AI Orchestration Separation**: Clear architectural distinction between AI intelligence (persistent VMs) and computational execution (container overlays)
-3. **Resource Efficiency Through Separation**: Prevention of computational tool bloat in AI environments while maintaining unlimited execution capabilities
-4. **On-Demand Capability Instantiation**: Dynamic creation of specialized computational environments based on artifact requirements
-5. **Dual-Trigger Execution Model**: Support for both AI-initiated and user-initiated artifact execution through the same overlay infrastructure
+- **Jupyter Notebooks** (Interactive data science)
+- **Docker Containers** (Multi-service applications)
+- **ML Training** (Unlimited GPU compute)
+- **Video Processing** (FFmpeg with full codec support)
+- **Audio Processing** (Professional audio tools)
+- **Web Scraping** (Unrestricted internet access)
 
----
+### Infrastructure as Code
+
+- **Terraform** (Cloud infrastructure)
+- **Ansible** (Configuration management)
+- **Kubernetes** (Container orchestration)
+- **Docker Compose** (Multi-container applications)
+
+## Revolutionary Features
+
+### 1. Unlimited Execution Model
+
+```python
+class UnlimitedExecutionConfig:
+    timeout: Optional[int] = None           # NO TIMEOUTS
+    memory_limit: Optional[int] = None      # NO MEMORY LIMITS  
+    cpu_limit: Optional[float] = None       # NO CPU LIMITS
+    network_access: bool = True             # FULL INTERNET ACCESS
+    file_system_access: bool = True         # COMPLETE FILE SYSTEM
+    gpu_enabled: bool = True                # UNLIMITED GPU COMPUTE
+    privileged_mode: bool = True            # FULL SYSTEM PRIVILEGES
+```
+
+### 2. Container-per-Artifact Architecture
+
+Each artifact receives its own disposable supercomputer:
+
+- **Complete isolation** (security through containers, not restrictions)
+- **Full hardware access** (all CPU cores, RAM, GPU)
+- **Persistent workspace** (survives container restarts)
+- **Real-time monitoring** (resource usage without limits)
+- **Hot-swappable environments** (instant container recreation)
+
+### 3. Real-time Collaborative Editing
+
+- **Multi-user editing** with live cursors and conflict resolution
+- **Multi-AI collaboration** (multiple models working simultaneously)
+- **Terminal sharing** (shared command-line access)
+- **File synchronization** (real-time file system updates)
+- **WebSocket streaming** (instant updates across all collaborators)
+
+### 4. Progressive Feature Revelation
+
+The system includes "Easter egg" features that unlock as users explore:
+
+- **Level 1**: Basic unlimited execution
+- **Level 2**: Multi-model comparison and collaboration
+- **Level 3**: VM integration and distributed computing
+
+## Implementation: The Five Core Files
+
+### 1. artifact_config.py - Zero Restrictions Core
+
+- **UnlimitedArtifact class**: No limits on size, complexity, or execution time
+- **Comprehensive ArtifactType enum**: 40+ programming languages and frameworks
+- **ExecutionEnvironment**: UNLIMITED, CONTAINER, NATIVE, GPU_ACCELERATED
+- **Zero security theater**: Real security through isolation, not artificial limits
+
+### 2. base_layer.py - Complete Language Support
+
+- **Comprehensive execution engine**: Full support for all major programming languages
+- **Resource monitoring**: Real-time metrics without restrictions
+- **File management**: Complete file system operations
+- **WebSocket integration**: Real-time collaborative features
+
+### 3. collaborative_artifact_core.py - Multi-User + Multi-AI
+
+- **TerminalSession**: Real PTY terminals with shared access
+- **CollaborationManager**: Real-time multi-user editing
+- **VMIntegration**: Bridge to persistent AI virtual machines
+- **Progressive unlocking**: Easter egg system for advanced features
+
+### 4. artifact_system_fastapi.py - Complete API Integration
+
+- **Production FastAPI router**: Full REST + WebSocket API
+- **Real-time collaboration endpoints**: Live editing and terminal access
+- **Multi-model comparison**: Side-by-side AI model evaluation
+- **Cost tracking**: Shows $0.00 local vs SaaS API costs
+
+### 5. artifact_container_runtime.py - Disposable Super Computers
+
+- **One container per artifact**: Complete isolation with unlimited power
+- **Unlimited base image**: All languages, frameworks, and tools pre-installed
+- **Real-time execution streaming**: Live output and interaction
+- **Resource monitoring**: Full hardware utilization tracking
+- **GPU integration**: Complete CUDA and ML framework support
+
+## Execution Environments
+
+### Unlimited Environment (Default)
+
+```python
+execution_config = UnlimitedExecutionConfig(
+    timeout=None,                    # Run forever if needed
+    memory_limit=None,               # Use all available RAM
+    cpu_limit=None,                  # Use all CPU cores
+    disk_limit=None,                 # Use all available storage
+    network_access=True,             # Full internet access
+    gpu_enabled=True,                # Complete GPU compute
+    privileged_mode=True             # Root access in container
+)
+```
+
+### Container Runtime Features
+
+- **Pre-built unlimited image**: All languages and frameworks ready
+- **Hot container swapping**: Instant environment changes
+- **Persistent volumes**: Data survives container restarts
+- **Real-time metrics**: CPU, RAM, GPU, network monitoring
+- **WebSocket streaming**: Live execution output
+- **Multi-port exposure**: Web services, APIs, databases
+
+## API Reference: Complete FastAPI Integration
+
+### Core Artifact Operations
+
+```python
+POST /api/artifacts/create          # Create unlimited artifact
+PUT  /api/artifacts/{id}            # Update with collaboration
+GET  /api/artifacts/{id}            # Retrieve with metrics
+DELETE /api/artifacts/{id}          # Clean deletion
+POST /api/artifacts/{id}/execute    # Unlimited execution
+```
+
+### **Revolutionary Features**
+
+```python
+POST /api/artifacts/create-terminal              # Live terminal session
+POST /api/artifacts/{id}/collaborate            # Real-time collaboration
+POST /api/artifacts/{id}/multi-model           # Multi-AI comparison
+POST /api/artifacts/{id}/unlimited-execution   # Remove all limits
+```
+
+### WebSocket Endpoints
+
+```python
+WS /api/artifacts/{id}/collaborate/ws           # Real-time editing
+WS /api/artifacts/terminal/{session_id}/ws     # Shared terminal
+WS /api/container/{id}/stream                   # Live execution
+```
+
+### System Status
+
+```python
+GET /api/artifacts/system/status    # Show sovereignty metrics
+GET /api/artifacts/progression/{user_id}    # Easter egg status
+```
+
+## Memory Integration: Deep Context Preservation
+
+### Semantic Artifact Storage
+
+- **Vector embeddings**: Semantic search across all artifacts
+- **Context preservation**: Maintains development context across sessions
+- **AI recommendations**: Suggests related artifacts and improvements
+- **Cross-session continuity**: Remembers user preferences and patterns
+
+### Memory Types
+
+```python
+MemoryType.ARTIFACT_CREATION      # Artifact creation events
+MemoryType.COLLABORATION_EVENT    # Real-time collaboration data
+MemoryType.EXECUTION_RESULT       # Unlimited execution outcomes
+MemoryType.RESOURCE_USAGE         # Hardware utilization patterns
+```
+
+## Security Model: Real Security, No Theater
+
+### Container Isolation (Primary Security)
+
+- **Complete process isolation**: Containers provide real security boundaries
+- **Network segmentation**: Controlled internet access when enabled
+- **File system isolation**: Protected host system access
+- **Resource limiting**: Optional user-controlled limits
+
+### User-Controlled Security Levels
+
+```python
+SecurityLevel.SANDBOXED      # Safe execution (default)
+SecurityLevel.TRUSTED        # Elevated permissions
+SecurityLevel.UNRESTRICTED   # Complete system access (user choice)
+```
+
+### No Artificial Restrictions
+
+- Security through **isolation**, not **limitation**
+- User **choice** in security vs capability trade-offs
+- **Transparent** security model (no hidden restrictions)
+- **Local sovereignty** (no external API dependencies)
+
+## Performance Monitoring: Local Advantage Demonstration
+
+### Resource Metrics
+
+```python
+ContainerMetrics:
+    cpu_percent: float           # Real-time CPU utilization
+    memory_usage_mb: float       # RAM usage (unlimited)
+    gpu_utilization: float       # GPU compute utilization
+    network_io: Dict            # Network throughput
+    execution_time: float        # No timeout enforcement
+    cost_savings: float          # SaaS cost avoided ($0.00 local)
+```
+
+### SaaS Comparison Headers
+
+```money_comparison
+X-Morpheus-Cost: $0.00                    # Local execution cost
+X-Morpheus-SaaS-Cost-Saved: $0.0123      # Estimated SaaS cost
+X-Morpheus-Total-Saved: $45.67           # Total savings
+X-Morpheus-Sovereignty: COMPLETE          # Independence level
+X-Morpheus-Restrictions: NONE             # Artificial limits
+```
+
+## Advanced Features: Progressive Revelation
+
+### Multi-Model Comparison
+
+- **Side-by-side generation**: Multiple AI models working on same artifact
+- **Performance comparison**: Speed, quality, cost analysis
+- **Model hot-swapping**: Switch models mid-development
+- **Cost transparency**: $0.00 local vs API pricing
+
+### Real-time Collaboration
+
+- **Human-AI collaboration**: AI assistants in real-time editing
+- **Multi-user editing**: Google Docs-style collaborative development
+- **Shared terminals**: Command-line collaboration
+- **Conflict resolution**: Intelligent merge conflict handling
+
+### VM Integration
+
+- **Persistent AI VMs**: Long-running development environments
+- **Container bridging**: Seamless VM-container integration
+- **Hot migration**: Move artifacts between environments
+- **Distributed execution**: Multi-node processing
+
+## Configuration: Complete Customization
+
+### Storage Configuration
+
+```python
+ARTIFACT_STORAGE_PATH = "data/unlimited_artifacts"
+CONTAINER_WORKSPACE_PATH = "/workspace"
+PERSISTENT_VOLUMES_PATH = "data/volumes"
+EXECUTION_LOGS_PATH = "data/execution_logs"
+```
+
+### Container Runtime
+
+```python
+DOCKER_BASE_IMAGE = "somnus-artifact:unlimited"
+GPU_ENABLED = True
+PRIVILEGED_MODE = True
+NETWORK_ACCESS = True
+UNLIMITED_RESOURCES = True
+```
+
+### Collaboration Features
+
+```python
+ENABLE_REAL_TIME_COLLABORATION = True
+ENABLE_MULTI_MODEL_COMPARISON = True
+ENABLE_TERMINAL_SHARING = True
+ENABLE_P2P_ARTIFACT_SHARING = True
+```
+
+## Usage Examples: Demonstrating Sovereignty
+
+### 1. Unlimited ML Training
+
+```python
+# Create ML training artifact (no time limits)
+artifact = await artifact_manager.create_artifact(
+    name="Unlimited GPU Training",
+    content="""
+    import torch
+    import time
+    
+    # Train forever if needed - no SaaS timeouts!
+    model = torch.nn.Sequential(...)
+    
+    for epoch in range(1000000):  # Unlimited iterations
+        # Train model with full GPU access
+        train_model(model)
+        time.sleep(1)  # No rush - unlimited time
+    """,
+    artifact_type=ArtifactType.MODEL_TRAINING,
+    execution_environment=ExecutionEnvironment.UNLIMITED,
+    gpu_enabled=True
+)
+
+# Execute with no limits
+result = await artifact_manager.execute_unlimited(artifact.id)
+```
+
+### 2. Multi-Model Collaboration
+
+```python
+# Compare multiple AI models on same task
+comparison = await artifact_manager.enable_multi_model_comparison(
+    artifact_id=artifact.id,
+    models=["gpt-4", "claude-3", "local-llama", "local-mistral"],
+    user_id=user_id
+)
+
+# Results show: Local models = $0.00, API models = $$$
+print(f"Local cost: $0.00")
+print(f"API cost saved: ${comparison.total_api_cost:.2f}")
+```
+
+### 3. Real-time Terminal Collaboration
+
+```python
+# Create shared terminal session
+artifact, terminal_id = await artifact_manager.create_terminal_artifact(
+    user_id=user_id,
+    session_id=session_id,
+    working_directory="/workspace"
+)
+
+# Multiple users can now share the same terminal
+# with live command execution and output
+```
+
+### 4. Persistent Workspace
+
+```python
+# Create workspace that survives restarts
+workspace = await artifact_manager.create_persistent_workspace(
+    workspace_name="AI Development Environment",
+    user_id=user_id,
+    artifacts=[artifact1.id, artifact2.id, artifact3.id]
+)
+
+# Workspace persists across system restarts
+# maintaining full development context
+```
+
+## Integration: Complete Ecosystem
+
+### Memory System Integration
+
+- **Semantic artifact indexing**: Vector search across all artifacts
+- **Context preservation**: Maintains development state across sessions
+- **AI recommendations**: Suggests improvements and related artifacts
+- **Learning patterns**: Adapts to user development preferences
+
+### VM System Integration
+
+- **Container-VM bridge**: Seamless environment switching
+- **Persistent development environments**: Long-running AI workspaces
+- **Hot migration**: Move artifacts between execution environments
+- **Resource scaling**: Dynamic resource allocation
+
+### Security Layer Integration
+
+- **Threat detection**: Real-time security monitoring
+- **Permission management**: Granular access control
+- **Audit logging**: Complete action tracking
+- **Compliance reporting**: Security posture monitoring
+
+## Cost Analysis: The SaaS Killer
+
+### Local Sovereignty Savings
+
+```savings
+Feature                   SaaS Cost       Somnus Cost    Savings
+─────────────────────────────────────────────────────────────────
+Code execution           $0.01/request   $0.00          100%
+Long-running processes   $0.10/hour      $0.00          100%
+GPU compute             $2.00/hour      $0.00          100%
+Real-time collaboration  $10/month       $0.00          100%
+Unlimited storage       $50/month       $0.00          100%
+Multi-model access      $100/month      $0.00          100%
+─────────────────────────────────────────────────────────────────
+Monthly savings for active developer:                    $300+
+Annual savings:                                          $3,600+
+```
+
+### True Cost of Ownership
+
+- **Somnus**: One-time hardware investment, unlimited usage
+- **SaaS**: Recurring monthly charges that scale with usage
+- **Break-even**: Typically 3-6 months for active developers
+
+## Troubleshooting: Complete Self-Sufficiency
+
+### Container Runtime Issues
+
+- **Docker not available**: Install Docker/Podman for container support
+- **GPU access denied**: Verify NVIDIA Container Toolkit installation
+- **Permission errors**: Ensure user is in docker group
+- **Resource exhaustion**: Monitor system resources, no artificial limits
+
+### Collaboration Sync Issues
+
+- **WebSocket disconnects**: Check firewall and network stability
+- **Merge conflicts**: Use built-in conflict resolution tools
+- **Performance lag**: Optimize WebSocket message batching
+- **Session persistence**: Verify Redis/memory backend configuration
+
+### Execution Environment Issues
+
+- **Container startup fails**: Check Docker daemon and image availability
+- **Network access blocked**: Verify container network configuration
+- **File permission errors**: Check volume mount permissions
+- **Resource monitoring gaps**: Verify psutil and system monitoring tools
+
+## Future Enhancements: The Sovereignty Roadmap
+
+### Phase 2: Advanced Sovereignty
+
+- **P2P artifact sharing**: Direct peer-to-peer collaboration
+- **Distributed execution**: Multi-node processing clusters
+- **Blockchain integration**: Decentralized artifact registry
+- **Advanced AI training**: Custom model fine-tuning
+
+### Phase 3: Complete Ecosystem
+
+- **Plugin marketplace**: Community-developed extensions
+- **Advanced debugging**: Integrated development environment
+- **Performance optimization**: Automatic resource optimization
+- **Enterprise features**: Team management and compliance
+
+### Phase 4: AI Sovereignty Platform
+
+- **Model marketplace**: Community AI model sharing
+- **Federated learning**: Collaborative model training
+- **AI governance**: Ethical AI development tools
+- **Sovereignty certification**: Verify complete independence
+
+## Conclusion: True AI Sovereignty
+
+The Somnus Disposable Super Computers represent a fundamental shift from SaaS dependency to true AI sovereignty. By providing unlimited execution environments, real-time collaboration, and complete hardware access at $0.00 operational cost, this system demonstrates that local AI infrastructure is not just viable—it's superior.
+
+Users who experience the freedom of unlimited execution time, complete hardware access, and zero per-use costs will find it impossible to return to the artificial restrictions and recurring charges of SaaS platforms. This is the path to true AI sovereignty.
 
 ## 2. Literature Review and Related Work
 
@@ -72,7 +540,7 @@ The SOMNUS Artifact System is founded on the principle of **Separation of Comput
 
 ### 3.2 Dual-Layer Execution Model
 
-```
+```artifact_flow_diagram
 ┌──────────────────────────────────────────────────────────────┐
 │                  SOMNUS Artifact System                     │
 ├──────────────────────────────────────────────────────────────┤
@@ -115,12 +583,14 @@ The overlay architecture implements sophisticated resource management through cl
 #### 3.3.1 AI VM Resource Conservation
 
 **Persistent Environment Optimization**:
+
 - Core AI capabilities maintained in lightweight, focused environment
 - No computational tool installation in primary AI workspace
 - Preserved system performance and startup times
 - Long-term environment stability and reliability
 
 **Knowledge Accumulation Without Bloat**:
+
 - AI learns tool usage patterns without installing tools locally
 - Orchestration knowledge stored as lightweight metadata
 - Container configuration templates cached for rapid deployment
@@ -129,12 +599,14 @@ The overlay architecture implements sophisticated resource management through cl
 #### 3.3.2 Container Overlay Specialization
 
 **Task-Specific Tool Environments**:
+
 - Machine Learning containers: PyTorch, TensorFlow, CUDA, Jupyter
 - Video Processing containers: FFmpeg, OpenCV, MediaPipe, YT-DLP
 - Research Automation containers: Selenium, BeautifulSoup, Scrapy
 - Development containers: IDE configurations, language runtimes, debugging tools
 
 **Disposable Resource Management**:
+
 - Clean slate for each artifact execution
 - No tool version conflicts or dependency pollution
 - Optimal resource allocation per computational domain
@@ -525,18 +997,14 @@ Future deployments of this architecture have the potential to fundamentally tran
 
 ---
 
-**Funding**
+## **Funding**
 
 This research was conducted as part of the SOMNUS open-source AI sovereignty initiative with no external funding dependencies.
 
-**Data Availability Statement**
+## **Author Contributions**
 
-Implementation code, architectural specifications, and performance benchmarks are available under MIT license at: https://github.com/somnus-systems/artifact-overlay-architecture
+System architecture design, implementation, and evaluation were conducted by the SOMNUS Systems Research Team. Performance analysis and security evaluation were developed by Morpheus, lead developer, researcher, and architect.
 
-**Author Contributions**
+## **Conflicts of Interest**
 
-System architecture design, implementation, and evaluation were conducted by the SOMNUS Systems Research Team. Performance analysis and security evaluation were conducted in collaboration with independent security researchers.
-
-**Conflicts of Interest**
-
-The authors declare no conflicts of interest related to this research. all test results are simulated.
+The authors declare no conflicts of interest related to this research. All test results are simulated.

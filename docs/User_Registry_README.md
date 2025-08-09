@@ -18,7 +18,7 @@ The Somnus User Registry is a privacy-first, local-only user profile system with
 
 Unlike traditional systems that expose raw user data, Somnus uses a **Projection DSL (Domain Specific Language)** that maps personal information to abstract capabilities:
 
-```
+```dsl_example
 Raw Data: "RTX 4090, 32GB RAM, VS Code, Docker"
 ↓ Projection DSL ↓
 AI Sees: {
@@ -36,26 +36,34 @@ AI Sees: {
 ### Profile Component Structure
 
 #### 1. Identity Profile
+
 Core user identification with projection mapping:
+
 - **Display name** → `who.name`
 - **Professional role** → `who.roles[]`
 - **Expertise areas** → `capabilities.domain_knowledge[]`
 - **Timezone** → `context.timezone`
 
 #### 2. Technical Profile  
+
 Hardware/software environment with capability mapping:
+
 - **GPU specs** → `capabilities.gpu_acceleration`, `capabilities.ml_inference`
 - **Development tools** → `capabilities.containerization`, `capabilities.version_control`
 - **Network context** → `capabilities.cloud_access`, `capabilities.offline_capable`
 
 #### 3. Workflow Profile
+
 Work patterns with behavioral indicators:
+
 - **Communication style** → `prefs.communication_style`
 - **Documentation preferences** → `prefs.doc_format`
 - **Peak hours** → `context.availability_patterns`
 
 #### 4. Learning Profile
+
 Knowledge acquisition preferences:
+
 - **Learning styles** → `prefs.explanation_style`
 - **Error tolerance** → `prefs.feedback_approach`
 - **Code commenting** → `prefs.code_verbosity`
@@ -63,6 +71,7 @@ Knowledge acquisition preferences:
 ### Projection DSL System
 
 #### Field Metadata with Projection Mapping
+
 ```python
 class FieldMeta:
     expose_to_llm: bool = False
@@ -74,6 +83,7 @@ class FieldMeta:
 ```
 
 #### Capability Mapping Examples
+
 ```python
 # Hardware projections
 "gpu_model": FieldMeta(
@@ -102,6 +112,7 @@ class FieldMeta:
 Different AI agents/tasks see different capability sets:
 
 #### Research Agent Context
+
 ```python
 # Scope: "task:research"
 {
@@ -118,6 +129,7 @@ Different AI agents/tasks see different capability sets:
 ```
 
 #### Coding Agent Context
+
 ```python
 # Scope: "task:coding"
 {
@@ -136,6 +148,7 @@ Different AI agents/tasks see different capability sets:
 ### Dual Storage Architecture
 
 #### Default: Python Module Store
+
 ```python
 # profiles/alex_developer.py
 from somnus_user_profile.types import UserProfile, Identity, Technical
@@ -155,6 +168,7 @@ profile = UserProfile(
 ```
 
 #### Optional: Encrypted SQLite Store
+
 ```python
 # For users wanting search/indexing capabilities
 SOMNUS_PROFILE_BACKEND=sqlite
@@ -163,6 +177,7 @@ SOMNUS_PROFILE_BACKEND=sqlite
 ### Provenance and Consent System
 
 #### Data Source Tracking
+
 ```python
 provenance_types = {
     "user_input": "User directly entered",
@@ -173,6 +188,7 @@ provenance_types = {
 ```
 
 #### Promotion Workflow
+
 ```python
 # AI makes observation
 ai_suggestion = {
@@ -190,18 +206,21 @@ user_action_required = "Promote AI observation to profile?"
 ## Security Model
 
 ### Projection-First Security
+
 - **No Raw Data Exposure**: AI never sees actual hardware specs, file paths, or personal details
 - **Capability Abstraction**: All data transformed into abstract capabilities
 - **Context Isolation**: Different tasks see different capability subsets
 - **Audit Trail**: Complete log of what was projected to which agent when
 
 ### Encryption and Authentication
+
 - **Key Derivation**: Argon2id from username + password + salt
 - **Profile Encryption**: All stored data encrypted at rest
 - **Session Security**: Temporary decryption with automatic cleanup
 - **Memory Protection**: Sensitive data cleared on logout
 
 ### Audit and Replay System
+
 ```python
 audit_entry = {
     "timestamp": "2025-08-09T14:30:00Z",
@@ -216,6 +235,7 @@ audit_entry = {
 ## Integration with Somnus Systems
 
 ### VM Settings Integration
+
 ```python
 def map_projection_to_vm(vm_settings, projection):
     """Map user capabilities to VM configuration"""
@@ -233,6 +253,7 @@ def map_projection_to_vm(vm_settings, projection):
 ```
 
 ### Memory System Integration
+
 ```python
 memory_config = {
     "retention_days": projection.get("prefs", {}).get("memory_retention", 90),
@@ -244,6 +265,7 @@ memory_config = {
 ## User Experience Flow
 
 ### Initial Setup
+
 1. **Profile Creation**: Username, password, basic identity
 2. **Privacy-First Defaults**: All fields `expose_to_llm=False` initially
 3. **Capability Mapping**: User chooses which capabilities to expose
@@ -251,6 +273,7 @@ memory_config = {
 5. **Task Configuration**: Different projections for different AI tasks
 
 ### Projection Management
+
 ```python
 # User toggles specific capabilities
 user.toggle_capability("gpu_acceleration", enabled=True, scope="task:coding")
@@ -261,6 +284,7 @@ preview = user.get_projection_preview(scope="task:research")
 ```
 
 ### AI Interaction Flow
+
 1. **Task Identification**: System identifies AI task (coding, research, etc.)
 2. **Scope Selection**: Appropriate projection scope selected
 3. **Capability Projection**: Generate filtered context for AI
@@ -270,6 +294,7 @@ preview = user.get_projection_preview(scope="task:research")
 ## Canonical Capability Flags
 
 ### Hardware Capabilities
+
 - `gpu_acceleration`: GPU available for compute
 - `high_memory_available`: >16GB RAM available
 - `ssd_storage`: Fast storage available
@@ -277,6 +302,7 @@ preview = user.get_projection_preview(scope="task:research")
 - `high_bandwidth`: Fast internet connection
 
 ### Software Capabilities
+
 - `containerization`: Docker/container tools
 - `version_control`: Git and related tools
 - `cloud_platforms`: AWS/GCP/Azure access
@@ -284,6 +310,7 @@ preview = user.get_projection_preview(scope="task:research")
 - `code_editing`: Advanced IDE/editor setup
 
 ### Development Capabilities
+
 - `web_development`: HTML/CSS/JS tools
 - `mobile_development`: iOS/Android tools
 - `data_science`: Pandas/NumPy/Jupyter setup
@@ -291,6 +318,7 @@ preview = user.get_projection_preview(scope="task:research")
 - `security_tools`: Pentesting/security software
 
 ### Domain Knowledge
+
 - `ai_expertise`: Machine learning knowledge
 - `web3_knowledge`: Blockchain/crypto understanding
 - `cybersecurity`: Information security expertise
@@ -300,6 +328,7 @@ preview = user.get_projection_preview(scope="task:research")
 ## Implementation Guidelines
 
 ### Minimal API Contract
+
 ```python
 # Core types
 class UserProfile(BaseModel):
@@ -320,6 +349,7 @@ class ProfileStore(Protocol):
 ```
 
 ### Backend Selection
+
 ```python
 # Environment variable controls backend
 SOMNUS_PROFILE_BACKEND=python  # Default: Python modules
@@ -327,6 +357,7 @@ SOMNUS_PROFILE_BACKEND=sqlite  # Optional: Encrypted SQLite
 ```
 
 ### Projection DSL Examples
+
 ```python
 # Simple capability mapping
 "gpu_model" → "capabilities.gpu_acceleration"
@@ -345,12 +376,14 @@ SOMNUS_PROFILE_BACKEND=sqlite  # Optional: Encrypted SQLite
 ## Security Considerations
 
 ### Threat Model Protection
+
 - **Data Extraction**: Capabilities don't leak personal details
 - **Inference Attacks**: Abstract capabilities prevent reconstruction
 - **Memory Analysis**: Encrypted storage with secure cleanup
 - **Side Channel**: Audit logs detect unusual access patterns
 
 ### Privacy Guarantees
+
 - **Capability Abstraction**: No reverse engineering from capabilities to raw data
 - **Scope Isolation**: Task-specific projections limit exposure
 - **Explicit Consent**: All AI access requires user approval
@@ -359,12 +392,14 @@ SOMNUS_PROFILE_BACKEND=sqlite  # Optional: Encrypted SQLite
 ## Future Enhancements
 
 ### Advanced Projection Features
+
 - **Dynamic Capability Detection**: Auto-detect new software installations
 - **Capability Versioning**: Track capability changes over time
 - **Cross-Profile Learning**: Learn optimal projection patterns (with consent)
 - **Federated Capabilities**: Share abstract capabilities across Somnus installations
 
 ### AI Integration Expansion
+
 - **Capability Optimization**: AI suggests optimal capability configurations
 - **Context Prediction**: Anticipate needed capabilities for tasks
 - **Privacy Coaching**: AI helps users optimize privacy settings
