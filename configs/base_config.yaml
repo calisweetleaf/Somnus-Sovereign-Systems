@@ -1,0 +1,66 @@
+# SOMNUS SYSTEMS - Core System Configuration
+# Production-grade settings for Persistent AI Computer Architecture
+
+system:
+  name: "somnus-systems"
+  version: "1.0.0"
+  environment: "production"
+  
+vm_management:
+  # Virtual Machine instance limits and lifecycle management
+  max_ai_vms: 50
+  vm_idle_timeout_minutes: 60 # VM suspended after 60 minutes of inactivity
+  vm_cleanup_interval_minutes: 5 # Check for idle VMs every 5 minutes
+  
+  # Default resource constraints per AI VM
+  default_vm_resources:
+    vcpus: 4                   # 4 Virtual CPU cores
+    memory_gb: 8               # 8GB RAM
+    storage_gb: 100            # 100GB persistent storage per VM
+    gpu_enabled: false         # GPU pass-through disabled by default
+    network_enabled: true      # Network access enabled by default (for internet research, tool downloads)
+    execution_timeout: 300     # 300 seconds (5 minutes) per command execution within VM
+  
+  # Base VM image configuration
+  base_vm_image_path: "/data/vm_images/base_ai_computer.qcow2" # Path to the base image for cloning
+  vm_instance_path: "/data/vm_instances" # Directory for individual AI VM disk images
+  vm_snapshot_path: "/data/vm_snapshots" # Directory for VM snapshots
+  vm_backup_path: "/data/vm_backups"     # Directory for VM backups
+
+logging:
+  level: "INFO"
+  format: "json"
+  file: "/var/log/somnus-ai/system.log"
+  max_size: "10000MB"
+  max_files: 100
+  
+monitoring:
+  metrics_enabled: true
+  health_check_interval: 30
+  resource_monitoring: true
+  audit_trail: true
+
+# Context and memory configuration (these remain largely conceptual as they interface with the VM)
+context:
+  default_max_tokens: 10192      # Conservative default for AI's context window
+  absolute_max_tokens: 88354     # Maximum supported by underlying LLMs
+  truncation_strategy: "importance_weighted"
+  
+  # Memory management (referring to the AI's long-term memory, not VM RAM)
+  memory_persistence: true    # AI's conversational and learned memory persists
+  anchor_tokens: true          # Preserve system/instruction tokens in AI's context
+  importance_threshold: 0.7    # Token importance cutoff for memory recall
+
+# Security enforcement for the overall system and interactions with VMs
+security:
+  content_filtering: false                 # Disable content filtering for local models
+  prompt_injection_detection: true         # Critical for securing AI interactions
+  capability_enforcement: true             # Enforce AI's defined capabilities (e.g., no unauthorized network access)
+  audit_all_interactions: true             # Log all AI VM interactions for auditing
+  
+  # Rate limiting for API interactions with the VM manager (not for AI's internal VM usage)
+  rate_limits:
+    vm_creation_requests_per_minute: 5
+    vm_command_executions_per_minute: 60
+    ai_instances_per_user: 5
+

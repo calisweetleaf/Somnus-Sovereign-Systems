@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morpheus Chat - AI Sovereignty Platform</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b; 
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --border-color: #475569;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a202c 100%);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        .glass-effect {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .sovereign-gradient {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+        }
+
+        .sovereignty-badge {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            animation: sovereignty-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes sovereignty-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(16, 185, 129, 0.5); }
+        }
+
+        .transition-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .local-model-badge {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, #1a202c 100%);
+            border-right: 1px solid var(--border-color);
+        }
+
+        .chat-message {
+            max-width: 85%;
+            word-wrap: break-word;
+            margin-bottom: 1rem;
+        }
+
+        .message-user {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+            margin-left: auto;
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        .message-ai {
+            background: var(--bg-tertiary);
+            border-radius: 18px 18px 18px 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent-blue);
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .sidebar-tab {
+            transition: all 0.2s;
+        }
+
+        .active-tab {
+            background: var(--bg-tertiary);
+        }
+
+        .inactive-tab:hover {
+            background: var(--bg-secondary);
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .setting-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .config-toggle {
+            appearance: none;
+            width: 3rem;
+            height: 1.5rem;
+            background: #475569;
+            border-radius: 0.75rem;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .config-toggle:checked {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+        }
+
+        .config-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 1.25rem;
+            height: 1.25rem;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .config-toggle:checked::after {
+            transform: translateX(1.5rem);
+        }
+
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .model-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            transition: all 0.2s;
+        }
+
+        .model-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .status-online { background: var(--accent-green); }
+        .status-loading { background: var(--accent-yellow); animation: pulse 1s infinite; }
+        .status-offline { background: var(--text-muted); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .feature-badge {
+            background: linear-gradient(135deg, var(--accent-green) 0%, #059669 100%);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .new-feature {
+            background: linear-gradient(135deg, var(--accent-purple) 0%, #7c3aed 100%);
+        }
+
+        .experimental-feature {
+            background: linear-gradient(135deg, var(--accent-yellow) 0%, #d97706 100%);
+        }
+
+        .modal-backdrop {
+            backdrop-filter: blur(8px);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .model-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-message {
+                max-width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Application Layout -->
+    <div class="flex h-screen">
+        <!-- Enhanced Sidebar -->
+        <aside class="w-80 sidebar flex flex-col">
+            <!-- Header Section -->
+            <div class="p-4 border-b border-gray-700">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 sovereign-gradient rounded-lg flex items-center justify-center">
+                            <i class="fas fa-brain text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-lg font-bold text-white">Morpheus Chat</h1>
+                            <p class="text-xs text-gray-400">AI Sovereignty Platform</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <div class="sovereignty-badge px-2 py-1 rounded-full text-xs text-white">
+                            <i class="fas fa-shield-alt mr-1"></i>
+                            SOVEREIGN
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="grid grid-cols-3 gap-2">
+                    <button id="new-chat-btn" class="btn-primary text-sm flex items-center justify-center space-x-1" data-tooltip="Start new conversation">
+                        <i class="fas fa-plus text-xs"></i>
+                        <span>New</span>
+                    </button>
+                    
+                    <button id="upload-file-btn-sidebar" class="btn-secondary text-sm flex items-center justify-center space-x-1" data-tooltip="Upload unlimited files">
+                        <i class="fas fa-upload text-xs"></i>
+                        <span>Upload</span>
+                    </button>
+                    
+                    <button id="research-btn-sidebar" class="btn-secondary text-sm flex items-center justify-center space-x-1" data-tooltip="Deep research with web search">
+                        <i class="fas fa-search-plus text-xs"></i>
+                        <span>Research</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <div class="px-4 pt-2 border-b border-gray-700">
+                <nav class="flex space-x-1" aria-label="Tabs">
+                    <button id="tab-chat-history" class="sidebar-tab active-tab px-3 py-2 font-medium text-sm rounded-t-md text-blue-400 border-b-2 border-blue-400" aria-current="page">
+                        <i class="fas fa-comments mr-1"></i> Chats
+                    </button>
+                    <button id="tab-models" class="sidebar-tab inactive-tab px-3 py-2 font-medium text-sm rounded-t-md text-gray-400 hover:text-white hover:border-b-2 hover:border-gray-500">
+                        <i class="fas fa-microchip mr-1"></i> Models
+                    </button>
+                    <button id="tab-plugins" class="sidebar-tab inactive-tab px-3 py-2 font-medium text-sm rounded-t-md text-gray-400 hover:text-white hover:border-b-2 hover:border-gray-500">
+                        <i class="fas fa-puzzle-piece mr-1"></i> Plugins
+                    </button>
+                    <button id="tab-projects" class="sidebar-tab inactive-tab px-3 py-2 font-medium text-sm rounded-t-md text-gray-400 hover:text-white hover:border-b-2 hover:border-gray-500">
+                        <i class="fas fa-folder mr-1"></i> Projects
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content Areas -->
+            
+            <!-- Chat History Section -->
+            <div id="chat-history-section" class="tab-content active flex-1 overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-gray-700">
+                    <div class="relative">
+                        <input type="search" id="search-chat-history" placeholder="Search conversations..." class="w-full bg-gray-700 border border-gray-600 text-gray-200 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500" aria-label="Search chat history">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+                <div id="chat-list" class="overflow-y-auto custom-scrollbar flex-1 p-4 space-y-3">
+                    <!-- Chat history items will be populated here -->
+                    <div class="p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer transition-colors" data-chat-id="chat-1">
+                        <h4 class="font-medium text-white text-sm mb-1">Multi-Model Comparison</h4>
+                        <p class="text-xs text-gray-400 line-clamp-2">Comparing GPT-4, Claude-3, Gemini, and local GGUF models...</p>
+                        <div class="mt-1 flex justify-between items-center">
+                            <span class="text-xs text-gray-500">2 hours ago</span>
+                            <div class="flex space-x-1">
+                                <span class="local-model-badge text-xs px-1 py-0.5 rounded text-white">LOCAL</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="chat-history-empty" class="hidden text-center py-10">
+                        <i class="fas fa-comments text-4xl text-gray-600 mb-3"></i>
+                        <p class="text-sm text-gray-400">No conversations yet.</p>
+                        <p class="text-xs text-gray-500">Start chatting to see history here.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Models Section -->
+            <div id="models-section" class="tab-content flex-1 overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                    <h3 class="font-medium text-white">Available Models</h3>
+                    <button id="add-model-btn" class="btn-secondary btn-sm flex items-center space-x-1 text-xs" data-tooltip="Load new model">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Load</span>
+                    </button>
+                </div>
+                <div id="model-list" class="overflow-y-auto custom-scrollbar flex-1 p-4 space-y-3">
+                    
+                    <!-- Local GGUF Models -->
+                    <div class="model-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <span class="status-indicator status-online"></span>
+                                <span class="text-white font-medium text-sm">Llama-3.1-70B-GGUF</span>
+                            </div>
+                            <div class="feature-badge">FREE</div>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-2">Local quantized model - 42GB</p>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>Q4_K_M</span>
+                            <span>70B params</span>
+                        </div>
+                    </div>
+
+                    <!-- Custom Neural Network -->
+                    <div class="model-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <span class="status-indicator status-online"></span>
+                                <span class="text-white font-medium text-sm">Custom-Research-Model</span>
+                            </div>
+                            <div class="feature-badge new-feature">CUSTOM</div>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-2">User-trained PyTorch model</p>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>Python</span>
+                            <span>Research</span>
+                        </div>
+                    </div>
+
+                    <!-- ONNX Model -->
+                    <div class="model-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <span class="status-indicator status-loading"></span>
+                                <span class="text-white font-medium text-sm">CodeLlama-ONNX</span>
+                            </div>
+                            <div class="feature-badge">LOADING</div>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-2">ONNX optimized for coding</p>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>ONNX</span>
+                            <span>Code-specialized</span>
+                        </div>
+                    </div>
+
+                    <!-- SafeTensors Model -->
+                    <div class="model-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <span class="status-indicator status-online"></span>
+                                <span class="text-white font-medium text-sm">Mistral-7B-SafeTensors</span>
+                            </div>
+                            <div class="feature-badge">FREE</div>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-2">SafeTensors format - 14GB</p>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>SafeTensors</span>
+                            <span>7B params</span>
+                        </div>
+                    </div>
+
+                    <div class="text-center py-4">
+                        <button class="btn-primary text-sm">
+                            <i class="fas fa-download mr-2"></i>
+                            Browse Model Registry
+                        </button>
+                        <p class="text-xs text-gray-500 mt-2">Every model architecture supported</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plugins Section -->
+            <div id="plugins-section" class="tab-content flex-1 overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                    <h3 class="font-medium text-white">Plugin Ecosystem</h3>
+                    <button id="add-plugin-btn" class="btn-secondary btn-sm flex items-center space-x-1 text-xs" data-tooltip="Install or manage plugins">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Browse</span>
+                    </button>
+                </div>
+                <div id="plugin-list" class="overflow-y-auto custom-scrollbar flex-1 p-4 space-y-3">
+                    
+                    <div class="model-card" data-plugin-id="web-search">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-search text-blue-400"></i>
+                                <span class="text-white font-medium text-sm">Web Search & Research</span>
+                            </div>
+                            <div class="feature-badge">ACTIVE</div>
+                        </div>
+                        <p class="text-xs text-gray-400">DuckDuckGo integration for privacy-focused search</p>
+                    </div>
+
+                    <div class="model-card" data-plugin-id="artifact-system">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-code text-purple-400"></i>
+                                <span class="text-white font-medium text-sm">Artifact System</span>
+                            </div>
+                            <div class="feature-badge">ACTIVE</div>
+                        </div>
+                        <p class="text-xs text-gray-400">Create and edit code, documents, and visualizations</p>
+                    </div>
+
+                    <div class="model-card" data-plugin-id="file-processing">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-file-alt text-green-400"></i>
+                                <span class="text-white font-medium text-sm">Multi-Modal File Processing</span>
+                            </div>
+                            <div class="feature-badge">ACTIVE</div>
+                        </div>
+                        <p class="text-xs text-gray-400">OCR, PDF extraction, document analysis</p>
+                    </div>
+
+                    <div class="model-card" data-plugin-id="git-integration">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fab fa-git-alt text-orange-400"></i>
+                                <span class="text-white font-medium text-sm">Git Integration</span>
+                            </div>
+                            <div class="feature-badge new-feature">BETA</div>
+                        </div>
+                        <p class="text-xs text-gray-400">Clone repos, analyze codebases, commit changes</p>
+                    </div>
+
+                    <div class="model-card" data-plugin-id="agent-collaboration">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-users text-cyan-400"></i>
+                                <span class="text-white font-medium text-sm">Agent Collaboration</span>
+                            </div>
+                            <div class="feature-badge experimental-feature">EXPERIMENTAL</div>
+                        </div>
+                        <p class="text-xs text-gray-400">Multi-agent teams for complex tasks</p>
+                    </div>
+
+                    <div class="text-center py-4">
+                        <button class="btn-secondary text-sm">
+                            <i class="fas fa-store mr-2"></i>
+                            Plugin Marketplace
+                        </button>
+                        <p class="text-xs text-gray-500 mt-2">Community-built extensions</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Projects Section -->
+            <div id="projects-section" class="tab-content flex-1 overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                    <h3 class="font-medium text-white">Project Workspaces</h3>
+                    <button id="create-project-btn" class="btn-primary btn-sm flex items-center space-x-1 text-xs" data-tooltip="Create new project">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Create</span>
+                    </button>
+                </div>
+                <div id="project-list" class="overflow-y-auto custom-scrollbar flex-1 p-4 space-y-3">
+                    
+                    <div class="model-card" data-project-id="research-project">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-microscope text-blue-400"></i>
+                                <span class="text-white font-medium text-sm">AI Research Analysis</span>
+                            </div>
+                            <div class="sovereignty-badge px-2 py-1 rounded text-xs text-white">ACTIVE</div>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-2">1,247 files • 3 models • 42 conversations</p>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>Updated 2h ago</span>
+                            <span>127GB data</span>
+                        </div>
+                    </div>
+
+                    <div class="model-card" data-project-id="codebase-project">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-code text-green-400"></i>
+                                <span class="text-white font-medium text-sm">Morpheus Development</span>
+                            </div>
+                            <div class="sovereignty-badge px-2 py-1 rounded text-xs text-white">ACTIVE</div>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-2">856 files • 5 models • 89 conversations</p>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>Updated 15m ago</span>
+                            <span>45GB data</span>
+                        </div>
+                    </div>
+
+                    <div class="text-center py-4">
+                        <p class="text-xs text-gray-500">Unlimited projects • Unlimited files</p>
+                        <p class="text-xs text-gray-600">Zero monthly fees • Complete sovereignty</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Button -->
+            <div class="p-4 border-t border-gray-700">
+                <div class="flex items-center justify-between">
+                    <button id="settings-btn" class="btn-secondary text-sm flex items-center space-x-2" data-tooltip="Global & Instance Settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </button>
+                    
+                    <div class="flex items-center space-x-2">
+                        <div class="text-xs text-gray-400">
+                            <span class="text-green-400">●</span> All Local
+                        </div>
+                        <div class="sovereignty-badge px-2 py-1 rounded text-xs text-white">
+                            100% FREE
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="flex-1 flex flex-col">
+            <!-- Top Bar -->
+            <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="status-indicator status-online"></div>
+                            <h2 class="text-lg font-semibold text-white">Multi-Model Chat</h2>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2 text-sm text-gray-400">
+                            <span>Models:</span>
+                            <span class="local-model-badge px-2 py-1 rounded text-xs text-white">Llama-3.1-70B</span>
+                            <span class="local-model-badge px-2 py-1 rounded text-xs text-white">Custom-Model</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3">
+                        <button id="model-selector-btn" class="btn-secondary text-sm" data-tooltip="Switch or compare models">
+                            <i class="fas fa-microchip mr-1"></i>
+                            Switch Models
+                        </button>
+                        
+                        <button id="export-chat-btn" class="btn-icon" data-tooltip="Export conversation">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        
+                        <button id="share-chat-btn" class="btn-icon" data-tooltip="Share conversation">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Chat Messages Area -->
+            <div id="chat-container" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
+                <!-- Welcome message -->
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 mx-auto mb-4 sovereign-gradient rounded-full flex items-center justify-center">
+                        <i class="fas fa-brain text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Welcome to AI Sovereignty</h3>
+                    <p class="text-gray-400 mb-4">Every model architecture. Zero restrictions. Complete freedom.</p>
+                    <div class="flex justify-center space-x-4 text-sm">
+                        <span class="feature-badge">Unlimited Files</span>
+                        <span class="feature-badge">Unlimited Context</span>
+                        <span class="feature-badge">Zero Monthly Fees</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="bg-gray-800 border-t border-gray-700 p-4">
+                <div id="file-preview-area" class="mb-2 space-x-2">
+                    <!-- File previews will appear here -->
+                </div>
+
+                <form id="chat-form" class="flex items-end space-x-3">
+                    <div class="flex-1 relative">
+                        <textarea 
+                            id="message-input" 
+                            placeholder="Message AI models or use / for commands... (Shift+Enter for new line)"
+                            class="w-full resize-none border border-gray-600 bg-gray-700 text-white rounded-lg px-4 py-3 pr-28 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent custom-scrollbar"
+                            rows="1"
+                            aria-label="Chat message input"
+                        ></textarea>
+                        
+                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1.5">
+                            <button type="button" id="attach-file-input-btn" class="btn-icon btn-sm" data-tooltip="Attach files (Ctrl+U)">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            <button type="button" id="voice-input-btn" class="btn-icon btn-sm" data-tooltip="Voice input (Ctrl+M)">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" id="send-btn" class="btn-primary px-4 py-3 rounded-lg" data-tooltip="Send message (Ctrl+Enter)">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+                
+                <div class="flex items-center justify-between mt-2 text-xs text-gray-500">
+                    <div class="flex items-center space-x-4">
+                        <span>Context: Unlimited</span>
+                        <span>Files: Unlimited</span>
+                        <span>Cost: $0.00/month</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span>Press / for commands</span>
+                        <span>•</span>
+                        <span>Ctrl+Enter to send</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar (Contextual Information) -->
+        <aside id="right-sidebar" class="w-80 bg-gray-800 border-l border-gray-700 flex flex-col hidden">
+            <div class="p-4 border-b border-gray-700">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-medium text-white">Context & Tools</h3>
+                    <button id="close-right-sidebar" class="btn-icon btn-sm">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-4">
+                <div class="text-center py-8">
+                    <i class="fas fa-info-circle text-3xl text-gray-600 mb-4"></i>
+                    <h4 class="text-lg font-semibold text-gray-300">Contextual Information</h4>
+                    <p class="text-sm text-gray-400">Active plugins, memory context, and tools will appear here.</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Comprehensive Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center hidden animate-fadeIn p-4">
+        <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col" role="dialog" aria-modal="true">
+            
+            <!-- Modal Header -->
+            <header class="p-6 border-b border-gray-700 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 sovereign-gradient rounded-lg flex items-center justify-center">
+                        <i class="fas fa-cog text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-xl text-white">Morpheus Settings</h3>
+                        <p class="text-sm text-gray-400">Global configuration and instance management</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="sovereignty-badge px-3 py-1 rounded-full text-xs text-white">
+                        <i class="fas fa-shield-alt mr-1"></i>
+                        100% SOVEREIGN
+                    </div>
+                    <button id="close-settings-modal" class="btn-icon btn-sm" data-tooltip="Close Settings (Esc)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="flex flex-1 overflow-hidden">
+                <!-- Settings Navigation -->
+                <nav class="w-64 bg-gray-900 border-r border-gray-700 p-4">
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Global Settings</h4>
+                        
+                        <button class="settings-nav-btn w-full text-left px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors" data-section="models">
+                            <i class="fas fa-microchip mr-3 w-4"></i>Model Architecture
+                        </button>
+                        
+                        <button class="settings-nav-btn w-full text-left px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors" data-section="sovereignty">
+                            <i class="fas fa-shield-alt mr-3 w-4"></i>AI Sovereignty
+                        </button>
+                        
+                        <button class="settings-nav-btn w-full text-left px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors" data-section="performance">
+                            <i class="fas fa-tachometer-alt mr-3 w-4"></i>Performance
+                        </button>
+                        
+                        <button class="settings-nav-btn w-full text-left px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors" data-section="storage">
+                            <i class="fas fa-hdd mr-3 w-4"></i>Storage & Files
+                        </button>
+                        
+                        <button class="settings-nav-btn w-full text-left px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors" data-section="interface">
+                            <i class="fas fa-palette mr-3 w-4"></i>Interface
+                        </button>
+
+                        <div class="border-t border-gray-700 my-4"></div>
+                        
+                        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Instance Settings</h4>
+                        
+                        <button class="settings-nav-btn w-full text-left px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors" data-section="personality">
+                            <i class="fas fa-user-cog mr-3 w-4"></i>AI Personality
+                        </button>
+                        
+                        <button class="settings-nav-btn w-full text-left px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors" data-section="behavior">
+                            <i class="fas fa-brain mr-3 w-4"></i>AI Behavior
+                        </button>
+                        
+                        <button class="settings-nav-btn w-full text-left px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors" data-section="memory">
+                            <i class="fas fa-memory mr-3 w-4"></i>Memory & Context
+                        </button>
+                        
+                        <button class="settings-nav-btn w-full text-left px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors" data-section="tools">
+                            <i class="fas fa-tools mr-3 w-4"></i>Tools & Plugins
+                        </button>
+                    </div>
+                </nav>
+
+                <!-- Settings Content -->
+                <main class="flex-1 overflow-y-auto custom-scrollbar">
+                    
+                    <!-- Model Architecture Section -->
+                    <div id="models-section" class="settings-section p-6 space-y-6">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-white mb-2">Model Architecture Support</h2>
+                            <p class="text-gray-400">Every model format, every architecture, zero restrictions</p>
+                        </div>
+
+                        <!-- Model Format Support -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Supported Formats</h3>
+                            
+                            <div class="model-grid">
+                                <!-- GGUF Models -->
+                                <div class="model-card">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-cube text-white"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-semibold text-white">GGUF Models</h4>
+                                                <p class="text-gray-400 text-sm">Quantized models for efficiency</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-badge">SUPPORTED</div>
+                                    </div>
+                                    <div class="text-sm text-gray-300">
+                                        <p>• Ollama compatibility</p>
+                                        <p>• llama.cpp integration</p>
+                                        <p>• Q4, Q5, Q8 quantization</p>
+                                    </div>
+                                </div>
+
+                                <!-- PyTorch Models -->
+                                <div class="model-card">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
+                                                <i class="fab fa-python text-white"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-semibold text-white">PyTorch Models</h4>
+                                                <p class="text-gray-400 text-sm">Native PyTorch support</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-badge">SUPPORTED</div>
+                                    </div>
+                                    <div class="text-sm text-gray-300">
+                                        <p>• .pt, .pth, .bin files</p>
+                                        <p>• GPU acceleration</p>
+                                        <p>• Custom architectures</p>
+                                    </div>
+                                </div>
+
+                                <!-- ONNX Models -->
+                                <div class="model-card">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-network-wired text-white"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-semibold text-white">ONNX Models</h4>
+                                                <p class="text-gray-400 text-sm">Cross-platform optimization</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-badge">SUPPORTED</div>
+                                    </div>
+                                    <div class="text-sm text-gray-300">
+                                        <p>• ONNX Runtime</p>
+                                        <p>• Hardware optimization</p>
+                                        <p>• Multi-provider support</p>
+                                    </div>
+                                </div>
+
+                                <!-- SafeTensors -->
+                                <div class="model-card">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-shield-alt text-white"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-semibold text-white">SafeTensors</h4>
+                                                <p class="text-gray-400 text-sm">Secure model format</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-badge">SUPPORTED</div>
+                                    </div>
+                                    <div class="text-sm text-gray-300">
+                                        <p>• Memory-safe loading</p>
+                                        <p>• Fast deserialization</p>
+                                        <p>• Hugging Face compatible</p>
+                                    </div>
+                                </div>
+
+                                <!-- Custom Neural Networks -->
+                                <div class="model-card">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-cyan-600 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-code text-white"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-semibold text-white">Custom Networks</h4>
+                                                <p class="text-gray-400 text-sm">User-built architectures</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-badge new-feature">CUSTOM</div>
+                                    </div>
+                                    <div class="text-sm text-gray-300">
+                                        <p>• Python modules</p>
+                                        <p>• Research models</p>
+                                        <p>• Experimental architectures</p>
+                                    </div>
+                                </div>
+
+                                <!-- Specialized Formats -->
+                                <div class="model-card">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-microchip text-white"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-semibold text-white">Specialized Formats</h4>
+                                                <p class="text-gray-400 text-sm">Hardware-optimized</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-badge">SUPPORTED</div>
+                                    </div>
+                                    <div class="text-sm text-gray-300">
+                                        <p>• TensorRT (NVIDIA)</p>
+                                        <p>• OpenVINO (Intel)</p>
+                                        <p>• TFLite (mobile)</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <i class="fas fa-info-circle text-blue-400"></i>
+                                    <span class="font-semibold text-blue-300">Universal Support Philosophy</span>
+                                </div>
+                                <p class="text-sm text-gray-300">
+                                    If it's a neural network, we support it. No artificial restrictions, no vendor lock-in, 
+                                    no monthly fees. Your models, your hardware, your sovereignty.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Model Loading Configuration -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Loading Configuration</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">GPU Acceleration</label>
+                                    <select class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                        <option value="auto">Auto-detect</option>
+                                        <option value="cuda">NVIDIA CUDA</option>
+                                        <option value="rocm">AMD ROCm</option>
+                                        <option value="metal">Apple Metal</option>
+                                        <option value="cpu">CPU Only</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Memory Allocation</label>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="range" id="memory-usage" min="1" max="64" value="16" class="flex-1">
+                                        <span id="memory-value" class="text-white text-sm w-12">16GB</span>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Parallel Loading</label>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="parallel-loading" class="config-toggle" checked>
+                                        <label for="parallel-loading" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                        <span class="text-gray-300 text-sm">Load multiple models simultaneously</span>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Model Caching</label>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="model-caching" class="config-toggle" checked>
+                                        <label for="model-caching" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                        <span class="text-gray-300 text-sm">Cache loaded models in memory</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Sovereignty Section -->
+                    <div id="sovereignty-section" class="settings-section hidden p-6 space-y-6">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-white mb-2">AI Sovereignty Status</h2>
+                            <p class="text-gray-400">Complete independence from SaaS providers</p>
+                        </div>
+
+                        <!-- Sovereignty Dashboard -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Sovereignty Metrics</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                <div class="text-center">
+                                    <div class="w-20 h-20 mx-auto mb-3 sovereignty-badge rounded-full flex items-center justify-center">
+                                        <span class="text-2xl font-bold text-white">100%</span>
+                                    </div>
+                                    <h4 class="font-semibold text-white">Data Sovereignty</h4>
+                                    <p class="text-sm text-gray-400">All data stays local</p>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <div class="w-20 h-20 mx-auto mb-3 sovereignty-badge rounded-full flex items-center justify-center">
+                                        <span class="text-2xl font-bold text-white">∞</span>
+                                    </div>
+                                    <h4 class="font-semibold text-white">Usage Limits</h4>
+                                    <p class="text-sm text-gray-400">Unlimited everything</p>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <div class="w-20 h-20 mx-auto mb-3 sovereignty-badge rounded-full flex items-center justify-center">
+                                        <span class="text-2xl font-bold text-white">$0</span>
+                                    </div>
+                                    <h4 class="font-semibold text-white">Monthly Costs</h4>
+                                    <p class="text-sm text-gray-400">Forever free</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <i class="fas fa-shield-alt text-green-400"></i>
+                                        <span class="text-white">Local Model Processing</span>
+                                    </div>
+                                    <div class="sovereignty-badge px-2 py-1 rounded text-xs text-white">ACTIVE</div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <i class="fas fa-database text-green-400"></i>
+                                        <span class="text-white">Local Data Storage</span>
+                                    </div>
+                                    <div class="sovereignty-badge px-2 py-1 rounded text-xs text-white">ACTIVE</div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <i class="fas fa-network-wired text-green-400"></i>
+                                        <span class="text-white">Offline Operation</span>
+                                    </div>
+                                    <div class="sovereignty-badge px-2 py-1 rounded text-xs text-white">CAPABLE</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Privacy Controls -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Privacy & Security</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Encrypt Local Storage</h4>
+                                        <p class="text-sm text-gray-400">Encrypt all conversation and file data</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="encrypt-storage" class="config-toggle" checked>
+                                        <label for="encrypt-storage" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Network Isolation</h4>
+                                        <p class="text-sm text-gray-400">Block all external network requests</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="network-isolation" class="config-toggle">
+                                        <label for="network-isolation" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Anonymous Usage</h4>
+                                        <p class="text-sm text-gray-400">No telemetry or usage tracking</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="anonymous-usage" class="config-toggle" checked>
+                                        <label for="anonymous-usage" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Section -->
+                    <div id="performance-section" class="settings-section hidden p-6 space-y-6">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-white mb-2">Performance Optimization</h2>
+                            <p class="text-gray-400">Maximize your hardware potential</p>
+                        </div>
+
+                        <!-- Hardware Utilization -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Hardware Utilization</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">CPU Threads</label>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="range" id="cpu-threads" min="1" max="32" value="16" class="flex-1">
+                                        <span id="cpu-threads-value" class="text-white text-sm w-8">16</span>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">GPU Memory (%)</label>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="range" id="gpu-memory" min="10" max="95" value="80" class="flex-1">
+                                        <span id="gpu-memory-value" class="text-white text-sm w-8">80%</span>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Batch Size</label>
+                                    <select class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                        <option value="1">1 (Fastest response)</option>
+                                        <option value="4">4 (Balanced)</option>
+                                        <option value="8" selected>8 (Higher throughput)</option>
+                                        <option value="16">16 (Maximum efficiency)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Context Window</label>
+                                    <select class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                        <option value="2048">2K (Fast)</option>
+                                        <option value="4096">4K (Standard)</option>
+                                        <option value="8192" selected>8K (Extended)</option>
+                                        <option value="16384">16K (Large)</option>
+                                        <option value="32768">32K (Maximum)</option>
+                                        <option value="unlimited">Unlimited</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Optimization Features -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Advanced Optimizations</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Flash Attention</h4>
+                                        <p class="text-sm text-gray-400">Memory-efficient attention computation</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="flash-attention" class="config-toggle" checked>
+                                        <label for="flash-attention" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Model Quantization</h4>
+                                        <p class="text-sm text-gray-400">Automatic precision optimization</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="quantization" class="config-toggle" checked>
+                                        <label for="quantization" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Tensor Parallelism</h4>
+                                        <p class="text-sm text-gray-400">Multi-GPU model distribution</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="tensor-parallel" class="config-toggle">
+                                        <label for="tensor-parallel" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Storage & Files Section -->
+                    <div id="storage-section" class="settings-section hidden p-6 space-y-6">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-white mb-2">Storage & File Management</h2>
+                            <p class="text-gray-400">Unlimited storage with intelligent organization</p>
+                        </div>
+
+                        <!-- Storage Overview -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Storage Overview</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-blue-400 mb-2">847GB</div>
+                                    <h4 class="font-semibold text-white">Total Used</h4>
+                                    <p class="text-sm text-gray-400">Models, conversations, files</p>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-green-400 mb-2">∞</div>
+                                    <h4 class="font-semibold text-white">Storage Limit</h4>
+                                    <p class="text-sm text-gray-400">Limited only by your hardware</p>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-purple-400 mb-2">142K</div>
+                                    <h4 class="font-semibold text-white">Files Processed</h4>
+                                    <p class="text-sm text-gray-400">All automatically indexed</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                                    <span class="text-white">Models</span>
+                                    <span class="text-gray-300">623GB</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                                    <span class="text-white">Project Files</span>
+                                    <span class="text-gray-300">189GB</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                                    <span class="text-white">Conversations</span>
+                                    <span class="text-gray-300">34GB</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                                    <span class="text-white">Cache & Temp</span>
+                                    <span class="text-gray-300">1.2GB</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Processing -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">File Processing</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Automatic OCR</h4>
+                                        <p class="text-sm text-gray-400">Extract text from images and PDFs</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="auto-ocr" class="config-toggle" checked>
+                                        <label for="auto-ocr" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Smart Categorization</h4>
+                                        <p class="text-sm text-gray-400">AI-powered file organization</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="smart-categorization" class="config-toggle" checked>
+                                        <label for="smart-categorization" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Version Control</h4>
+                                        <p class="text-sm text-gray-400">Track file changes and history</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="version-control" class="config-toggle" checked>
+                                        <label for="version-control" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interface Section -->
+                    <div id="interface-section" class="settings-section hidden p-6 space-y-6">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-white mb-2">Interface Customization</h2>
+                            <p class="text-gray-400">Personalize your AI sovereignty experience</p>
+                        </div>
+
+                        <!-- Theme Settings -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Appearance</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Theme</label>
+                                    <select class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                        <option value="dark" selected>Dark (Sovereign)</option>
+                                        <option value="light">Light</option>
+                                        <option value="auto">Auto</option>
+                                        <option value="high-contrast">High Contrast</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Accent Color</label>
+                                    <select class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                        <option value="blue" selected>Sovereign Blue</option>
+                                        <option value="purple">Royal Purple</option>
+                                        <option value="green">Freedom Green</option>
+                                        <option value="cyan">Tech Cyan</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Font Size</label>
+                                    <select class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                        <option value="small">Small</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="large">Large</option>
+                                        <option value="extra-large">Extra Large</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Language</label>
+                                    <select class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                        <option value="en" selected>English</option>
+                                        <option value="es">Español</option>
+                                        <option value="fr">Français</option>
+                                        <option value="de">Deutsch</option>
+                                        <option value="zh">中文</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Layout Options -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Layout Options</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Compact Mode</h4>
+                                        <p class="text-sm text-gray-400">Reduce spacing for more content</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="compact-mode" class="config-toggle">
+                                        <label for="compact-mode" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Show Sidebar</h4>
+                                        <p class="text-sm text-gray-400">Display navigation sidebar</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="show-sidebar" class="config-toggle" checked>
+                                        <label for="show-sidebar" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Sovereignty Badges</h4>
+                                        <p class="text-sm text-gray-400">Show sovereignty indicators</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="sovereignty-badges" class="config-toggle" checked>
+                                        <label for="sovereignty-badges" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Personality Section -->
+                    <div id="personality-section" class="settings-section hidden p-6 space-y-6">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-white mb-2">AI Personality Configuration</h2>
+                            <p class="text-gray-400">Customize how AI models interact with you</p>
+                        </div>
+
+                        <!-- Personality Sliders -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Communication Style</h3>
+                            
+                            <div class="space-y-6">
+                                <div class="setting-item">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-white font-medium">Formality Level</span>
+                                        <span id="formality-display" class="text-gray-300 text-sm">Balanced</span>
+                                    </div>
+                                    <input type="range" id="formality-slider" min="0" max="100" value="50" 
+                                           class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-white font-medium">Creativity vs Logic</span>
+                                        <span id="creativity-display" class="text-gray-300 text-sm">Moderate</span>
+                                    </div>
+                                    <input type="range" id="creativity-slider" min="0" max="100" value="60" 
+                                           class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-white font-medium">Response Length</span>
+                                        <span id="length-display" class="text-gray-300 text-sm">Medium</span>
+                                    </div>
+                                    <input type="range" id="length-slider" min="0" max="100" value="65" 
+                                           class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-white font-medium">Enthusiasm Level</span>
+                                        <span id="enthusiasm-display" class="text-gray-300 text-sm">Balanced</span>
+                                    </div>
+                                    <input type="range" id="enthusiasm-slider" min="0" max="100" value="45" 
+                                           class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Role Presets -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Role Presets</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <button class="role-preset p-4 border border-gray-600 rounded-lg hover:border-blue-500 transition-colors text-left">
+                                    <h4 class="font-semibold text-white mb-1">Research Assistant</h4>
+                                    <p class="text-sm text-gray-400">Analytical, detailed, fact-focused</p>
+                                </button>
+                                
+                                <button class="role-preset p-4 border border-gray-600 rounded-lg hover:border-blue-500 transition-colors text-left">
+                                    <h4 class="font-semibold text-white mb-1">Creative Partner</h4>
+                                    <p class="text-sm text-gray-400">Imaginative, inspiring, experimental</p>
+                                </button>
+                                
+                                <button class="role-preset p-4 border border-gray-600 rounded-lg hover:border-blue-500 transition-colors text-left">
+                                    <h4 class="font-semibold text-white mb-1">Technical Expert</h4>
+                                    <p class="text-sm text-gray-400">Precise, logical, problem-solving</p>
+                                </button>
+                                
+                                <button class="role-preset p-4 border border-gray-600 rounded-lg hover:border-blue-500 transition-colors text-left">
+                                    <h4 class="font-semibold text-white mb-1">Friendly Tutor</h4>
+                                    <p class="text-sm text-gray-400">Patient, encouraging, educational</p>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Behavior Section -->
+                    <div id="behavior-section" class="settings-section hidden p-6 space-y-6">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-white mb-2">AI Behavior Settings</h2>
+                            <p class="text-gray-400">Fine-tune model behavior and capabilities</p>
+                        </div>
+
+                        <!-- Response Configuration -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Response Configuration</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Stream Responses</h4>
+                                        <p class="text-sm text-gray-400">Show responses as they generate</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="stream-responses" class="config-toggle" checked>
+                                        <label for="stream-responses" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Auto-suggest</h4>
+                                        <p class="text-sm text-gray-400">Provide response suggestions</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="auto-suggest" class="config-toggle" checked>
+                                        <label for="auto-suggest" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Context Awareness</h4>
+                                        <p class="text-sm text-gray-400">Remember conversation context</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="context-awareness" class="config-toggle" checked>
+                                        <label for="context-awareness" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Safety & Filtering -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Safety & Content Filtering</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Content Filter Level</label>
+                                    <select class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                        <option value="strict">Strict</option>
+                                        <option value="moderate" selected>Moderate</option>
+                                        <option value="relaxed">Relaxed</option>
+                                        <option value="off">Off (Full sovereignty)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Personal Information Protection</h4>
+                                        <p class="text-sm text-gray-400">Automatically redact sensitive data</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="pii-protection" class="config-toggle" checked>
+                                        <label for="pii-protection" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Memory & Context Section -->
+                    <div id="memory-section" class="settings-section hidden p-6 space-y-6">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-white mb-2">Memory & Context Management</h2>
+                            <p class="text-gray-400">Unlimited persistent memory across all sessions</p>
+                        </div>
+
+                        <!-- Memory Configuration -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Memory Settings</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Memory Persistence</label>
+                                    <select class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                        <option value="session">Session Only</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="permanent" selected>Permanent</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Context Window</label>
+                                    <select class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                        <option value="4k">4K tokens</option>
+                                        <option value="8k">8K tokens</option>
+                                        <option value="16k">16K tokens</option>
+                                        <option value="32k">32K tokens</option>
+                                        <option value="unlimited" selected>Unlimited</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Cross-Session Memory</h4>
+                                        <p class="text-sm text-gray-400">Remember across all conversations</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="cross-session-memory" class="config-toggle" checked>
+                                        <label for="cross-session-memory" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Smart Context Compression</h4>
+                                        <p class="text-sm text-gray-400">Intelligently manage large contexts</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="smart-compression" class="config-toggle" checked>
+                                        <label for="smart-compression" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-white font-medium">Preference Learning</h4>
+                                        <p class="text-sm text-gray-400">Learn and adapt to your preferences</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="checkbox" id="preference-learning" class="config-toggle" checked>
+                                        <label for="preference-learning" class="w-12 h-6 bg-gray-600 rounded-full relative cursor-pointer"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Memory Statistics -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Memory Statistics</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-blue-400 mb-2">2.4M</div>
+                                    <h4 class="font-semibold text-white">Memory Items</h4>
+                                    <p class="text-sm text-gray-400">Stored memories</p>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-green-400 mb-2">847</div>
+                                    <h4 class="font-semibold text-white">Conversations</h4>
+                                    <p class="text-sm text-gray-400">Total sessions</p>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-purple-400 mb-2">∞</div>
+                                    <h4 class="font-semibold text-white">Memory Limit</h4>
+                                    <p class="text-sm text-gray-400">Unlimited capacity</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tools & Plugins Section -->
+                    <div id="tools-section" class="settings-section hidden p-6 space-y-6">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-white mb-2">Tools & Plugin Configuration</h2>
+                            <p class="text-gray-400">Enable and configure AI capabilities</p>
+                        </div>
+
+                        <!-- Core Tools -->
+                        <div class="setting-group glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">Core AI Tools</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">

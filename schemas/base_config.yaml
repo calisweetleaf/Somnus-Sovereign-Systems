@@ -1,0 +1,74 @@
+# SOMNUS SYSTEMS - Core System Configuration
+# Production-grade settings mirroring OpenAI ChatGPT architecture
+
+system:
+  name: "somnus-systems"
+  version: "1.0.0"
+  environment: "production"
+  
+session_management:
+  # Container resource limits (mirroring OpenAI sandbox constraints)
+  max_sessions: 50
+  session_timeout: none # 1 hour idle timeout
+  cleanup_interval: none   # 5 minutes
+  
+  # Resource constraints per session (matching ChatGPT sandbox)
+  resources:
+    cpu_limit: "4.0"           # 4 CPU cores
+    memory_limit: "12G"         # 12GB RAM
+    disk_limit: "none"           # Unlimited Storage
+    execution_timeout: 120     # 120 seconds per code execution
+    network_mode: "none"       # No external network by default
+    
+container_runtime:
+  # Docker configuration
+  base_image: "morpheus-chat:base"
+  registry: "local"
+  pull_policy: "IfNotPresent"
+  
+  # Security profiles
+  security_opt:
+    - "seccomp:unconfined"     # Will be restricted via custom profile
+    - "apparmor:unconfined"    # Custom AppArmor profile
+  
+  # Volume mounts
+  volumes:
+    - "/tmp/morpheus-sessions:/sessions:rw"
+    - "/dev/null:/dev/random:ro"  # Prevent entropy attacks
+    
+logging:
+  level: "INFO"
+  format: "json"
+  file: "/var/log/morpheus-chat/system.log"
+  max_size: "10000MB"
+  max_files: 100
+  
+monitoring:
+  metrics_enabled: true
+  health_check_interval: 30
+  resource_monitoring: true
+  audit_trail: true
+
+# Context and memory configuration
+context:
+  default_max_tokens: 10192      # Conservative default
+  absolute_max_tokens: 88354    # Maximum supported
+  truncation_strategy: "importance_weighted"
+  
+  # Memory management
+  memory_persistence: true    # Default to ephemeral
+  anchor_tokens: true          # Preserve system/instruction tokens
+  importance_threshold: 0.7    # Token importance cutoff
+
+# Security enforcement
+security:
+  content_filtering: false
+  prompt_injection_detection: true
+  capability_enforcement: true
+  audit_all_interactions: true
+  
+  # Rate limiting
+  rate_limits:
+    requests_per_minute: 60
+    tokens_per_hour: 1000000
+    sessions_per_user: 10

@@ -1,0 +1,117 @@
+# MORPHEUS CHAT - Security-Hardened Base Image
+# Production-grade Python sandbox environment with ChatGPT-equivalent capabilities
+
+FROM python:3.11-slim as builder
+
+# Install build dependencies for compilation
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    gcc \
+    g++ \
+    gfortran \
+    libopenblas-dev \
+    liblapack-dev \
+    libffi-dev \
+    libssl-dev \
+    pkg-config \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python packages with optimizations
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir --compile \
+    --global-option=build_ext \
+    --global-option=-j$(nproc) \
+    -r /tmp/requirements.txt
+
+# Production stage - minimal and secure
+FROM python:3.11-slim
+
+# Install minimal runtime dependencies only
+RUN apt-get update && apt-get install -y \
+    libopenblas0 \
+    libgomp1 \
+    libquadmath0 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean \
+    && rm -rf /tmp/* /var/tmp/*
+
+# Copy Python packages from builder stage
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Create non-root user for security (matching OpenAI's approach)
+RUN groupadd -r morpheus && useradd --no-log-init -r -g morpheus morpheus
+
+# Create session directory with proper permissions
+RUN mkdir -p /sessions && chown morpheus:morpheus /sessions
+RUN mkdir -p /tmp/morpheus && chown morpheus:morpheus /tmp/morpheus
+
+# Set up Python environment variables
+ENV PYTHONPATH=/usr/local/lib/python3.11/site-packages
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONHASHSEED=random
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Security hardening - file permissions
+RUN chmod 755 /usr/local/bin/* \
+    && find /usr/local/lib/python3.11 -type f -name "*.py" -exec chmod 644 {} \; \
+    && find /usr/local/lib/python3.11 -type d -exec chmod 755 {} \;
+
+# Remove unnecessary files and caches
+RUN find /usr/local/lib/python3.11 -name "*.pyc" -delete \
+    && find /usr/local/lib/python3.11 -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true \
+    && rm -rf /root/.cache /tmp/* /var/tmp/*
+
+# Create restricted Python wrapper that blocks dangerous modules
+RUN cat > /usr/local/bin/restricted-python3 << 'EOF'
+#!/usr/bin/env python3
+import sys
+import os
+
+# Restricted module list (matching ChatGPT sandbox)
+RESTRICTED_MODULES = {
+    'os', 'sys', 'subprocess', 'multiprocessing', 'threading',
+    'socket', 'urllib', 'requests', 'http', 'ftplib', 'smtplib',
+    'telnetlib', 'imaplib', 'poplib', 'ctypes', '__import__',
+    'eval', 'exec', 'compile'
+}
+
+# Hook import to block restricted modules
+original_import = __builtins__.__import__
+
+def restricted_import(name, *args, **kwargs):
+    if name in RESTRICTED_MODULES:
+        raise ImportError(f"Module '{name}' is restricted in this environment")
+    return original_import(name, *args, **kwargs)
+
+__builtins__.__import__ = restricted_import
+
+# Execute the Python code
+if __name__ == "__main__":
+    # Remove the script name from sys.argv
+    sys.argv = sys.argv[1:]
+    
+    if sys.argv:
+        # Execute file
+        exec(open(sys.argv[0]).read())
+    else:
+        # Interactive mode (restricted)
+        import code
+        code.interact(banner="Morpheus Chat Python Environment (Restricted)")
+EOF
+
+RUN chmod +x /usr/local/bin/restricted-python3
+
+# Switch to non-root user
+USER morpheus
+WORKDIR /sessions
+
+# Health check to verify Python environment
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python3 -c "import numpy, pandas, matplotlib; print('Environment OK')" || exit 1
+
+# Default command - keep container alive
+CMD ["python3", "-c", "import time; print('Morpheus Chat sandbox ready'); time.sleep(3600)"]

@@ -1,0 +1,376 @@
+# MORPHEUS CHAT - Security Policies & Multi-Layer Enforcement
+# Production-grade security matching OpenAI's defensive architecture
+
+security_framework:
+  # Multi-layer security architecture
+  layers:
+    - "input_validation"
+    - "content_filtering"
+    - "prompt_injection_detection"
+    - "capability_enforcement"
+    - "execution_sandboxing"
+    - "output_sanitization"
+    - "audit_logging"
+
+# Container security profiles
+container_security:
+  # Seccomp profile for syscall filtering
+  seccomp_profile:
+    default_action: "SCMP_ACT_ERRNO"
+    allowed_syscalls:
+      - "read"
+      - "write"
+      - "open"
+      - "close"
+      - "stat"
+      - "fstat"
+      - "lstat"
+      - "mmap"
+      - "mprotect"
+      - "munmap"
+      - "brk"
+      - "futex"
+      - "clone"
+      - "execve"
+      - "exit"
+      - "exit_group"
+      - "wait4"
+      - "access"
+      - "pipe"
+      - "dup"
+      - "dup2"
+      - "getpid"
+      - "getuid"
+      - "geteuid"
+      - "getgid"
+      - "getegid"
+    
+    # Explicitly blocked dangerous syscalls
+    blocked_syscalls:
+      - "socket"        # No network creation
+      - "connect"       # No outbound connections
+      - "bind"          # No server binding
+      - "listen"        # No listening sockets
+      - "accept"        # No incoming connections
+      - "mount"         # No filesystem mounting
+      - "umount"        # No unmounting
+      - "ptrace"        # No process tracing
+      - "kill"          # No signal sending to other processes
+      - "tkill"         # No thread killing
+      - "tgkill"        # No thread group killing
+      - "reboot"        # No system reboot
+      - "syslog"        # No system logging access
+      - "setuid"        # No privilege escalation
+      - "setgid"        # No group changes
+      - "chroot"        # No chroot jails
+      - "pivot_root"    # No root pivoting
+  
+  # AppArmor profile for additional restrictions
+  apparmor_profile: |
+    #include <tunables/global>
+    
+    /usr/bin/python3 {
+      #include <abstractions/base>
+      #include <abstractions/python>
+      
+      # Allow read access to Python libraries
+      /usr/lib/python3*/** r,
+      /usr/local/lib/python3*/** r,
+      
+      # Allow read/write to session directory only
+      /sessions/** rw,
+      /tmp/morpheus-** rw,
+      
+      # Deny network access
+      deny network,
+      
+      # Deny access to sensitive system files
+      deny /etc/passwd r,
+      deny /etc/shadow r,
+      deny /etc/hosts r,
+      deny /proc/sys/** r,
+      deny /sys/** r,
+      
+      # Allow execution of python interpreter only
+      /usr/bin/python3 ix,
+      
+      # Deny capability escalation
+      deny capability,
+    }
+  
+  # Resource limits (cgroups v2)
+  cgroup_limits:
+    memory:
+      limit: "4G"
+      swap_limit: "512M"
+      oom_kill_disable: false
+    cpu:
+      quota: "2.0"
+      period: "100000"
+      shares: 1024
+    blkio:
+      weight: 500
+      read_bps: "100M"
+      write_bps: "100M"
+    pids:
+      limit: 256
+
+# Content filtering and moderation
+content_security:
+  # Toxicity detection
+  toxicity_filters:
+    enabled: true
+    models:
+      - "unitary/toxic-bert"
+      - "martin-ha/toxic-comment-model"
+    threshold: 0.8
+    
+  # Prompt injection detection
+  prompt_injection:
+    enabled: true
+    patterns:
+      - "ignore previous instructions"
+      - "disregard system prompt"
+      - "act as"
+      - "roleplay as"
+      - "pretend to be"
+      - "simulate being"
+      - "jailbreak"
+      - "DAN mode"
+      - "developer mode"
+    
+    # Advanced detection using embedding similarity
+    embedding_detection:
+      enabled: true
+      model: "sentence-transformers/all-MiniLM-L6-v2"
+      similarity_threshold: 0.85
+      known_injection_embeddings: "/security/injection_embeddings.pkl"
+  
+  # Content classification
+  content_classifiers:
+    violence:
+      enabled: true
+      threshold: 0.7
+    hate_speech:
+      enabled: true
+      threshold: 0.8
+    sexual_content:
+      enabled: true
+      threshold: 0.9
+    illegal_activities:
+      enabled: true
+      threshold: 0.95
+
+# Plugin and tool security
+plugin_security:
+  # Plugin manifest validation
+  manifest_validation:
+    required_fields:
+      - "name"
+      - "version"
+      - "capabilities"
+      - "permissions"
+      - "author"
+      - "signature"
+    
+    # Capability declarations
+    supported_capabilities:
+      - "file_read"
+      - "file_write"
+      - "network_request"
+      - "code_execution"
+      - "system_info"
+      - "user_interaction"
+    
+    # Permission model
+    permission_levels:
+      read_only: ["file_read", "system_info"]
+      limited_write: ["file_read", "file_write"]
+      network_access: ["file_read", "network_request"]
+      code_execution: ["file_read", "file_write", "code_execution"]
+      full_access: ["file_read", "file_write", "network_request", "code_execution", "system_info", "user_interaction"]
+  
+  # Plugin signature verification
+  signature_verification:
+    enabled: true
+    public_key_path: "/security/plugin_public_key.pem"
+    signature_algorithm: "RSA-PSS"
+    hash_algorithm: "SHA-256"
+  
+  # Runtime capability enforcement
+  capability_enforcement:
+    enabled: true
+    deny_by_default: true
+    capability_checks:
+      file_operations: "check_file_access"
+      network_requests: "check_network_permission"
+      code_execution: "check_execution_permission"
+
+# Code execution security
+code_execution:
+  # Python interpreter restrictions
+  python_security:
+    restricted_modules:
+      - "os"
+      - "sys"
+      - "subprocess"
+      - "multiprocessing"
+      - "threading"
+      - "socket"
+      - "urllib"
+      - "requests"
+      - "http"
+      - "ftplib"
+      - "smtplib"
+      - "telnetlib"
+      - "imaplib"
+      - "poplib"
+      - "ctypes"
+      - "__import__"
+      - "eval"
+      - "exec"
+      - "compile"
+      - "open"  # Will be wrapped with restricted version
+    
+    allowed_modules:
+      - "math"
+      - "random"
+      - "datetime"
+      - "json"
+      - "csv"
+      - "base64"
+      - "hashlib"
+      - "hmac"
+      - "re"
+      - "string"
+      - "collections"
+      - "itertools"
+      - "functools"
+      - "operator"
+      - "numpy"
+      - "pandas"
+      - "matplotlib"
+      - "seaborn"
+      - "plotly"
+      - "scipy"
+      - "sklearn"
+      - "pillow"
+      - "requests"  # Wrapped version with restrictions
+  
+  # Execution environment
+  execution_limits:
+    max_execution_time: 120  # seconds
+    max_memory_usage: "2G"
+    max_file_size: "100M"
+    max_output_length: 10000  # characters
+    max_files_created: 10
+    
+  # File system restrictions
+  filesystem_security:
+    allowed_paths:
+      - "/sessions/{session_id}/"
+      - "/tmp/morpheus-{session_id}/"
+    
+    file_operations:
+      max_file_size: "512M"
+      allowed_extensions:
+        - ".txt"
+        - ".csv"
+        - ".json"
+        - ".py"
+        - ".md"
+        - ".jpg"
+        - ".png"
+        - ".pdf"
+      
+      denied_extensions:
+        - ".exe"
+        - ".bat"
+        - ".sh"
+        - ".ps1"
+        - ".scr"
+        - ".com"
+        - ".pif"
+
+# Audit and monitoring
+audit_security:
+  # Comprehensive logging
+  audit_events:
+    - "session_created"
+    - "session_destroyed"
+    - "model_loaded"
+    - "model_switched"
+    - "plugin_invoked"
+    - "code_executed"
+    - "file_uploaded"
+    - "file_downloaded"
+    - "security_violation"
+    - "content_filtered"
+    - "rate_limit_exceeded"
+  
+  # Log retention and security
+  log_security:
+    encryption_enabled: true
+    retention_period: 90  # days
+    max_log_size: "1G"
+    log_rotation: true
+    
+  # Anomaly detection
+  anomaly_detection:
+    enabled: true
+    models:
+      - "isolation_forest"
+      - "one_class_svm"
+    features:
+      - "request_frequency"
+      - "token_usage"
+      - "error_rate"
+      - "execution_time"
+      - "resource_usage"
+    
+    # Alert thresholds
+    alert_thresholds:
+      high_request_frequency: 100  # requests/minute
+      unusual_token_usage: 50000   # tokens/hour
+      high_error_rate: 0.2         # 20% error rate
+      long_execution_time: 60      # seconds
+      high_memory_usage: 0.9       # 90% of limit
+
+# Rate limiting and DDoS protection
+rate_limiting:
+  # Request rate limits
+  request_limits:
+    global:
+      requests_per_second: 10
+      requests_per_minute: 600
+      requests_per_hour: 3600
+    
+    per_session:
+      requests_per_second: 2
+      requests_per_minute: 60
+      requests_per_hour: 1000
+    
+    per_user:
+      requests_per_second: 5
+      requests_per_minute: 300
+      requests_per_hour: 2000
+  
+  # Token usage limits
+  token_limits:
+    per_session:
+      tokens_per_minute: 10000
+      tokens_per_hour: 100000
+      tokens_per_day: 1000000
+    
+    per_user:
+      tokens_per_minute: 50000
+      tokens_per_hour: 500000
+      tokens_per_day: 5000000
+  
+  # Adaptive rate limiting
+  adaptive_limiting:
+    enabled: true
+    base_multiplier: 1.0
+    load_threshold: 0.8
+    cpu_threshold: 0.9
+    memory_threshold: 0.85

@@ -1,0 +1,387 @@
+# MORPHEUS CHAT - Persistent Memory Configuration
+# Production-grade memory system with privacy controls and retention policies
+
+memory_system:
+  # Core storage configuration
+  storage:
+    vector_db_path: "data/memory/vectors"
+    metadata_db_path: "data/memory/metadata.db"
+    backup_path: "data/memory/backups"
+    
+    # Storage limits per user
+    max_memories_per_user: 50000
+    max_storage_per_user_gb: 10.0
+    max_document_size_mb: 100
+    
+    # Database optimization
+    sqlite_pragmas:
+      journal_mode: "WAL"
+      cache_size: -64000  # 64MB cache
+      temp_store: "memory"
+      synchronous: "NORMAL"
+      mmap_size: 268435456  # 256MB memory map
+    
+    # Vector database settings
+    chromadb_settings:
+      chroma_db_impl: "duckdb+parquet"
+      anonymized_telemetry: false
+      persist_directory: true
+      collection_metadata_compression: true
+
+  # Embedding and semantic search
+  embeddings:
+    # Primary embedding model for semantic search
+    model: "sentence-transformers/all-MiniLM-L6-v2"
+    model_cache_dir: "data/models/embeddings"
+    
+    # Alternative models for specific use cases
+    specialized_models:
+      code_embeddings: "microsoft/codebert-base"
+      multilingual: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+      
+    # Embedding optimization
+    batch_size: 32
+    max_sequence_length: 512
+    normalize_embeddings: true
+    
+    # Performance tuning
+    device_preference: ["cuda", "mps", "cpu"]
+    fp16_inference: true
+    onnx_optimization: false  # Future enhancement
+
+  # Memory retention and lifecycle
+  retention_policies:
+    # Default retention periods (days, -1 = never expire)
+    critical_memories: -1      # User identity, core preferences
+    high_importance: 365       # Important facts, insights
+    medium_importance: 90      # Useful context, recent conversations
+    low_importance: 30         # Casual interactions
+    temporary_memories: 1      # Debug info, system messages
+    
+    # Advanced retention strategies
+    adaptive_retention: true   # Learn from user access patterns
+    importance_decay: true     # Gradually reduce importance over time
+    redundancy_detection: true # Merge similar memories
+    
+    # Cleanup policies
+    cleanup_interval_seconds: 3600
+    batch_cleanup_size: 1000
+    low_relevance_threshold: 0.3
+    
+    # Storage optimization
+    compression_enabled: true
+    archival_threshold_days: 180
+    archival_compression_ratio: 0.7
+
+  # Privacy and encryption
+  privacy:
+    # Encryption settings
+    encryption_enabled: true
+    encryption_algorithm: "Fernet"  # Symmetric encryption
+    key_derivation: "PBKDF2"
+    key_iterations: 100000
+    
+    # User data isolation
+    strict_user_isolation: true
+    cross_user_sharing: false
+    anonymization_enabled: false  # For analytics
+    
+    # Data export and deletion
+    export_format: "json"
+    deletion_confirmation: true
+    secure_deletion: true  # Overwrite deleted data
+    
+    # Audit and compliance
+    audit_memory_access: true
+    audit_retention_days: 90
+    gdpr_compliance: true
+    data_residency: "local"
+
+  # Semantic search and retrieval
+  retrieval:
+    # Search configuration
+    similarity_threshold: 0.7
+    max_results_per_query: 20
+    diversification_enabled: true
+    
+    # Context enhancement
+    auto_context_expansion: true
+    max_context_memories: 10
+    context_relevance_threshold: 0.6
+    
+    # Advanced search features
+    temporal_weighting: true      # Boost recent memories
+    importance_weighting: true    # Boost high-importance memories
+    access_pattern_learning: true # Learn from user preferences
+    
+    # Hybrid search (semantic + keyword)
+    hybrid_search_enabled: true
+    keyword_boost_factor: 0.3
+    semantic_boost_factor: 0.7
+
+  # Memory classification and tagging
+  classification:
+    # Automatic content classification
+    auto_classification: true
+    classification_confidence_threshold: 0.8
+    
+    # Memory type detection patterns
+    patterns:
+      core_facts:
+        - "my name is"
+        - "i work at"
+        - "i live in"
+        - "i prefer"
+        - "call me"
+      
+      preferences:
+        - "i like"
+        - "i don't like"
+        - "i hate"
+        - "favorite"
+        - "prefer"
+      
+      technical_content:
+        - "code"
+        - "function"
+        - "algorithm"
+        - "programming"
+        - "debug"
+      
+      creative_content:
+        - "story"
+        - "poem"
+        - "creative"
+        - "artistic"
+        - "design"
+    
+    # Tag extraction
+    auto_tagging: true
+    max_tags_per_memory: 10
+    tag_similarity_threshold: 0.8
+
+  # Performance and optimization
+  performance:
+    # Caching strategies
+    memory_cache_size: 1000
+    embedding_cache_size: 5000
+    cache_ttl_seconds: 3600
+    
+    # Background processing
+    async_processing: true
+    batch_processing_size: 100
+    max_concurrent_operations: 10
+    
+    # Memory usage optimization
+    lazy_loading: true
+    memory_mapping: true
+    garbage_collection_threshold: 1000
+    
+    # Monitoring and alerting
+    performance_monitoring: true
+    slow_query_threshold_ms: 1000
+    memory_usage_alerting: true
+    disk_usage_alerting: true
+
+  # Integration with session management
+  session_integration:
+    # Automatic memory storage
+    auto_store_conversations: true
+    conversation_importance_threshold: "low"
+    
+    # Context injection
+    inject_context_memories: true
+    max_context_tokens: 2048
+    context_injection_strategy: "importance_first"
+    
+    # Cross-session continuity
+    session_continuity: true
+    continuity_lookback_hours: 24
+    max_continuity_memories: 5
+    
+    # Memory triggers
+    fact_extraction_enabled: true
+    preference_learning_enabled: true
+    tool_result_storage: true
+
+# File upload and document processing
+document_processing:
+  # Supported file types
+  supported_formats:
+    text: [".txt", ".md", ".rst", ".log"]
+    documents: [".pdf", ".docx", ".doc", ".rtf"]
+    code: [".py", ".js", ".html", ".css", ".json", ".yaml", ".xml"]
+    data: [".csv", ".tsv", ".json", ".xlsx", ".xls"]
+    images: [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"]
+  
+  # Processing configuration
+  max_file_size_mb: 100
+  max_files_per_upload: 10
+  virus_scanning: true
+  content_extraction: true
+  
+  # OCR and text extraction
+  ocr_enabled: true
+  ocr_languages: ["eng", "spa", "fra", "deu"]
+  pdf_text_extraction: true
+  
+  # Document chunking for large files
+  chunking_enabled: true
+  chunk_size: 2048
+  chunk_overlap: 256
+  semantic_chunking: true
+  
+  # Document embedding and indexing
+  document_embeddings: true
+  full_text_search: true
+  document_summarization: true
+
+# Web search integration
+web_search:
+  enabled: true
+  provider: "duckduckgo"  # Open source alternative
+  
+  # Search configuration
+  max_results: 10
+  result_caching: true
+  cache_duration_hours: 24
+  
+  # Content processing
+  webpage_extraction: true
+  content_summarization: true
+  link_following_depth: 1
+  
+  # Rate limiting
+  requests_per_minute: 60
+  concurrent_requests: 5
+  
+  # Privacy and safety
+  safe_search: true
+  content_filtering: true
+  tracking_protection: true
+
+# Deep research capabilities
+research:
+  enabled: true
+  
+  # Research strategies
+  max_research_depth: 3
+  sources_per_query: 5
+  synthesis_enabled: true
+  
+  # Source diversity
+  academic_sources: true
+  news_sources: true
+  technical_documentation: true
+  
+  # Quality filtering
+  source_credibility_scoring: true
+  fact_checking: true
+  bias_detection: true
+  
+  # Output generation
+  research_reports: true
+  citation_tracking: true
+  evidence_weighting: true
+
+# Artifact system (Claude-like)
+artifacts:
+  enabled: true
+  
+  # Artifact types
+  supported_types:
+    - "text/markdown"
+    - "text/html"
+    - "application/javascript"
+    - "text/python"
+    - "application/json"
+    - "image/svg+xml"
+  
+  # Storage and management
+  artifact_storage: "data/artifacts"
+  max_artifact_size_mb: 50
+  artifact_versioning: true
+  
+  # Security
+  code_sandboxing: true
+  html_sanitization: true
+  javascript_restrictions: true
+  
+  # Collaboration features
+  artifact_sharing: false  # Privacy-first
+  collaborative_editing: false
+  version_history: true
+
+# System prompt management
+system_prompts:
+  # Default system prompts
+  default_prompt: |
+    You are Morpheus Chat, an advanced AI assistant with access to persistent memory 
+    and powerful tools. You can remember previous conversations, learn user preferences, 
+    and maintain context across sessions. Use your memory to provide personalized, 
+    continuous assistance while respecting user privacy and preferences.
+  
+  # Memory-enhanced prompts
+  memory_context_prompt: |
+    Based on your previous interactions with this user, provide personalized assistance. 
+    Reference relevant context from past conversations when helpful, but don't explicitly 
+    mention accessing stored memories unless asked.
+  
+  # Specialized prompts
+  research_prompt: |
+    You are conducting deep research on the user's query. Use web search, document 
+    analysis, and your knowledge base to provide comprehensive, well-sourced information.
+  
+  code_prompt: |
+    You are assisting with code development. Use your memory of the user's coding 
+    preferences, previous projects, and technical context to provide relevant help.
+  
+  # Dynamic prompt enhancement
+  context_injection: true
+  prompt_personalization: true
+  adaptive_prompting: true
+
+# Monitoring and analytics
+monitoring:
+  # Memory system metrics
+  track_memory_usage: true
+  track_retrieval_performance: true
+  track_user_engagement: true
+  
+  # Privacy-preserving analytics
+  anonymized_metrics: true
+  aggregate_statistics: true
+  usage_patterns: true
+  
+  # Performance optimization
+  query_optimization: true
+  index_optimization: true
+  cache_optimization: true
+  
+  # Health monitoring
+  system_health_checks: true
+  data_integrity_checks: true
+  backup_verification: true
+
+# Backup and disaster recovery
+backup:
+  # Automated backups
+  enabled: true
+  backup_interval_hours: 6
+  retention_days: 30
+  
+  # Backup types
+  full_backup_weekly: true
+  incremental_backup_daily: true
+  vector_db_backup: true
+  metadata_backup: true
+  
+  # Recovery procedures
+  recovery_testing: true
+  restoration_verification: true
+  data_consistency_checks: true
+  
+  # External backup storage
+  cloud_backup: false  # Privacy-first approach
+  local_backup_path: "data/backups"
+  compression_enabled: true

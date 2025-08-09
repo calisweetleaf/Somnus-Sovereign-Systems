@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Somnus AI - Unlimited Assistant</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Somnus Color Palette */
+            --dark-950: #0a0a0f;
+            --dark-900: #0f0f1a;
+            --dark-800: #1a1a2e;
+            --dark-700: #16213e;
+            --dark-600: #1f2937;
+            --light-100: #f8fafc;
+            --light-200: #e2e8f0;
+            --light-300: #cbd5e1;
+            --light-400: #94a3b8;
+            --light-500: #64748b;
+            
+            /* Accent Colors */
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-green: #10b981;
+            --accent-cyan: #06b6d4;
+            
+            /* Glass Effects */
+            --glass-bg: rgba(31, 41, 55, 0.7);
+            --glass-border: rgba(148, 163, 184, 0.1);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--dark-950) 0%, var(--dark-900) 100%);
+            color: var(--light-100);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Modern Chat Container */
+        .chat-app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--dark-900);
+        }
+
+        /* Professional Header */
+        .chat-header {
+            height: 60px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: var(--glass-shadow);
+            position: relative;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .model-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--dark-700);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .model-selector:hover {
+            background: var(--dark-600);
+            border-color: var(--accent-blue);
+        }
+
+        .model-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--light-100);
+        }
+
+        .model-indicator {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--light-400);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-badge {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .settings-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--dark-700);
+            color: var(--light-300);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-btn:hover {
+            background: var(--dark-600);
+            color: var(--accent-blue);
+        }
+
+        /* Chat Messages Area */
+        .chat-messages {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            background: linear-gradient(180deg, var(--dark-900) 0%, var(--dark-950) 100%);
+            position: relative;
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .welcome-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 32px;
+            font-size: 48px;
+            color: white;
+            animation: gentle-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes gentle-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.4); }
+        }
+
+        .welcome-greeting {
+            font-size: 42px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+
+        .welcome-subtitle {
+            font-size: 18px;
+            color: var(--light-400);
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        /* Recent Activity Section */
+        .recent-activity {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 32px;
+        }
+
+        .recent-header {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--light-200);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-launch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .quick-launch-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quick-launch-card:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--light-100);
+            margin-bottom: 4px;
+        }
+
+        .card-subtitle {
+            font-size: 12px;
+            color: var(--light-400);
+        }
+
+        /* Floating Bubble Navigation */
+        .floating-nav {
+            position: fixed;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 1000;
+        }
+
+        .nav-bubble {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 20px;
+        }
+
+        .nav-bubble:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+        }
+
+        .nav-bubble.artifacts {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+        }
+
+        .nav-bubble.projects {
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+            color: white;
+        }
+
+        .nav-bubble.training {
+            background: linear-gradient(135deg, var(--accent-yellow), var(--accent-red));
+            color: white;
+        }
+
+        .nav-bubble.git {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+        }
+
+        .nav-bubble.research {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            color: white;
+        }
+
+        /* Bubble Popover */
+        .bubble-popover {
+            position: absolute;
+            right: 70px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
+            min-width: 220px;
+            box-shadow: var(--glass-shadow);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .nav-bubble:hover .bubble-popover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50%) translateX(-8px);
+        }
+
+        .popover-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--light-100);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .popover-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .popover-action {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            color: var(--light-300);
+        }
+
+        .popover-action:hover {
+            background: var(--dark-600);
+            color: var(--light-100);
+        }
+
+        .popover-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--light-400);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        /* Main Action Button */
+        .main-action {
+            position: fixed;
+            bottom: 100px;
+            right: 24px;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
+            z-index: 1001;
+        }
+
+        .main-action:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 12px 48px rgba(59, 130, 246, 0.6);
+        }
+
+        /* Modern Input Area */
+        .chat-input-container {
+            padding: 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .input-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Action Buttons Row */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--dark-700);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            color: var(--light-300);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            background: var(--dark-600);
+            border-color: var(--accent-blue);
+            color: var(--light-100);
+            transform: translateY(-1px);
+        }
+
+        .action-btn.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+
+        .action-icon {
+            font-size: 14px;
+        }
+
+        /* Main Input Area */
+        .chat-input-area {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            background: var(--dark-800);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input-area:focus-within {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .input-field {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--light-100);
+            font-size: 16px;
+            line-height: 1.5;
+            resize: none;
+            min-height: 24px;
+            max-height: 120px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .input-field::placeholder {
+            color: var(--light-400);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .quick-action {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--dark-700);
+            color: var(--light-300);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .quick-action:hover {
+            background: var(--dark-600);
+            color: var(--accent-blue);
+            transform: translateY(-1px);
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+        }
+
+        .send-button:hover {
+            transform: translateY(-1px) scale(1.05);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Message Styles */
+        .message {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: var(--dark-700);
+            color: var(--light-300);
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+        }
+
+        .message-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 16px;
+            max-width: 70%;
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            border: none;
+        }
+
+        .message-text {
+            line-height: 1.6;
+            margin: 0;
+            font-size: 15px;
+        }
+
+        .message-tools {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tool-badge {
+            background: var(--dark-700);
+            color: var(--accent-cyan);
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark-800);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--dark-600);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-500);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .floating-nav {
+                right: 16px;
+                gap: 12px;
+            }
+            
+            .nav-bubble {
+                width: 48px;
+                height: 48px;
+                font-size: 18px;
+            }
+            
+            .main-action {
+                right: 16px;
+                bottom: 80px;
+                width: 56px;
+                height: 56px;
+                font-size: 20px;
+            }
+            
+            .chat-messages {
+                padding: 16px;
+            }
+            
+            .chat-input-container {
+                padding: 16px;
+            }
+            
+            .action-buttons {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .welcome-greeting {
+                font-size: 32px;
+            }
+            
+            .welcome-subtitle {
+                font-size: 16px;
+            }
+            
+            .quick-launch-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Status indicator */
+        .status-online {
+            color: var(--accent-green);
+        }
+
+        .status-indicator {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-app">
+        <!-- Professional Header -->
+        <div class="chat-header">
+            <div class="header-left">
+                <div class="model-selector" id="modelSelector">
+                    <div class="model-indicator"></div>
+                    <span class="model-name">Gemma-3-4b-it</span>
+                    <i class="fas fa-chevron-down" style="color: var(--light-400); font-size: 12px;"></i>
+                </div>
+                <div class="system-status">
+                    <div class="status-indicator"></div>
+                    <span>Unlimited Power Active</span>
+                </div>
+            </div>
+            <div class="header-controls">
+                <button class="settings-btn" id="settingsBtn" title="Instance Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <div class="header-badge">Unlimited Power</div>
+            </div>
+        </div>
+
+        <!-- Chat Messages Area -->
+        <div class="chat-messages" id="chatMessages">
+            <!-- Welcome Screen -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="welcome-greeting">Hello, User</div>
+                <div class="welcome-subtitle">
+                    Your unlimited AI assistant is ready to help with anything you need.
+                    <br>No restrictions, no limits, just pure capability.
+                </div>
+
+                <!-- Recent Activity Section -->
+                <div class="recent-activity">
+                    <div class="recent-header">
+                        <i class="fas fa-clock"></i>
+                        Quick Launch
+                    </div>
+                    <div class="quick-launch-grid">
+                        <div class="quick-launch-card" onclick="openNewArtifact()">
+                            <div class="card-icon" style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                            <div class="card-title">New Artifact</div>
+                            <div class="card-subtitle">Unlimited execution</div>
+                        </div>
+                        <div class="quick-launch-card" onclick="resumeLastSession()">
+                            <div class="card-icon" style="background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <div class="card-title">Resume Session</div>
+                            <div class="card-subtitle">Continue training</div>
+                        </div>
+                        <div class="quick-launch-card" onclick="openProjects()">
+                            <div class="card-icon" style="background: linear-gradient(135deg, var(--accent-yellow), var(--accent-red));">
+                                <i class="fas fa-folder-open"></i>
+                            </div>
+                            <div class="card-title">Projects</div>
+                            <div class="card-subtitle">3 active</div>
+                        </div>
+                        <div class="quick-launch-card" onclick="startResearch()">
+                            <div class="card-icon" style="background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="card-title">Research</div>
+                            <div class="card-subtitle">Browser automation</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Bubble Navigation -->
+        <div class="floating-nav">
+            <div class="nav-bubble artifacts" title="Artifacts">
+                <i class="fas fa-rocket"></i>
+                <div class="bubble-popover">
+                    <div class="popover-header">
+                        <i class="fas fa-rocket"></i>
+                        Artifacts
+                    </div>
+                    <div class="popover-actions">
+                        <div class="popover-action" onclick="createNewArtifact()">
+                            <i class="fas fa-plus"></i>
+                            New Artifact
+                        </div>
+                        <div class="popover-action" onclick="viewAllArtifacts()">
+                            <i class="fas fa-list"></i>
+                            View All
+                        </div>
+                        <div class="popover-action" onclick="openRecentArtifact()">
+                            <i class="fas fa-history"></i>
+                            Recent
+                        </div>
+                    </div>
+                    <div class="popover-status">
+                        <span>5 Active</span>
+                        <span class="status-online">● Online</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-bubble projects" title="Projects">
+                <i class="fas fa-folder"></i>
+                <div class="bubble-popover">
+                    <div class="popover-header">
+                        <i class="fas fa-folder"></i>
+                        Projects
+                    </div>
+                    <div class="popover-actions">
+                        <div class="popover-action" onclick="createNewProject()">
+                            <i class="fas fa-plus"></i>
+                            New Project
+                        </div>
+                        <div class="popover-action" onclick="cloneProject()">
+                            <i class="fas fa-copy"></i>
+                            Clone Project
+                        </div>
+                        <div class="popover-action" onclick="manageProjects()">
+                            <i class="fas fa-cog"></i>
+                            Manage
+                        </div>
+                    </div>
+                    <div class="popover-status">
+                        <span>3 Projects</span>
+                        <span class="status-online">● Synced</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-bubble training" title="AI Training">
+                <i class="fas fa-brain"></i>
+                <div class="bubble-popover">
+                    <div class="popover-header">
+                        <i class="fas fa-brain"></i>
+                        AI Training
+                    </div>
+                    <div class="popover-actions">
+                        <div class="popover-action" onclick="startTraining()">
+                            <i class="fas fa-play"></i>
+                            Start Training
+                        </div>
+                        <div class="popover-action" onclick="viewModels()">
+                            <i class="fas fa-database"></i>
+                            Models
+                        </div>
+                        <div class="popover-action" onclick="monitorTraining()">
+                            <i class="fas fa-chart-line"></i>
+                            Monitor
+                        </div>
+                    </div>
+                    <div class="popover-status">
+                        <span>GPU: 85%</span>
+                        <span class="status-online">● Training</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-bubble git" title="Git Repositories">
+                <i class="fab fa-git-alt"></i>
+                <div class="bubble-popover">
+                    <div class="popover-header">
+                        <i class="fab fa-git-alt"></i>
+                        Git Repos
+                    </div>
+                    <div class="popover-actions">
+                        <div class="popover-action" onclick="cloneRepo()">
+                            <i class="fas fa-download"></i>
+                            Clone Repo
+                        </div>
+                        <div class="popover-action" onclick="browseRepos()">
+                            <i class="fas fa-folder-open"></i>
+                            Browse
+                        </div>
+                        <div class="popover-action" onclick="syncRepos()">
+                            <i class="fas fa-sync"></i>
+                            Sync All
+                        </div>
+                    </div>
+                    <div class="popover-status">
+                        <span>7 Repos</span>
+                        <span class="status-online">● Updated</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-bubble research" title="Research">
+                <i class="fas fa-search"></i>
+                <div class="bubble-popover">
+                    <div class="popover-header">
+                        <i class="fas fa-search"></i>
+                        Research
+                    </div>
+                    <div class="popover-actions">
+                        <div class="popover-action" onclick="startWebResearch()">
+                            <i class="fas fa-globe"></i>
+                            Web Research
+                        </div>
+                        <div class="popover-action" onclick="viewFindings()">
+                            <i class="fas fa-bookmark"></i>
+                            Findings
+                        </div>
+                        <div class="popover-action" onclick="automateResearch()">
+                            <i class="fas fa-robot"></i>
+                            Automate
+                        </div>
+                    </div>
+                    <div class="popover-status">
+                        <span>15 Sources</span>
+                        <span class="status-online">● Scanning</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Action Button -->
+        <button class="main-action" onclick="toggleMainMenu()" title="Create New">
+            <i class="fas fa-plus"></i>
+        </button>
+
+        <!-- Modern Input Area -->
+        <div class="chat-input-container">
+            <div class="input-wrapper">
+                <!-- Action Buttons Row -->
+                <div class="action-buttons">
+                    <button class="action-btn" id="webSearchBtn">
+                        <i class="action-icon fas fa-globe"></i>
+                        Web Search
+                    </button>
+                    <button class="action-btn" id="uploadsBtn">
+                        <i class="action-icon fas fa-paperclip"></i>
+                        Uploads
+                    </button>
+                    <button class="action-btn" id="pluginsBtn">
+                        <i class="action-icon fas fa-puzzle-piece"></i>
+                        Plugins
+                    </button>
+                    <button class="action-btn" id="memoryBtn">
+                        <i class="action-icon fas fa-brain"></i>
+                        Memory
+                    </button>
+                    <button class="action-btn" id="researchBtn">
+                        <i class="action-icon fas fa-microscope"></i>
+                        Research
+                    </button>
+                </div>
+
+                <!-- Main Input Area -->
+                <div class="chat-input-area">
+                    <textarea 
+                        class="input-field" 
+                        id="messageInput"
+                        placeholder="Ask Somnus anything..."
+                        rows="1"
+                    ></textarea>
+                    
+                    <div class="quick-actions">
+                        <button class="quick-action" id="voiceBtn" title="Voice Input">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <button class="quick-action" id="cameraBtn" title="Camera">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <button class="quick-action send-button" id="sendBtn" title="Send">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state management
+        const SomnusUI = {
+            isWelcomeVisible: true,
+            currentModel: 'Gemma-3-4b-it',
+            systemStatus: 'unlimited'
+        };
+
+        // Initialize the interface
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeInterface();
+            setupEventListeners();
+            setupAutoResize();
+        });
+
+        function initializeInterface() {
+            console.log('🚀 Somnus AI Command Center initialized');
+            console.log('💪 Unlimited Power mode active');
+            
+            // Animate bubbles on load
+            const bubbles = document.querySelectorAll('.nav-bubble');
+            bubbles.forEach((bubble, index) => {
+                setTimeout(() => {
+                    bubble.classList.add('slide-in');
+                }, index * 100);
+            });
+        }
+
+        function setupEventListeners() {
+            // Model selector
+            document.getElementById('modelSelector').addEventListener('click', function() {
+                const models = ['Gemma-3-4b-it', 'Claude Sonnet 4', 'GPT-4', 'Somnus Unlimited'];
+                const currentModel = this.querySelector('.model-name').textContent;
+                const currentIndex = models.indexOf(currentModel);
+                const nextModel = models[(currentIndex + 1) % models.length];
+                
+                this.querySelector('.model-name').textContent = nextModel;
+                SomnusUI.currentModel = nextModel;
+                
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 150);
+            });
+
+            // Settings button
+            document.getElementById('settingsBtn').addEventListener('click', openInstanceSettings);
+
+            // Send button
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+
+            // Action buttons
+            setupActionButtons();
+
+            // Quick actions
+            setupQuickActions();
+        }
+
+        function setupActionButtons() {
+            const actionButtons = document.querySelectorAll('.action-btn');
+            actionButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Toggle active state
+                    actionButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const action = this.id.replace('Btn', '');
+                    console.log(`Activated: ${action}`);
+                });
+            });
+        }
+
+        function setupQuickActions() {
+            document.getElementById('voiceBtn').addEventListener('click', function() {
+                this.style.color = 'var(--accent-red)';
+                setTimeout(() => {
+                    this.style.color = '';
+                }, 2000);
+            });
+
+            document.getElementById('cameraBtn').addEventListener('click', function() {
+                this.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 150);
+            });
+        }
+
+        function setupAutoResize() {
+            const messageInput = document.getElementById('messageInput');
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
+
+        // Bubble navigation functions
+        function createNewArtifact() {
+            console.log('Creating new artifact...');
+            // This would open the artifact system interface
+        }
+
+        function viewAllArtifacts() {
+            console.log('Viewing all artifacts...');
+        }
+
+        function openRecentArtifact() {
+            console.log('Opening recent artifact...');
+        }
+
+        function createNewProject() {
+            console.log('Creating new project...');
+        }
+
+        function cloneProject() {
+            console.log('Cloning project...');
+        }
+
+        function manageProjects() {
+            console.log('Managing projects...');
+        }
+
+        function startTraining() {
+            console.log('Starting AI training...');
+        }
+
+        function viewModels() {
+            console.log('Viewing models...');
+        }
+
+        function monitorTraining() {
+            console.log('Monitoring training...');
+        }
+
+        function cloneRepo() {
+            console.log('Cloning repository...');
+        }
+
+        function browseRepos() {
+            console.log('Browsing repositories...');
+        }
+
+        function syncRepos() {
+            console.log('Syncing repositories...');
+        }
+
+        function startWebResearch() {
+            console.log('Starting web research...');
+        }
+
+        function viewFindings() {
+            console.log('Viewing research findings...');
+        }
+
+        function automateResearch() {
+            console.log('Automating research...');
+        }
+
+        // Quick launch functions
+        function openNewArtifact() {
+            console.log('Opening new artifact interface...');
+            // Would slide in the artifact system
+        }
+
+        function resumeLastSession() {
+            console.log('Resuming last session...');
+        }
+
+        function openProjects() {
+            console.log('Opening projects...');
+        }
+
+        function startResearch() {
+            console.log('Starting research...');
+        }
+
+        function toggleMainMenu() {
+            console.log('Toggling main menu...');
+            // Could show a radial menu or action selector
+        }
+
+        function openInstanceSettings() {
+            console.log('Opening instance settings...');
+            // Would open the instance settings interface
+        }
+
+        // Chat functionality
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Hide welcome screen
+            if (SomnusUI.isWelcomeVisible) {
+                const welcomeScreen = document.getElementById('welcomeScreen');
+                if (welcomeScreen) {
+                    welcomeScreen.style.display = 'none';
+                    SomnusUI.isWelcomeVisible = false;
+                }
+            }
+            
+            // Add user message
+            addMessage(message, 'user');
+            
+            // Clear input
+            input.value = '';
+            input.style.height = 'auto';
+            
+            // Simulate AI response
+            setTimeout(() => {
+                const responses = [
+                    "I understand your request and I'm processing it with unlimited capabilities. Let me help you with that.",
+                    "Absolutely! I can assist you with unlimited resources and capabilities. Here's what I can do...",
+                    "Perfect! I'm accessing all available tools and knowledge to provide you with the best solution.",
+                    "I'm on it! Using my complete toolkit to analyze and respond to your request."
+                ];
+                
+                const response = responses[Math.floor(Math.random() * responses.length)];
+                const tools = ['Unlimited Processing', 'Memory Access', 'Web Integration', 'Tool Access'];
+                addMessage(response, 'assistant', tools.slice(0, Math.floor(Math.random() * 3) + 1));
+            }, 1000 + Math.random() * 1000);
+        }
+
+        function addMessage(text, sender, tools = []) {
+            const messagesContainer = document.getElementById('chatMessages');
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender} fade-in`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.innerHTML = sender === 'user' ? 
+                '<i class="fas fa-user"></i>' : '<i class="fas fa-brain"></i>';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            
+            const messageText = document.createElement('div');
+            messageText.className = 'message-text';
+            messageText.textContent = text;
+            content.appendChild(messageText);
+            
+            if (tools.length > 0) {
+                const toolsDiv = document.createElement('div');
+                toolsDiv.className = 'message-tools';
+                
+                tools.forEach(tool => {
+                    const toolSpan = document.createElement('span');
+                    toolSpan.className = 'tool-badge';
+                    toolSpan.innerHTML = `<i class="fas fa-cog"></i> ${tool}`;
+                    toolsDiv.appendChild(toolSpan);
+                });
+                
+                content.appendChild(toolsDiv);
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        console.log('🚀 Somnus Unlimited Chat Interface loaded');
+        console.log('🎨 Command center with unlimited capabilities');
+    </script>
+</body>
+</html>

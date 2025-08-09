@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Somnus AI Collaboration - Multi-Agent Orchestration</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Your exact Somnus Color Palette */
+            --dark-950: #0a0a0f;
+            --dark-900: #0f0f1a;
+            --dark-800: #1a1a2e;
+            --dark-700: #16213e;
+            --dark-600: #1f2937;
+            --light-100: #f8fafc;
+            --light-200: #e2e8f0;
+            --light-300: #cbd5e1;
+            --light-400: #94a3b8;
+            --light-500: #64748b;
+            
+            /* Your exact Accent Colors */
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-green: #10b981;
+            --accent-cyan: #06b6d4;
+            
+            /* Your exact Glass Effects */
+            --glass-bg: rgba(31, 41, 55, 0.7);
+            --glass-border: rgba(148, 163, 184, 0.1);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--dark-950) 0%, var(--dark-900) 100%);
+            color: var(--light-100);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Modern Collaboration Container */
+        .collaboration-app {
+            display: flex;
+            height: 100vh;
+            background: var(--dark-900);
+        }
+
+        /* Agent Orchestration Sidebar */
+        .agents-sidebar {
+            width: 320px;
+            background: var(--dark-800);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .agents-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .collaboration-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 32px;
+            color: white;
+            animation: orchestration-pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes orchestration-pulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+            }
+            50% { 
+                transform: scale(1.05);
+                box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);
+            }
+        }
+
+        .collaboration-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--light-100);
+            margin-bottom: 4px;
+        }
+
+        .collaboration-subtitle {
+            font-size: 12px;
+            color: var(--light-400);
+        }
+
+        .orchestration-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--dark-700);
+            border-radius: 12px;
+            margin-top: 12px;
+            font-size: 11px;
+            color: var(--accent-cyan);
+        }
+
+        .status-pulse {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Agent List */
+        .agents-list {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .agent-section {
+            margin-bottom: 20px;
+        }
+
+        .agent-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--light-400);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .agent-count {
+            background: var(--accent-blue);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+        .agent-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--glass-shadow);
+            border-color: var(--accent-cyan);
+        }
+
+        .agent-card.active {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: var(--accent-cyan);
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .agent-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .agent-avatar.researcher {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+        }
+
+        .agent-avatar.coder {
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+        }
+
+        .agent-avatar.analyst {
+            background: linear-gradient(135deg, var(--accent-yellow), var(--accent-red));
+        }
+
+        .agent-avatar.coordinator {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+        }
+
+        .agent-info {
+            flex: 1;
+        }
+
+        .agent-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--light-100);
+            margin-bottom: 2px;
+        }
+
+        .agent-role {
+            font-size: 10px;
+            color: var(--light-400);
+        }
+
+        .agent-status {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .agent-status.ready {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .agent-status.working {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-blue);
+        }
+
+        .agent-status.synthesizing {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--accent-purple);
+        }
+
+        .agent-capabilities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .capability-badge {
+            background: var(--dark-700);
+            color: var(--light-400);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 9px;
+            font-weight: 500;
+        }
+
+        /* Main Chat Area */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg, var(--dark-900) 0%, var(--dark-950) 100%);
+        }
+
+        /* Collaboration Header */
+        .chat-header {
+            height: 70px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: var(--glass-shadow);
+        }
+
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .session-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .session-details h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .session-meta {
+            font-size: 12px;
+            color: var(--light-400);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .orchestration-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .control-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--dark-700);
+            color: var(--light-300);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            background: var(--dark-600);
+            color: var(--accent-cyan);
+            transform: translateY(-1px);
+        }
+
+        .control-btn.active {
+            background: var(--accent-cyan);
+            color: white;
+        }
+
+        /* Collaboration Messages */
+        .chat-messages {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Welcome Screen for Collaboration */
+        .collaboration-welcome {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .welcome-orchestration-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 32px;
+            font-size: 48px;
+            color: white;
+            animation: gentle-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes gentle-glow {
+            0%, 100% { 
+                box-shadow: 0 8px 32px rgba(6, 182, 212, 0.3);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 12px 48px rgba(59, 130, 246, 0.4);
+                transform: scale(1.02);
+            }
+        }
+
+        .welcome-greeting {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 50%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .welcome-subtitle {
+            font-size: 18px;
+            color: var(--light-400);
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .collaboration-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 32px;
+            width: 100%;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--light-400);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Message Types */
+        .message {
+            display: flex;
+            gap: 16px;
+            max-width: 85%;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.agent-communication {
+            align-self: center;
+            max-width: 90%;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: var(--dark-700);
+            color: var(--light-300);
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: white;
+        }
+
+        .message.agent-communication .message-avatar {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+            color: white;
+        }
+
+        .message-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            position: relative;
+            box-shadow: var(--glass-shadow);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            border: none;
+        }
+
+        .message.agent-communication .message-content {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: var(--accent-purple);
+        }
+
+        .message-text {
+            line-height: 1.6;
+            margin: 0;
+            font-size: 15px;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .message-type {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-purple);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .message-timestamp {
+            font-size: 11px;
+            color: var(--light-500);
+        }
+
+        /* Agent Communication Specific */
+        .agent-communication-content {
+            margin-top: 12px;
+        }
+
+        .task-delegation {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--accent-blue);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 12px;
+        }
+
+        .task-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        .task-status {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: var(--accent-blue);
+            color: white;
+            margin-left: auto;
+        }
+
+        .task-description {
+            font-size: 13px;
+            color: var(--light-300);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .task-participants {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .participant-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--dark-700);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: var(--light-300);
+        }
+
+        .participant-avatar {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            background: var(--accent-cyan);
+        }
+
+        /* Progress Tracking */
+        .progress-section {
+            margin-top: 16px;
+            padding: 12px;
+            background: var(--dark-700);
+            border-radius: 8px;
+        }
+
+        .progress-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--light-300);
+        }
+
+        .progress-percentage {
+            font-size: 12px;
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--dark-600);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        /* Synthesis Display */
+        .synthesis-panel {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent-green);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .synthesis-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .synthesis-icon {
+            color: var(--accent-green);
+            font-size: 14px;
+        }
+
+        .synthesis-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+
+        .agent-contributions {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .contribution-item {
+            background: var(--dark-700);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 12px;
+        }
+
+        .contribution-agent {
+            color: var(--accent-cyan);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .contribution-text {
+            color: var(--light-300);
+            line-height: 1.4;
+        }
+
+        /* Modern Input Area for Collaboration */
+        .chat-input-container {
+            padding: 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .input-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Collaboration Controls */
+        .collaboration-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--dark-700);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            color: var(--light-300);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            background: var(--dark-600);
+            border-color: var(--accent-cyan);
+            color: var(--light-100);
+            transform: translateY(-1px);
+        }
+
+        .action-btn.active {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            color: white;
+        }
+
+        .action-icon {
+            font-size: 14px;
+        }
+
+        /* Main Input Area */
+        .chat-input-area {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            background: var(--dark-800);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input-area:focus-within {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        }
+
+        .input-field {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--light-100);
+            font-size: 16px;
+            line-height: 1.5;
+            resize: none;
+            min-height: 24px;
+            max-height: 120px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .input-field::placeholder {
+            color: var(--light-400);
+        }
+
+        /* Quick Actions for Collaboration */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .quick-action {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--dark-700);
+            color: var(--light-300);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .quick-action:hover {
+            background: var(--dark-600);
+            color: var(--accent-cyan);
+            transform: translateY(-1px);
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: white;
+        }
+
+        .send-button:hover {
+            transform: translateY(-1px) scale(1.05);
+            box-shadow: 0 4px 16px rgba(6, 182, 212, 0.4);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Orchestration Indicators */
+        .orchestration-indicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 12px;
+            color: var(--accent-cyan);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .orchestration-indicator.active {
+            display: flex;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark-800);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--dark-600);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-500);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .agents-sidebar {
+                width: 280px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                position: fixed;
+                z-index: 1000;
+                height: 100vh;
+            }
+            
+            .agents-sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .chat-messages {
+                padding: 16px;
+            }
+            
+            .chat-input-container {
+                padding: 16px;
+            }
+            
+            .collaboration-controls {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .welcome-greeting {
+                font-size: 32px;
+            }
+            
+            .welcome-subtitle {
+                font-size: 16px;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading States */
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .loading-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            animation: loading-bounce 1.4s ease-in-out infinite both;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes loading-bounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+            } 40% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="collaboration-app">
+        <!-- Agent Orchestration Sidebar -->
+        <div class="agents-sidebar">
+            <!-- Collaboration Header -->
+            <div class="agents-header">
+                <div class="collaboration-icon">
+                    <i class="fas fa-network-wired"></i>
+                </div>
+                <div class="collaboration-title">AI Collaboration Hub</div>
+                <div class="collaboration-subtitle">Multi-Agent Orchestration</div>
+                <div class="orchestration-status">
+                    <div class="status-pulse"></div>
+                    <span>Active Orchestration</span>
+                </div>
+            </div>
+
+            <!-- Agent List -->
+            <div class="agents-list">
+                <!-- Active Agents -->
+                <div class="agent-section">
+                    <div class="agent-section-title">
+                        <i class="fas fa-users"></i>
+                        Active Agents
+                        <div class="agent-count">4</div>
+                    </div>
+                    
+                    <div class="agent-card active">
+                        <div class="agent-header">
+                            <div class="agent-avatar coordinator">CO</div>
+                            <div class="agent-info">
+                                <div class="agent-name">Coordinator</div>
+                                <div class="agent-role">Task Orchestration</div>
+                            </div>
+                            <div class="agent-status synthesizing">Synthesizing</div>
+                        </div>
+                        <div class="agent-capabilities">
+                            <div class="capability-badge">Task Delegation</div>
+                            <div class="capability-badge">Response Synthesis</div>
+                            <div class="capability-badge">Coordination</div>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-avatar researcher">RE</div>
+                            <div class="agent-info">
+                                <div class="agent-name">Research Specialist</div>
+                                <div class="agent-role">Information Analysis</div>
+                            </div>
+                            <div class="agent-status working">Researching</div>
+                        </div>
+                        <div class="agent-capabilities">
+                            <div class="capability-badge">Web Research</div>
+                            <div class="capability-badge">Data Analysis</div>
+                            <div class="capability-badge">Source Verification</div>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-avatar coder">CD</div>
+                            <div class="agent-info">
+                                <div class="agent-name">Code Assistant</div>
+                                <div class="agent-role">Programming & Development</div>
+                            </div>
+                            <div class="agent-status working">Coding</div>
+                        </div>
+                        <div class="agent-capabilities">
+                            <div class="capability-badge">Code Generation</div>
+                            <div class="capability-badge">Debugging</div>
+                            <div class="capability-badge">Architecture</div>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-avatar analyst">AN</div>
+                            <div class="agent-info">
+                                <div class="agent-name">Data Analyst</div>
+                                <div class="agent-role">Pattern Recognition</div>
+                            </div>
+                            <div class="agent-status ready">Ready</div>
+                        </div>
+                        <div class="agent-capabilities">
+                            <div class="capability-badge">Statistical Analysis</div>
+                            <div class="capability-badge">Visualization</div>
+                            <div class="capability-badge">Insights</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available Agents -->
+                <div class="agent-section">
+                    <div class="agent-section-title">
+                        <i class="fas fa-plus-circle"></i>
+                        Available Agents
+                        <div class="agent-count">3</div>
+                    </div>
+                    
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-avatar" style="background: linear-gradient(135deg, var(--accent-red), var(--accent-yellow));">CR</div>
+                            <div class="agent-info">
+                                <div class="agent-name">Creative Writer</div>
+                                <div class="agent-role">Content Creation</div>
+                            </div>
+                            <div class="agent-status ready">Ready</div>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-avatar" style="background: linear-gradient(135deg, var(--accent-green), var(--accent-yellow));">TS</div>
+                            <div class="agent-info">
+                                <div class="agent-name">Technical Specialist</div>
+                                <div class="agent-role">System Architecture</div>
+                            </div>
+                            <div class="agent-status ready">Ready</div>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <div class="agent-avatar" style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-red));">QA</div>
+                            <div class="agent-info">
+                                <div class="agent-name">Quality Assurance</div>
+                                <div class="agent-role">Testing & Validation</div>
+                            </div>
+                            <div class="agent-status ready">Ready</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Collaboration Area -->
+        <div class="chat-main">
+            <!-- Collaboration Header -->
+            <div class="chat-header">
+                <div class="session-info">
+                    <div class="session-avatar">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <div class="session-details">
+                        <h2>Multi-Agent Collaboration Session</h2>
+                        <div class="session-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-users"></i>
+                                <span>4 Active Agents</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span>Session: 00:08:42</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-tasks"></i>
+                                <span>3 Tasks Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="orchestration-controls">
+                    <button class="control-btn" id="pauseOrchestration" title="Pause Orchestration">
+                        <i class="fas fa-pause"></i>
+                    </button>
+                    <button class="control-btn active" id="realTimeMode" title="Real-time Mode">
+                        <i class="fas fa-broadcast-tower"></i>
+                    </button>
+                    <button class="control-btn" id="collaborationSettings" title="Collaboration Settings">
+                        <i class="fas fa-cogs"></i>
+                    </button>
+                    <button class="control-btn" id="exportSession" title="Export Session">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Collaboration Messages -->
+            <div class="chat-messages" id="collaborationMessages">
+                <!-- Welcome Screen -->
+                <div class="collaboration-welcome" id="collaborationWelcome">
+                    <div class="welcome-orchestration-icon">
+                        <i class="fas fa-network-wired"></i>
+                    </div>
+                    <div class="welcome-greeting">Multi-Agent AI Collaboration</div>
+                    <div class="welcome-subtitle">
+                        Harness the power of specialized AI agents working together to solve complex problems.
+                        <br>Delegate tasks, coordinate responses, and synthesize unified solutions.
+                    </div>
+                    <div class="collaboration-stats">
+                        <div class="stat-card">
+                            <div class="stat-value">4</div>
+                            <div class="stat-label">Active Agents</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">127</div>
+                            <div class="stat-label">Tasks Completed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">98.7%</div>
+                            <div class="stat-label">Success Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">2.3s</div>
+                            <div class="stat-label">Avg Response</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collaboration Input Area -->
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <!-- Collaboration Controls -->
+                    <div class="collaboration-controls">
+                        <button class="action-btn" id="taskDelegationBtn">
+                            <i class="action-icon fas fa-project-diagram"></i>
+                            Task Delegation
+                        </button>
+                        <button class="action-btn" id="parallelProcessingBtn">
+                            <i class="action-icon fas fa-layer-group"></i>
+                            Parallel Processing
+                        </button>
+                        <button class="action-btn" id="responseSynthesisBtn">
+                            <i class="action-icon fas fa-compress-arrows-alt"></i>
+                            Response Synthesis
+                        </button>
+                        <button class="action-btn" id="agentCollaborationBtn">
+                            <i class="action-icon fas fa-handshake"></i>
+                            Agent Collaboration
+                        </button>
+                        <button class="action-btn" id="devSessionBtn">
+                            <i class="action-icon fas fa-code"></i>
+                            Dev Session
+                        </button>
+                    </div>
+
+                    <!-- Main Input Area -->
+                    <div class="chat-input-area">
+                        <textarea 
+                            class="input-field" 
+                            id="collaborationInput"
+                            placeholder="Describe a complex task for the AI collaboration team to work on..."
+                            rows="1"
+                        ></textarea>
+                        
+                        <div class="quick-actions">
+                            <button class="quick-action" id="voiceInputBtn" title="Voice Input">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <button class="quick-action" id="fileUploadBtn" title="Upload Files">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            <button class="quick-action" id="orchestrationBtn" title="Orchestration Mode">
+                                <i class="fas fa-sitemap"></i>
+                            </button>
+                            <button class="quick-action send-button" id="sendCollaborationBtn" title="Send to Collaboration Team">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orchestration Indicator -->
+    <div class="orchestration-indicator" id="orchestrationIndicator">
+        <div class="loading-dots">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+        </div>
+        <span>AI agents are collaborating...</span>
+    </div>
+
+    <script>
+        // Collaboration state management
+        const collaborationState = {
+            activeAgents: [
+                { id: 'coordinator', name: 'Coordinator', role: 'Task Orchestration', status: 'synthesizing', avatar: 'CO' },
+                { id: 'researcher', name: 'Research Specialist', role: 'Information Analysis', status: 'working', avatar: 'RE' },
+                { id: 'coder', name: 'Code Assistant', role: 'Programming & Development', status: 'working', avatar: 'CD' },
+                { id: 'analyst', name: 'Data Analyst', role: 'Pattern Recognition', status: 'ready', avatar: 'AN' }
+            ],
+            activeTasks: [],
+            sessionStartTime: Date.now(),
+            messageHistory: [],
+            orchestrationMode: 'parallel_collaborative'
+        };
+
+        // Initialize collaboration interface
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeOrchestration();
+            initializeControls();
+            initializeAgentInteractions();
+            startSessionTimer();
+            initializeAutoResize();
+        });
+
+        // Auto-resize textarea
+        function initializeAutoResize() {
+            const collaborationInput = document.getElementById('collaborationInput');
+            collaborationInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+        }
+
+        // Collaboration controls
+        function initializeControls() {
+            const controlButtons = document.querySelectorAll('.action-btn');
+            controlButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Toggle active state
+                    this.classList.toggle('active');
+                    
+                    // Handle specific collaboration modes
+                    const mode = this.id.replace('Btn', '');
+                    handleCollaborationMode(mode);
+                    
+                    // Visual feedback
+                    const icon = this.querySelector('.action-icon');
+                    icon.style.transform = 'scale(1.2)';
+                    setTimeout(() => {
+                        icon.style.transform = 'scale(1)';
+                    }, 150);
+                });
+            });
+
+            // Agent card interactions
+            const agentCards = document.querySelectorAll('.agent-card');
+            agentCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    // Remove active class from all cards
+                    agentCards.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked card
+                    this.classList.add('active');
+                    
+                    // Show agent details or initiate direct communication
+                    const agentName = this.querySelector('.agent-name').textContent;
+                    showAgentDetails(agentName);
+                });
+            });
+
+            // Orchestration controls
+            document.getElementById('pauseOrchestration')?.addEventListener('click', toggleOrchestration);
+            document.getElementById('realTimeMode')?.addEventListener('click', toggleRealTimeMode);
+            document.getElementById('collaborationSettings')?.addEventListener('click', showCollaborationSettings);
+            document.getElementById('exportSession')?.addEventListener('click', exportCollaborationSession);
+        }
+
+        // Initialize orchestration system
+        function initializeOrchestration() {
+            updateOrchestrationStatus();
+            startCollaborationHeartbeat();
+        }
+
+        // Agent interactions
+        function initializeAgentInteractions() {
+            // Simulate agent activity
+            setInterval(() => {
+                simulateAgentActivity();
+            }, 5000);
+        }
+
+        // Session timer
+        function startSessionTimer() {
+            setInterval(() => {
+                updateSessionTimer();
+            }, 1000);
+        }
+
+        // Collaboration mode handlers
+        function handleCollaborationMode(mode) {
+            console.log(`Collaboration mode: ${mode}`);
+            
+            switch(mode) {
+                case 'taskDelegation':
+                    initializeTaskDelegation();
+                    break;
+                case 'parallelProcessing':
+                    enableParallelProcessing();
+                    break;
+                case 'responseSynthesis':
+                    startResponseSynthesis();
+                    break;
+                case 'agentCollaboration':
+                    enhanceAgentCollaboration();
+                    break;
+                case 'devSession':
+                    startDevelopmentSession();
+                    break;
+            }
+        }
+
+        // Send collaboration message
+        function sendCollaborationMessage() {
+            const input = document.getElementById('collaborationInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Hide welcome screen
+            const welcomeScreen = document.getElementById('collaborationWelcome');
+            if (welcomeScreen) {
+                welcomeScreen.style.display = 'none';
+            }
+            
+            // Add user message
+            addCollaborationMessage(message, 'user');
+            
+            // Clear input
+            input.value = '';
+            input.style.height = 'auto';
+            
+            // Show orchestration indicator
+            showOrchestrationIndicator();
+            
+            // Simulate AI collaboration workflow
+            setTimeout(() => {
+                startCollaborationWorkflow(message);
+            }, 1000);
+        }
+
+        // Collaboration workflow simulation
+        function startCollaborationWorkflow(userInput) {
+            // Phase 1: Task Analysis and Delegation
+            setTimeout(() => {
+                addTaskDelegationMessage(userInput);
+            }, 1500);
+            
+            // Phase 2: Agent Progress Updates
+            setTimeout(() => {
+                addAgentProgressMessage('researcher', 'Conducting research on the topic...');
+            }, 3000);
+            
+            setTimeout(() => {
+                addAgentProgressMessage('coder', 'Analyzing code requirements...');
+            }, 4500);
+            
+            // Phase 3: Synthesis
+            setTimeout(() => {
+                addSynthesisMessage();
+            }, 6000);
+            
+            // Phase 4: Final Response
+            setTimeout(() => {
+                addFinalCollaborationResponse(userInput);
+                hideOrchestrationIndicator();
+            }, 8000);
+        }
+
+        // Add collaboration messages
+        function addCollaborationMessage(text, sender, type = 'standard') {
+            const messagesContainer = document.getElementById('collaborationMessages');
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender} ${type}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            
+            if (sender === 'user') {
+                avatar.innerHTML = '<i class="fas fa-user"></i>';
+            } else if (sender === 'agent-communication') {
+                avatar.innerHTML = '<i class="fas fa-network-wired"></i>';
+            } else {
+                avatar.innerHTML = '<i class="fas fa-users"></i>';
+            }
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            
+            if (type === 'task-delegation') {
+                content.innerHTML = createTaskDelegationContent(text);
+            } else if (type === 'synthesis') {
+                content.innerHTML = createSynthesisContent(text);
+            } else {
+                const messageText = document.createElement('div');
+                messageText.className = 'message-text';
+                messageText.textContent = text;
+                content.appendChild(messageText);
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Task delegation message
+        function addTaskDelegationMessage(userInput) {
+            const content = `
+                <div class="message-header">
+                    <div class="message-type">Task Delegation</div>
+                    <div class="message-timestamp">${new Date().toLocaleTimeString()}</div>
+                </div>
+                <div class="task-delegation">
+                    <div class="task-header">
+                        <div class="task-title">Multi-Agent Task Analysis</div>
+                        <div class="task-status">Active</div>
+                    </div>
+                    <div class="task-description">${userInput}</div>
+                    <div class="task-participants">
+                        <div class="participant-badge">
+                            <div class="participant-avatar" style="background: var(--accent-purple);"></div>
+                            Research Specialist
+                        </div>
+                        <div class="participant-badge">
+                            <div class="participant-avatar" style="background: var(--accent-green);"></div>
+                            Code Assistant
+                        </div>
+                        <div class="participant-badge">
+                            <div class="participant-avatar" style="background: var(--accent-cyan);"></div>
+                            Coordinator
+                        </div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-header">
+                            <div class="progress-label">Task Progress</div>
+                            <div class="progress-percentage">25%</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 25%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            addCollaborationMessage(content, 'agent-communication', 'task-delegation');
+        }
+
+        // Agent progress message
+        function addAgentProgressMessage(agentType, progressText) {
+            const agentInfo = {
+                researcher: { name: 'Research Specialist', color: 'var(--accent-purple)' },
+                coder: { name: 'Code Assistant', color: 'var(--accent-green)' },
+                analyst: { name: 'Data Analyst', color: 'var(--accent-yellow)' }
+            };
+            
+            const agent = agentInfo[agentType];
+            const content = `
+                <div class="message-header">
+                    <div class="message-type">Agent Progress Update</div>
+                    <div class="message-timestamp">${new Date().toLocaleTimeString()}</div>
+                </div>
+                <div class="agent-communication-content">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <div style="width: 20px; height: 20px; background: ${agent.color}; border-radius: 6px;"></div>
+                        <strong>${agent.name}</strong>
+                    </div>
+                    <div>${progressText}</div>
+                </div>
+            `;
+            
+            addCollaborationMessage(content, 'agent-communication');
+        }
+
+        // Synthesis message
+        function addSynthesisMessage() {
+            const content = `
+                <div class="message-header">
+                    <div class="message-type">Response Synthesis</div>
+                    <div class="message-timestamp">${new Date().toLocaleTimeString()}</div>
+                </div>
+                <div class="synthesis-panel">
+                    <div class="synthesis-header">
+                        <div class="synthesis-icon">
+                            <i class="fas fa-compress-arrows-alt"></i>
+                        </div>
+                        <div class="synthesis-title">Combining Agent Contributions</div>
+                    </div>
+                    <div class="agent-contributions">
+                        <div class="contribution-item">
+                            <div class="contribution-agent">Research Specialist</div>
+                            <div class="contribution-text">Comprehensive research data and validated sources compiled</div>
+                        </div>
+                        <div class="contribution-item">
+                            <div class="contribution-agent">Code Assistant</div>
+                            <div class="contribution-text">Technical implementation approach and code structure defined</div>
+                        </div>
+                        <div class="contribution-item">
+                            <div class="contribution-agent">Coordinator</div>
+                            <div class="contribution-text">Integration strategy and unified response framework established</div>
+                        </div>
+                    </div>
+                    <div style="color: var(--accent-green); font-size: 12px; margin-top: 8px;">
+                        <i class="fas fa-check-circle"></i> Synthesis complete - generating unified response
+                    </div>
+                </div>
+            `;
+            
+            addCollaborationMessage(content, 'agent-communication', 'synthesis');
+        }
+
+        // Final collaboration response
+        function addFinalCollaborationResponse(userInput) {
+            const responses = [
+                `Based on the collaborative analysis from our specialized agents, here's a comprehensive solution that combines research insights, technical implementation, and strategic coordination to address your request effectively.`,
+                `Our multi-agent team has synthesized a unified response incorporating research findings, code analysis, and coordination strategies to provide you with a thorough and well-rounded solution.`,
+                `Through collaborative processing involving research, development, and coordination agents, we've assembled a comprehensive response that addresses all aspects of your query.`
+            ];
+            
+            const response = responses[Math.floor(Math.random() * responses.length)];
+            
+            addCollaborationMessage(response, 'assistant');
+            
+            // Update collaboration stats
+            updateCollaborationStats();
+        }
+
+        // Utility functions
+        function showOrchestrationIndicator() {
+            const indicator = document.getElementById('orchestrationIndicator');
+            if (indicator) {
+                indicator.classList.add('active');
+            }
+        }
+
+        function hideOrchestrationIndicator() {
+            const indicator = document.getElementById('orchestrationIndicator');
+            if (indicator) {
+                indicator.classList.remove('active');
+            }
+        }
+
+        function updateSessionTimer() {
+            const elapsed = Date.now() - collaborationState.sessionStartTime;
+            const hours = Math.floor(elapsed / 3600000).toString().padStart(2, '0');
+            const minutes = Math.floor((elapsed % 3600000) / 60000).toString().padStart(2, '0');
+            const seconds = Math.floor((elapsed % 60000) / 1000).toString().padStart(2, '0');
+            
+            const timerElements = document.querySelectorAll('[data-timer]');
+            timerElements.forEach(el => {
+                el.textContent = `Session: ${hours}:${minutes}:${seconds}`;
+            });
+        }
+
+        function simulateAgentActivity() {
+            // Randomly update agent statuses
+            const statuses = ['ready', 'working', 'synthesizing'];
+            const agents = document.querySelectorAll('.agent-status');
+            
+            agents.forEach(status => {
+                if (Math.random() < 0.3) { // 30% chance to update
+                    const newStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                    status.className = `agent-status ${newStatus}`;
+                    status.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+                }
+            });
+        }
+
+        function updateOrchestrationStatus() {
+            // Update orchestration status display
+            console.log('Orchestration status updated');
+        }
+
+        function startCollaborationHeartbeat() {
+            setInterval(() => {
+                // Maintain collaboration connections
+                console.log('Collaboration heartbeat');
+            }, 10000);
+        }
+
+        function updateCollaborationStats() {
+            // Update collaboration statistics
+            const statValues = document.querySelectorAll('.stat-value');
+            if (statValues.length >= 2) {
+                // Increment tasks completed
+                const tasksElement = statValues[1];
+                const currentTasks = parseInt(tasksElement.textContent);
+                tasksElement.textContent = currentTasks + 1;
+            }
+        }
+
+        // Event handlers
+        function toggleOrchestration() {
+            console.log('Toggle orchestration');
+        }
+
+        function toggleRealTimeMode() {
+            console.log('Toggle real-time mode');
+        }
+
+        function showCollaborationSettings() {
+            console.log('Show collaboration settings');
+        }
+
+        function exportCollaborationSession() {
+            console.log('Export collaboration session');
+        }
+
+        function showAgentDetails(agentName) {
+            console.log(`Show details for ${agentName}`);
+        }
+
+        function initializeTaskDelegation() {
+            console.log('Initialize task delegation');
+        }
+
+        function enableParallelProcessing() {
+            console.log('Enable parallel processing');
+        }
+
+        function startResponseSynthesis() {
+            console.log('Start response synthesis');
+        }
+
+        function enhanceAgentCollaboration() {
+            console.log('Enhance agent collaboration');
+        }
+
+        function startDevelopmentSession() {
+            console.log('Start development session');
+        }
+
+        // Main send function
+        document.getElementById('sendCollaborationBtn')?.addEventListener('click', sendCollaborationMessage);
+
+        // Enter key to send (Shift+Enter for new line)
+        document.getElementById('collaborationInput')?.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendCollaborationMessage();
+            }
+        });
+
+        // Quick action handlers
+        document.getElementById('voiceInputBtn')?.addEventListener('click', function() {
+            console.log('Voice input activated');
+        });
+
+        document.getElementById('fileUploadBtn')?.addEventListener('click', function() {
+            console.log('File upload activated');
+        });
+
+        document.getElementById('orchestrationBtn')?.addEventListener('click', function() {
+            this.classList.toggle('active');
+            console.log('Orchestration mode toggled');
+        });
+
+        console.log('🚀 Somnus AI Collaboration Interface loaded');
+        console.log('🤖 Multi-agent orchestration system online');
+        console.log('🔗 Agent communication protocols active');
+    </script>
+</body>
+</html>

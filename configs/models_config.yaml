@@ -1,0 +1,145 @@
+# MORPHEUS CHAT - Model Registry & Capabilities
+# Production model configuration with hot-swap and quantization support
+
+model_registry:
+  # Local transformer models
+  local_models:
+    llama2_7b:
+      name: "Llama-2-7B-Chat"
+      path: "/models/llama2-7b-chat"
+      format: "huggingface"
+      context_length: 4096
+      capabilities: ["text", "chat", "reasoning"]
+      quantization:
+        enabled: true
+        bits: 4
+        method: "bitsandbytes"
+      memory_requirements:
+        gpu_memory: "6GB"
+        system_memory: "8GB"
+      
+    mistral_7b:
+      name: "Mistral-7B-Instruct"
+      path: "/models/mistral-7b-instruct"
+      format: "huggingface"
+      context_length: 8192
+      capabilities: ["text", "chat", "code", "reasoning"]
+      quantization:
+        enabled: true
+        bits: 4
+        method: "bitsandbytes"
+      memory_requirements:
+        gpu_memory: "6GB"
+        system_memory: "8GB"
+    
+    deepseek_coder:
+      name: "DeepSeek-Coder-7B-Instruct"
+      path: "/models/deepseek-coder-7b"
+      format: "huggingface"
+      context_length: 16384
+      capabilities: ["text", "code", "reasoning", "tools"]
+      quantization:
+        enabled: true
+        bits: 4
+        method: "bitsandbytes"
+      memory_requirements:
+        gpu_memory: "8GB"
+        system_memory: "10GB"
+
+  # API-based models (proxy support)
+  api_models:
+    gpt4_proxy:
+      name: "GPT-4-Turbo-Proxy"
+      provider: "openai"
+      model_id: "gpt-4-turbo-preview"
+      context_length: 128000
+      capabilities: ["text", "chat", "code", "reasoning", "vision", "tools"]
+      api_config:
+        base_url: "https://api.openai.com/v1"
+        rate_limits:
+          requests_per_minute: 500
+          tokens_per_minute: 30000
+    
+    claude_proxy:
+      name: "Claude-3-Sonnet-Proxy"
+      provider: "anthropic"
+      model_id: "claude-3-sonnet-20240229"
+      context_length: 200000
+      capabilities: ["text", "chat", "code", "reasoning", "vision", "tools"]
+      api_config:
+        base_url: "https://api.anthropic.com"
+        rate_limits:
+          requests_per_minute: 50
+          tokens_per_minute: 40000
+
+# Model loading and inference configuration
+inference:
+  # Hardware acceleration
+  device_preferences: ["cuda", "mps", "cpu"]
+  mixed_precision: true
+  torch_compile: true
+  
+  # Memory optimization
+  offload_to_cpu: true
+  gradient_checkpointing: false  # Inference only
+  attention_implementation: "flash_attention_2"
+  
+  # Generation parameters
+  default_generation_config:
+    temperature: 0.7
+    top_p: 0.9
+    top_k: 50
+    max_new_tokens: 2048
+    repetition_penalty: 1.1
+    do_sample: true
+    
+  # Safety and content filtering
+  safety_config:
+    enable_content_filter: true
+    toxicity_threshold: 0.8
+    prompt_injection_detection: true
+    max_generation_time: 30  # seconds
+
+# Model switching and hot-swap
+model_management:
+  # Hot-swap configuration
+  hot_swap_enabled: true
+  preload_models: ["mistral_7b"]  # Keep in memory
+  lazy_loading: true
+  
+  # Resource management
+  max_concurrent_models: 2
+  memory_cleanup_threshold: 0.9
+  model_cache_size: "16GB"
+  
+  # Fallback chain
+  fallback_models:
+    - "mistral_7b"     # Primary fallback
+    - "llama2_7b"      # Secondary fallback
+    - "gpt4_proxy"     # Ultimate fallback (if API available)
+
+# Capability-based routing
+capability_routing:
+  text_generation: ["mistral_7b", "llama2_7b", "gpt4_proxy"]
+  code_generation: ["deepseek_coder", "mistral_7b", "gpt4_proxy"]
+  reasoning_tasks: ["gpt4_proxy", "claude_proxy", "mistral_7b"]
+  vision_tasks: ["gpt4_proxy", "claude_proxy"]
+  tool_usage: ["deepseek_coder", "gpt4_proxy", "claude_proxy"]
+
+# Agentic model support
+agentic_models:
+  enable_tool_calling: true
+  enable_function_calling: true
+  enable_code_execution: true
+  
+  # Agent safety
+  max_tool_calls_per_turn: 5
+  tool_call_timeout: 30
+  recursive_call_limit: 3
+  
+  # Agent capabilities
+  supported_tools:
+    - "python_interpreter"
+    - "web_search"
+    - "file_operations"
+    - "calculator"

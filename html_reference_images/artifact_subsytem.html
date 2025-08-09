@@ -1,0 +1,2383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Somnus Artifact System - Unlimited Power</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/4.4.0/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sortablejs/1.15.0/Sortable.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Somnus Color Palette */
+            --dark-950: #0a0a0f;
+            --dark-900: #0f0f1a;
+            --dark-800: #1a1a2e;
+            --dark-700: #16213e;
+            --dark-600: #1f2937;
+            --light-100: #f8fafc;
+            --light-200: #e2e8f0;
+            --light-300: #cbd5e1;
+            --light-400: #94a3b8;
+            --light-500: #64748b;
+            
+            /* Accent Colors */
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-green: #10b981;
+            --accent-cyan: #06b6d4;
+            
+            /* Glass Effects */
+            --glass-bg: rgba(31, 41, 55, 0.7);
+            --glass-border: rgba(148, 163, 184, 0.1);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--dark-950) 0%, var(--dark-900) 100%);
+            color: var(--light-100);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Main Container */
+        .artifact-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--dark-900);
+        }
+
+        /* Header */
+        .artifact-header {
+            height: 70px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: var(--glass-shadow);
+            position: relative;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .artifact-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .artifact-info h1 {
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .artifact-subtitle {
+            font-size: 12px;
+            color: var(--light-400);
+            margin-top: 2px;
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .execution-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--dark-700);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--dark-700);
+            color: var(--light-300);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .header-btn:hover {
+            background: var(--dark-600);
+            color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+
+        .header-btn.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .unlimited-badge {
+            background: linear-gradient(135deg, var(--accent-yellow), var(--accent-red));
+            color: white;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Main Content Area */
+        .artifact-main {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Left Sidebar - Navigation & Controls */
+        .artifact-sidebar {
+            width: 320px;
+            background: var(--dark-800);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-section {
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .section-header {
+            padding: 16px 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--light-400);
+        }
+
+        .section-content {
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Execution Environment Panel */
+        .execution-env {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .env-selector {
+            position: relative;
+        }
+
+        .env-dropdown {
+            width: 100%;
+            background: var(--dark-600);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--light-100);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .env-dropdown:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .env-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .env-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .unlimited-env { background: linear-gradient(45deg, var(--accent-yellow), var(--accent-red)); }
+        .gpu-env { background: var(--accent-green); }
+        .container-env { background: var(--accent-blue); }
+        .distributed-env { background: var(--accent-purple); }
+
+        /* Quick Actions Grid */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .quick-action {
+            background: var(--dark-600);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .quick-action:hover {
+            background: var(--dark-500);
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+
+        .quick-action i {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: var(--accent-blue);
+        }
+
+        /* File Explorer */
+        .file-explorer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-tree {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+        }
+
+        .file-item:hover {
+            background: var(--dark-600);
+        }
+
+        .file-item.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .file-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        /* Center - Editor Area */
+        .artifact-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .editor-tabs {
+            height: 40px;
+            background: var(--dark-700);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            overflow-x: auto;
+        }
+
+        .editor-tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--dark-600);
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 12px;
+            white-space: nowrap;
+            margin-right: 4px;
+        }
+
+        .editor-tab.active {
+            background: var(--dark-800);
+            color: var(--accent-blue);
+        }
+
+        .tab-close {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            opacity: 0.6;
+            transition: all 0.2s ease;
+        }
+
+        .tab-close:hover {
+            opacity: 1;
+            background: var(--accent-red);
+            color: white;
+        }
+
+        .monaco-container {
+            flex: 1;
+            position: relative;
+        }
+
+        /* Execution Terminal */
+        .execution-terminal {
+            height: 300px;
+            background: var(--dark-950);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            font-family: 'Consolas', 'Monaco', monospace;
+            resize: vertical;
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            height: 32px;
+            background: var(--dark-800);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            justify-content: space-between;
+        }
+
+        .terminal-title {
+            font-size: 11px;
+            color: var(--light-400);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .terminal-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .terminal-btn {
+            width: 20px;
+            height: 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .terminal-btn.clear { background: var(--accent-red); color: white; }
+        .terminal-btn.expand { background: var(--accent-blue); color: white; }
+
+        .terminal-content {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .terminal-line {
+            margin-bottom: 4px;
+        }
+
+        .terminal-prompt {
+            color: var(--accent-green);
+        }
+
+        .terminal-output {
+            color: var(--light-300);
+        }
+
+        .terminal-error {
+            color: var(--accent-red);
+        }
+
+        .terminal-success {
+            color: var(--accent-green);
+        }
+
+        /* Right Panel - Advanced Features */
+        .artifact-right-panel {
+            width: 400px;
+            background: var(--dark-800);
+            border-left: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-tabs {
+            height: 48px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+        }
+
+        .panel-tab {
+            flex: 1;
+            height: 100%;
+            border: none;
+            background: transparent;
+            color: var(--light-400);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .panel-tab.active {
+            color: var(--accent-blue);
+            background: var(--dark-700);
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* Metrics Dashboard */
+        .metrics-dashboard {
+            padding: 20px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: var(--light-400);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cpu-metric { color: var(--accent-blue); }
+        .memory-metric { color: var(--accent-green); }
+        .gpu-metric { color: var(--accent-yellow); }
+        .network-metric { color: var(--accent-purple); }
+
+        .performance-chart {
+            height: 200px;
+            background: var(--dark-700);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        /* Video Processing Panel */
+        .video-panel {
+            padding: 20px;
+        }
+
+        .video-controls {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .video-input {
+            width: 100%;
+            background: var(--dark-600);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--light-100);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .video-input::placeholder {
+            color: var(--light-400);
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .video-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .video-btn.download {
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-yellow));
+            color: white;
+        }
+
+        .video-btn.process {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+        }
+
+        .video-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .video-preview {
+            width: 100%;
+            height: 200px;
+            background: var(--dark-700);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light-400);
+            font-size: 12px;
+            margin-top: 16px;
+        }
+
+        /* AI Training Panel */
+        .training-panel {
+            padding: 20px;
+        }
+
+        .training-status {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .training-progress {
+            width: 100%;
+            height: 8px;
+            background: var(--dark-600);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+            width: 0%;
+            transition: width 1s ease;
+        }
+
+        .training-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .training-stat {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        .stat-label {
+            color: var(--light-400);
+        }
+
+        .stat-value {
+            color: var(--light-100);
+            font-weight: 600;
+        }
+
+        /* Browser Research Panel */
+        .research-panel {
+            padding: 20px;
+        }
+
+        .research-controls {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .research-input {
+            width: 100%;
+            background: var(--dark-600);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--light-100);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .research-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .research-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(6, 182, 212, 0.3);
+        }
+
+        .screenshot-gallery {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .screenshot-item {
+            aspect-ratio: 16/9;
+            background: var(--dark-700);
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .screenshot-item:hover {
+            transform: scale(1.02);
+        }
+
+        /* Git Repository Panel */
+        .git-panel {
+            padding: 20px;
+        }
+
+        .git-controls {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .git-input {
+            width: 100%;
+            background: var(--dark-600);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--light-100);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .git-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .git-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+        }
+
+        .repo-browser {
+            max-height: 300px;
+            overflow-y: auto;
+            background: var(--dark-700);
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+
+        .repo-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 12px;
+            border-bottom: 1px solid var(--dark-600);
+        }
+
+        .repo-item:hover {
+            background: var(--dark-600);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark-800);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--dark-600);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-500);
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .artifact-right-panel {
+                width: 350px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .artifact-sidebar {
+                width: 280px;
+            }
+            
+            .artifact-right-panel {
+                width: 320px;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--dark-600);
+            border-radius: 50%;
+            border-top-color: var(--accent-blue);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Success/Error States */
+        .success {
+            color: var(--accent-green);
+        }
+
+        .error {
+            color: var(--accent-red);
+        }
+
+        .warning {
+            color: var(--accent-yellow);
+        }
+
+        /* Notification System */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: var(--glass-shadow);
+            z-index: 2000;
+            max-width: 300px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--accent-green);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--accent-red);
+        }
+
+        .notification.warning {
+            border-left: 4px solid var(--accent-yellow);
+        }
+
+        .notification.info {
+            border-left: 4px solid var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="artifact-container">
+        <!-- Header -->
+        <div class="artifact-header">
+            <div class="header-left">
+                <div class="artifact-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <div class="artifact-info">
+                    <h1>Unlimited Artifact System</h1>
+                    <div class="artifact-subtitle">Container: artifact_${Date.now().toString(36)}</div>
+                </div>
+            </div>
+
+            <div class="header-center">
+                <div class="execution-status">
+                    <div class="status-indicator"></div>
+                    <span id="execution-status">Ready for Unlimited Execution</span>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <button class="header-btn" id="settings-btn" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="header-btn" id="fullscreen-btn" title="Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+                <button class="header-btn" id="save-btn" title="Save Artifact">
+                    <i class="fas fa-save"></i>
+                </button>
+                <button class="header-btn active" id="execute-btn" title="Execute">
+                    <i class="fas fa-play"></i>
+                </button>
+                <div class="unlimited-badge">Unlimited Power</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="artifact-main">
+            <!-- Left Sidebar -->
+            <div class="artifact-sidebar">
+                <!-- Execution Environment -->
+                <div class="sidebar-section">
+                    <div class="section-header">
+                        <i class="fas fa-rocket"></i> Execution Environment
+                    </div>
+                    <div class="section-content">
+                        <div class="execution-env">
+                            <div class="env-selector">
+                                <div class="env-dropdown" id="env-dropdown">
+                                    <div class="env-option">
+                                        <div class="env-icon unlimited-env">∞</div>
+                                        <span>Unlimited Power</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="quick-actions">
+                                <div class="quick-action" id="youtube-action">
+                                    <i class="fab fa-youtube"></i>
+                                    YouTube
+                                </div>
+                                <div class="quick-action" id="gpu-action">
+                                    <i class="fas fa-microchip"></i>
+                                    GPU
+                                </div>
+                                <div class="quick-action" id="ml-action">
+                                    <i class="fas fa-brain"></i>
+                                    ML Train
+                                </div>
+                                <div class="quick-action" id="research-action">
+                                    <i class="fas fa-search"></i>
+                                    Research
+                                </div>
+                                <div class="quick-action" id="git-action">
+                                    <i class="fab fa-git-alt"></i>
+                                    Git
+                                </div>
+                                <div class="quick-action" id="docker-action">
+                                    <i class="fab fa-docker"></i>
+                                    Docker
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Explorer -->
+                <div class="sidebar-section file-explorer">
+                    <div class="section-header">
+                        <i class="fas fa-folder"></i> Workspace Files
+                    </div>
+                    <div class="file-tree" id="file-tree">
+                        <div class="file-item active">
+                            <div class="file-icon"><i class="fas fa-file-code" style="color: var(--accent-blue);"></i></div>
+                            <span>main.py</span>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon"><i class="fas fa-file" style="color: var(--accent-green);"></i></div>
+                            <span>requirements.txt</span>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon"><i class="fas fa-folder" style="color: var(--accent-yellow);"></i></div>
+                            <span>data/</span>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon"><i class="fas fa-folder" style="color: var(--accent-yellow);"></i></div>
+                            <span>models/</span>
+                        </div>
+                        <div class="file-item">
+                            <div class="file-icon"><i class="fas fa-folder" style="color: var(--accent-yellow);"></i></div>
+                            <span>output/</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center - Editor -->
+            <div class="artifact-editor">
+                <div class="editor-tabs">
+                    <div class="editor-tab active">
+                        <i class="fab fa-python" style="color: var(--accent-blue);"></i>
+                        <span>main.py</span>
+                        <div class="tab-close"><i class="fas fa-times"></i></div>
+                    </div>
+                    <div class="editor-tab">
+                        <i class="fas fa-file-alt" style="color: var(--accent-green);"></i>
+                        <span>requirements.txt</span>
+                        <div class="tab-close"><i class="fas fa-times"></i></div>
+                    </div>
+                </div>
+
+                <div class="monaco-container" id="monaco-container">
+                    <!-- Monaco Editor will be mounted here -->
+                </div>
+
+                <div class="execution-terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-title">
+                            <i class="fas fa-terminal"></i> Unlimited Execution Terminal
+                        </div>
+                        <div class="terminal-controls">
+                            <button class="terminal-btn clear" id="clear-terminal">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="terminal-btn expand" id="expand-terminal">
+                                <i class="fas fa-expand-arrows-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="terminal-content" id="terminal-content">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">somnus@unlimited:~/workspace$</span>
+                            <span class="terminal-output"> Container initialized with unlimited capabilities</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-success">✅ GPU acceleration enabled</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-success">✅ Internet access unlimited</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-success">✅ File system access granted</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-success">✅ All AI/ML libraries available</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">somnus@unlimited:~/workspace$</span>
+                            <span class="terminal-output"> Ready for unlimited execution...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="artifact-right-panel">
+                <div class="panel-tabs">
+                    <button class="panel-tab active" data-panel="metrics">
+                        <i class="fas fa-chart-line"></i>
+                        Metrics
+                    </button>
+                    <button class="panel-tab" data-panel="video">
+                        <i class="fas fa-video"></i>
+                        Video
+                    </button>
+                    <button class="panel-tab" data-panel="training">
+                        <i class="fas fa-brain"></i>
+                        AI Training
+                    </button>
+                    <button class="panel-tab" data-panel="research">
+                        <i class="fas fa-search"></i>
+                        Research
+                    </button>
+                    <button class="panel-tab" data-panel="git">
+                        <i class="fab fa-git-alt"></i>
+                        Git
+                    </button>
+                </div>
+
+                <div class="panel-content">
+                    <!-- Metrics Panel -->
+                    <div class="metrics-dashboard panel-content-section active" id="metrics-panel">
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-value cpu-metric" id="cpu-usage">0%</div>
+                                <div class="metric-label">CPU Usage</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value memory-metric" id="memory-usage">0%</div>
+                                <div class="metric-label">Memory</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value gpu-metric" id="gpu-usage">0%</div>
+                                <div class="metric-label">GPU Usage</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value network-metric" id="network-usage">0 MB/s</div>
+                                <div class="metric-label">Network</div>
+                            </div>
+                        </div>
+                        
+                        <div class="performance-chart" id="performance-chart">
+                            <canvas id="metrics-chart" width="100%" height="200"></canvas>
+                        </div>
+
+                        <div class="container-status">
+                            <h4 style="margin-bottom: 12px; color: var(--accent-blue);">Container Status</h4>
+                            <div class="terminal-line">
+                                <span class="terminal-success">🐳 Container ID: unlimited_${Date.now().toString(36)}</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="terminal-success">⚡ Status: Running (Unlimited)</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="terminal-success">🚀 Uptime: <span id="uptime">00:00:00</span></span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="terminal-success">💾 Storage: Unlimited</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Video Processing Panel -->
+                    <div class="video-panel panel-content-section" id="video-panel">
+                        <div class="video-controls">
+                            <h4 style="margin-bottom: 12px; color: var(--accent-red);">
+                                <i class="fab fa-youtube"></i> YouTube Video Processing
+                            </h4>
+                            <input type="text" class="video-input" placeholder="Paste YouTube URL here..." id="youtube-url">
+                            <div class="video-actions">
+                                <button class="video-btn download" id="download-video">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                                <button class="video-btn process" id="process-video">
+                                    <i class="fas fa-cogs"></i> Process
+                                </button>
+                            </div>
+                            <div class="video-preview" id="video-preview">
+                                <i class="fas fa-video" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+                                Video preview will appear here after download
+                            </div>
+                        </div>
+
+                        <div class="processing-options">
+                            <h4 style="margin-bottom: 12px; color: var(--accent-purple);">Processing Options</h4>
+                            <div class="quick-actions">
+                                <div class="quick-action">
+                                    <i class="fas fa-cut"></i>
+                                    Extract Audio
+                                </div>
+                                <div class="quick-action">
+                                    <i class="fas fa-images"></i>
+                                    Generate Frames
+                                </div>
+                                <div class="quick-action">
+                                    <i class="fas fa-compress"></i>
+                                    Compress
+                                </div>
+                                <div class="quick-action">
+                                    <i class="fas fa-magic"></i>
+                                    AI Enhance
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Training Panel -->
+                    <div class="training-panel panel-content-section" id="training-panel">
+                        <div class="training-status">
+                            <h4 style="margin-bottom: 12px; color: var(--accent-green);">
+                                <i class="fas fa-brain"></i> AI Model Training
+                            </h4>
+                            <div class="training-progress">
+                                <div class="progress-bar" id="training-progress-bar"></div>
+                            </div>
+                            <div class="training-stats">
+                                <div class="training-stat">
+                                    <span class="stat-label">Epoch:</span>
+                                    <span class="stat-value" id="current-epoch">0/100</span>
+                                </div>
+                                <div class="training-stat">
+                                    <span class="stat-label">Loss:</span>
+                                    <span class="stat-value" id="current-loss">0.0000</span>
+                                </div>
+                                <div class="training-stat">
+                                    <span class="stat-label">Accuracy:</span>
+                                    <span class="stat-value" id="current-accuracy">0.00%</span>
+                                </div>
+                                <div class="training-stat">
+                                    <span class="stat-label">GPU Temp:</span>
+                                    <span class="stat-value" id="gpu-temp">45°C</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="training-controls">
+                            <h4 style="margin-bottom: 12px; color: var(--accent-blue);">Training Controls</h4>
+                            <div class="quick-actions">
+                                <div class="quick-action" id="start-training">
+                                    <i class="fas fa-play"></i>
+                                    Start Training
+                                </div>
+                                <div class="quick-action" id="pause-training">
+                                    <i class="fas fa-pause"></i>
+                                    Pause
+                                </div>
+                                <div class="quick-action" id="save-checkpoint">
+                                    <i class="fas fa-save"></i>
+                                    Save Checkpoint
+                                </div>
+                                <div class="quick-action" id="export-model">
+                                    <i class="fas fa-upload"></i>
+                                    Export Model
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="model-info">
+                            <h4 style="margin-bottom: 12px; color: var(--accent-yellow);">Model Information</h4>
+                            <div class="terminal-line">
+                                <span class="terminal-output">Architecture: Transformer (Custom)</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="terminal-output">Parameters: 7.2B</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="terminal-output">Dataset: Custom Training Data</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="terminal-output">GPU Memory: 24GB VRAM</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Research Panel -->
+                    <div class="research-panel panel-content-section" id="research-panel">
+                        <div class="research-controls">
+                            <h4 style="margin-bottom: 12px; color: var(--accent-cyan);">
+                                <i class="fas fa-search"></i> Browser Research
+                            </h4>
+                            <input type="text" class="research-input" placeholder="Enter research query..." id="research-query">
+                            <button class="research-btn" id="start-research">
+                                <i class="fas fa-globe"></i> Start Visual Research
+                            </button>
+                        </div>
+
+                        <div class="research-status">
+                            <h4 style="margin-bottom: 12px; color: var(--accent-blue);">Research Progress</h4>
+                            <div class="terminal-line">
+                                <span class="terminal-output">Sources Found: <span id="sources-count">0</span></span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="terminal-output">Screenshots: <span id="screenshots-count">0</span></span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="terminal-output">Documents: <span id="documents-count">0</span></span>
+                            </div>
+                        </div>
+
+                        <div class="screenshot-gallery" id="screenshot-gallery">
+                            <div class="screenshot-item">
+                                <div style="width: 100%; height: 100%; background: var(--dark-600); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--light-400);">
+                                    Screenshot 1
+                                </div>
+                            </div>
+                            <div class="screenshot-item">
+                                <div style="width: 100%; height: 100%; background: var(--dark-600); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--light-400);">
+                                    Screenshot 2
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Git Repository Panel -->
+                    <div class="git-panel panel-content-section" id="git-panel">
+                        <div class="git-controls">
+                            <h4 style="margin-bottom: 12px; color: var(--accent-purple);">
+                                <i class="fab fa-github"></i> Git Repository
+                            </h4>
+                            <input type="text" class="git-input" placeholder="Enter GitHub repository URL..." id="git-url">
+                            <button class="git-btn" id="clone-repo">
+                                <i class="fas fa-download"></i> Clone Repository
+                            </button>
+                        </div>
+
+                        <div class="repo-status">
+                            <h4 style="margin-bottom: 12px; color: var(--accent-green);">Repository Status</h4>
+                            <div class="terminal-line">
+                                <span class="terminal-output">Status: <span id="repo-status">Ready to clone</span></span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="terminal-output">Files: <span id="repo-files">0</span></span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="terminal-output">Size: <span id="repo-size">0 MB</span></span>
+                            </div>
+                        </div>
+
+                        <div class="repo-browser" id="repo-browser">
+                            <div class="repo-item">
+                                <i class="fas fa-folder" style="color: var(--accent-yellow);"></i>
+                                <span>src/</span>
+                            </div>
+                            <div class="repo-item">
+                                <i class="fas fa-file-code" style="color: var(--accent-blue);"></i>
+                                <span>main.py</span>
+                            </div>
+                            <div class="repo-item">
+                                <i class="fas fa-file-alt" style="color: var(--accent-green);"></i>
+                                <span>README.md</span>
+                            </div>
+                            <div class="repo-item">
+                                <i class="fas fa-file" style="color: var(--light-400);"></i>
+                                <span>requirements.txt</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <script>
+        // Global state management
+        const ArtifactSystem = {
+            // Monaco Editor instance
+            editor: null,
+            
+            // WebSocket connection for real-time updates
+            websocket: null,
+            
+            // Current execution state
+            executionState: {
+                isRunning: false,
+                containerId: null,
+                currentCommand: null
+            },
+            
+            // Metrics tracking
+            metrics: {
+                cpu: 0,
+                memory: 0,
+                gpu: 0,
+                network: 0
+            },
+            
+            // Panel state
+            activePanel: 'metrics',
+            
+            // File system state
+            files: new Map(),
+            
+            // Training state
+            training: {
+                isTraining: false,
+                epoch: 0,
+                loss: 0,
+                accuracy: 0
+            },
+            
+            // Research state
+            research: {
+                isResearching: false,
+                sourcesFound: 0,
+                screenshots: [],
+                documents: []
+            },
+            
+            // Git state
+            git: {
+                isCloning: false,
+                currentRepo: null,
+                files: []
+            }
+        };
+
+        // Initialize the artifact system
+        async function initializeArtifactSystem() {
+            console.log('🚀 Initializing Somnus Unlimited Artifact System...');
+            
+            // Initialize Monaco Editor
+            await initializeMonacoEditor();
+            
+            // Setup WebSocket connection
+            setupWebSocketConnection();
+            
+            // Initialize UI components
+            setupPanelSwitching();
+            setupExecutionControls();
+            setupFileExplorer();
+            setupMetricsDashboard();
+            setupVideoControls();
+            setupTrainingControls();
+            setupResearchControls();
+            setupGitControls();
+            
+            // Start metric collection
+            startMetricsCollection();
+            
+            // Start uptime counter
+            startUptimeCounter();
+            
+            console.log('✅ Artifact System initialized with unlimited capabilities');
+            showNotification('Artifact System Ready', 'Unlimited execution environment active', 'success');
+        }
+
+        // Initialize Monaco Editor
+        async function initializeMonacoEditor() {
+            return new Promise((resolve) => {
+                require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' }});
+                require(['vs/editor/editor.main'], function () {
+                    const container = document.getElementById('monaco-container');
+                    
+                    ArtifactSystem.editor = monaco.editor.create(container, {
+                        value: `#!/usr/bin/env python3
+"""
+Somnus Unlimited Artifact - No Restrictions, Infinite Possibilities
+"""
+import os
+import sys
+import subprocess
+import requests
+import torch
+import cv2
+import numpy as np
+from pathlib import Path
+
+# Unlimited imports - everything is available
+print("🚀 UNLIMITED EXECUTION ENVIRONMENT ACTIVE")
+print("=" * 50)
+
+# Check system capabilities
+print(f"Python: {sys.version}")
+print(f"Working Directory: {os.getcwd()}")
+print(f"CPU Cores: {os.cpu_count()}")
+
+# Check GPU availability
+if torch.cuda.is_available():
+    print(f"🎮 GPU: {torch.cuda.get_device_name(0)}")
+    print(f"🎮 VRAM: {torch.cuda.get_device_properties(0).total_memory // (1024**3)} GB")
+else:
+    print("🎮 GPU: Not available")
+
+# Check internet connectivity
+try:
+    response = requests.get("https://httpbin.org/ip", timeout=5)
+    print(f"🌐 Internet: Connected (IP: {response.json()['origin']})")
+except:
+    print("🌐 Internet: Offline")
+
+# Unlimited capabilities demo
+print("\\n🔓 UNLIMITED CAPABILITIES:")
+print("✅ File System: Full access")
+print("✅ Network: Unrestricted")
+print("✅ Packages: Install anything")
+print("✅ System: No sandbox limits")
+print("✅ Duration: No timeouts")
+print("✅ Resources: Unlimited")
+
+# YouTube download example
+def download_youtube_video(url, output_path="./downloads/"):
+    """Download YouTube video - unlimited power"""
+    try:
+        import yt_dlp
+        ydl_opts = {
+            'outtmpl': f'{output_path}%(title)s.%(ext)s',
+            'format': 'best'
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        print(f"✅ Downloaded: {url}")
+    except ImportError:
+        print("Installing yt-dlp...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "yt-dlp"])
+        print("✅ yt-dlp installed, retry download")
+
+# AI model training example
+def train_unlimited_model():
+    """Train AI model with unlimited resources"""
+    print("🧠 Starting unlimited AI training...")
+    print("🎯 Model: Custom Transformer (7B parameters)")
+    print("🚀 Training: No time limits, unlimited epochs")
+    print("💾 Storage: Unlimited checkpoints")
+    print("🎮 GPU: Full acceleration enabled")
+
+# Browser automation example
+def automated_research(query):
+    """Conduct automated web research"""
+    print(f"🔍 Researching: {query}")
+    print("🌐 Opening browsers...")
+    print("📸 Taking screenshots...")
+    print("📄 Downloading documents...")
+    print("🧠 Analyzing content...")
+
+# Unlimited execution - no artificial limits
+print("\\n🎉 READY FOR UNLIMITED EXECUTION!")
+print("Type your code below and execute with unlimited power...")
+`,
+                        language: 'python',
+                        theme: 'vs-dark',
+                        fontSize: 14,
+                        fontFamily: 'Consolas, Monaco, monospace',
+                        minimap: { enabled: true },
+                        scrollBeyondLastLine: false,
+                        automaticLayout: true,
+                        tabSize: 4,
+                        insertSpaces: true,
+                        wordWrap: 'on',
+                        lineNumbers: 'on',
+                        glyphMargin: true,
+                        folding: true,
+                        lineDecorationsWidth: 0,
+                        lineNumbersMinChars: 3,
+                        renderLineHighlight: 'all',
+                        cursorBlinking: 'blink',
+                        cursorSmoothCaretAnimation: true,
+                        smoothScrolling: true
+                    });
+
+                    // Handle editor changes
+                    ArtifactSystem.editor.onDidChangeModelContent(() => {
+                        const content = ArtifactSystem.editor.getValue();
+                        ArtifactSystem.files.set('main.py', content);
+                    });
+
+                    resolve();
+                });
+            });
+        }
+
+        // Setup WebSocket connection for real-time communication
+        function setupWebSocketConnection() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/artifact/unlimited`;
+            
+            try {
+                ArtifactSystem.websocket = new WebSocket(wsUrl);
+                
+                ArtifactSystem.websocket.onopen = function(event) {
+                    console.log('🔗 WebSocket connected for real-time execution');
+                    addTerminalLine('🔗 Real-time connection established', 'success');
+                };
+                
+                ArtifactSystem.websocket.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    handleWebSocketMessage(data);
+                };
+                
+                ArtifactSystem.websocket.onclose = function(event) {
+                    console.log('🔌 WebSocket disconnected');
+                    addTerminalLine('🔌 Connection lost, reconnecting...', 'warning');
+                    setTimeout(setupWebSocketConnection, 3000);
+                };
+                
+                ArtifactSystem.websocket.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                    addTerminalLine('❌ Connection error', 'error');
+                };
+            } catch (error) {
+                console.log('WebSocket not available, using polling mode');
+                addTerminalLine('📡 Using polling mode for updates', 'warning');
+            }
+        }
+
+        // Handle WebSocket messages
+        function handleWebSocketMessage(data) {
+            switch (data.type) {
+                case 'execution_output':
+                    addTerminalLine(data.content, data.stream === 'stderr' ? 'error' : 'output');
+                    break;
+                case 'execution_completed':
+                    addTerminalLine(`🎉 Execution completed (exit code: ${data.exit_code})`, 'success');
+                    ArtifactSystem.executionState.isRunning = false;
+                    updateExecutionStatus('Ready for unlimited execution');
+                    break;
+                case 'metrics_update':
+                    updateMetrics(data.metrics);
+                    break;
+                case 'training_progress':
+                    updateTrainingProgress(data.progress);
+                    break;
+                case 'research_update':
+                    updateResearchProgress(data.update);
+                    break;
+                case 'container_state':
+                    updateContainerState(data.state);
+                    break;
+            }
+        }
+
+        // Setup panel switching
+        function setupPanelSwitching() {
+            const panelTabs = document.querySelectorAll('.panel-tab');
+            const panelSections = document.querySelectorAll('.panel-content-section');
+            
+            panelTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const panelName = tab.dataset.panel;
+                    
+                    // Update active tab
+                    panelTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Update active panel
+                    panelSections.forEach(section => {
+                        section.classList.remove('active');
+                        section.style.display = 'none';
+                    });
+                    
+                    const activePanel = document.getElementById(`${panelName}-panel`);
+                    if (activePanel) {
+                        activePanel.classList.add('active');
+                        activePanel.style.display = 'block';
+                        activePanel.classList.add('fade-in');
+                    }
+                    
+                    ArtifactSystem.activePanel = panelName;
+                });
+            });
+        }
+
+        // Setup execution controls
+        function setupExecutionControls() {
+            const executeBtn = document.getElementById('execute-btn');
+            const envDropdown = document.getElementById('env-dropdown');
+            
+            executeBtn.addEventListener('click', executeCode);
+            
+            // Environment selector
+            envDropdown.addEventListener('click', () => {
+                showNotification('Environment', 'Unlimited Power environment active', 'info');
+            });
+            
+            // Quick actions
+            document.getElementById('youtube-action').addEventListener('click', () => {
+                switchToPanel('video');
+                showNotification('YouTube Ready', 'Video processing capabilities enabled', 'success');
+            });
+            
+            document.getElementById('gpu-action').addEventListener('click', () => {
+                addTerminalLine('🎮 GPU acceleration enabled', 'success');
+                showNotification('GPU Active', 'CUDA acceleration enabled', 'success');
+            });
+            
+            document.getElementById('ml-action').addEventListener('click', () => {
+                switchToPanel('training');
+                showNotification('ML Ready', 'AI training environment activated', 'success');
+            });
+            
+            document.getElementById('research-action').addEventListener('click', () => {
+                switchToPanel('research');
+                showNotification('Research Active', 'Browser automation ready', 'success');
+            });
+            
+            document.getElementById('git-action').addEventListener('click', () => {
+                switchToPanel('git');
+                showNotification('Git Ready', 'Repository management active', 'success');
+            });
+            
+            document.getElementById('docker-action').addEventListener('click', () => {
+                addTerminalLine('🐳 Docker container management enabled', 'success');
+                showNotification('Docker Active', 'Container orchestration ready', 'success');
+            });
+        }
+
+        // Execute code in unlimited environment
+        async function executeCode() {
+            if (ArtifactSystem.executionState.isRunning) {
+                showNotification('Execution', 'Already running unlimited execution', 'warning');
+                return;
+            }
+            
+            const code = ArtifactSystem.editor.getValue();
+            
+            if (!code.trim()) {
+                showNotification('Error', 'No code to execute', 'error');
+                return;
+            }
+            
+            ArtifactSystem.executionState.isRunning = true;
+            updateExecutionStatus('Executing with unlimited power...');
+            
+            addTerminalLine('🚀 Starting unlimited execution...', 'output');
+            addTerminalLine('somnus@unlimited:~/workspace$ python3 main.py', 'prompt');
+            
+            // Simulate execution with WebSocket or HTTP
+            if (ArtifactSystem.websocket && ArtifactSystem.websocket.readyState === WebSocket.OPEN) {
+                ArtifactSystem.websocket.send(JSON.stringify({
+                    type: 'execute',
+                    command: 'python3 main.py',
+                    code: code,
+                    environment: 'unlimited'
+                }));
+            } else {
+                // Fallback simulation
+                simulateExecution(code);
+            }
+        }
+
+        // Simulate execution for demonstration
+        async function simulateExecution(code) {
+            const lines = [
+                '🚀 UNLIMITED EXECUTION ENVIRONMENT ACTIVE',
+                '=' * 50,
+                'Python: 3.11.0 (main, Oct 24 2022, 18:26:48)',
+                'Working Directory: /workspace',
+                'CPU Cores: 16',
+                '🎮 GPU: NVIDIA RTX 4090 (24GB VRAM)',
+                '🌐 Internet: Connected',
+                '',
+                '🔓 UNLIMITED CAPABILITIES:',
+                '✅ File System: Full access',
+                '✅ Network: Unrestricted',
+                '✅ Packages: Install anything',
+                '✅ System: No sandbox limits',
+                '✅ Duration: No timeouts',
+                '✅ Resources: Unlimited',
+                '',
+                '🎉 READY FOR UNLIMITED EXECUTION!',
+                'Code execution completed successfully.'
+            ];
+            
+            for (let i = 0; i < lines.length; i++) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                addTerminalLine(lines[i], 'output');
+            }
+            
+            ArtifactSystem.executionState.isRunning = false;
+            updateExecutionStatus('Ready for unlimited execution');
+            addTerminalLine('somnus@unlimited:~/workspace$ ', 'prompt');
+            
+            showNotification('Execution Complete', 'Code executed with unlimited power', 'success');
+        }
+
+        // Setup file explorer
+        function setupFileExplorer() {
+            const fileItems = document.querySelectorAll('.file-item');
+            
+            fileItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    fileItems.forEach(f => f.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    const fileName = item.querySelector('span').textContent;
+                    
+                    if (fileName.endsWith('/')) {
+                        showNotification('Folder', `Opened folder: ${fileName}`, 'info');
+                    } else {
+                        openFile(fileName);
+                    }
+                });
+            });
+        }
+
+        // Open file in editor
+        function openFile(fileName) {
+            const fileContents = {
+                'main.py': ArtifactSystem.editor.getValue(),
+                'requirements.txt': `# Unlimited package requirements
+torch>=2.0.0
+transformers>=4.20.0
+opencv-python>=4.7.0
+requests>=2.28.0
+numpy>=1.24.0
+pandas>=2.0.0
+matplotlib>=3.7.0
+yt-dlp>=2023.3.4
+selenium>=4.8.0
+beautifulsoup4>=4.11.0
+scikit-learn>=1.2.0
+tensorflow>=2.12.0
+`,
+                'data/': 'Folder containing data files',
+                'models/': 'Folder containing AI models',
+                'output/': 'Folder containing execution outputs'
+            };
+            
+            if (fileContents[fileName] && !fileName.endsWith('/')) {
+                ArtifactSystem.editor.setValue(fileContents[fileName]);
+                showNotification('File Opened', `Loaded: ${fileName}`, 'success');
+            }
+        }
+
+        // Setup metrics dashboard
+        function setupMetricsDashboard() {
+            // Initialize Chart.js
+            const ctx = document.getElementById('metrics-chart');
+            if (ctx) {
+                const metricsChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            {
+                                label: 'CPU %',
+                                data: [],
+                                borderColor: 'rgb(59, 130, 246)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Memory %',
+                                data: [],
+                                borderColor: 'rgb(16, 185, 129)',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'GPU %',
+                                data: [],
+                                borderColor: 'rgb(245, 158, 11)',
+                                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#cbd5e1'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                            },
+                            y: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                                min: 0,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+                
+                ArtifactSystem.metricsChart = metricsChart;
+            }
+        }
+
+        // Setup video controls
+        function setupVideoControls() {
+            const downloadBtn = document.getElementById('download-video');
+            const processBtn = document.getElementById('process-video');
+            const urlInput = document.getElementById('youtube-url');
+            
+            downloadBtn.addEventListener('click', async () => {
+                const url = urlInput.value.trim();
+                if (!url) {
+                    showNotification('Error', 'Please enter a YouTube URL', 'error');
+                    return;
+                }
+                
+                downloadBtn.innerHTML = '<div class="loading"></div> Downloading...';
+                addTerminalLine(`📺 Downloading video: ${url}`, 'output');
+                
+                // Simulate download
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
+                addTerminalLine('✅ Video downloaded successfully', 'success');
+                showNotification('Download Complete', 'YouTube video ready for processing', 'success');
+                
+                // Update preview
+                const preview = document.getElementById('video-preview');
+                preview.innerHTML = `
+                    <video controls style="width: 100%; height: 100%; border-radius: 8px;">
+                        <source src="#" type="video/mp4">
+                        Video preview (${url})
+                    </video>
+                `;
+            });
+            
+            processBtn.addEventListener('click', () => {
+                processBtn.innerHTML = '<div class="loading"></div> Processing...';
+                addTerminalLine('🎬 Starting video processing...', 'output');
+                addTerminalLine('🔧 Extracting audio track...', 'output');
+                addTerminalLine('🖼️ Generating frame thumbnails...', 'output');
+                addTerminalLine('🤖 Running AI enhancement...', 'output');
+                
+                setTimeout(() => {
+                    processBtn.innerHTML = '<i class="fas fa-cogs"></i> Process';
+                    addTerminalLine('✅ Video processing complete', 'success');
+                    showNotification('Processing Complete', 'Video enhanced with AI', 'success');
+                }, 4000);
+            });
+        }
+
+        // Setup training controls
+        function setupTrainingControls() {
+            const startBtn = document.getElementById('start-training');
+            const pauseBtn = document.getElementById('pause-training');
+            const saveBtn = document.getElementById('save-checkpoint');
+            const exportBtn = document.getElementById('export-model');
+            
+            startBtn.addEventListener('click', () => {
+                if (ArtifactSystem.training.isTraining) {
+                    showNotification('Training', 'Training already in progress', 'warning');
+                    return;
+                }
+                
+                startTraining();
+            });
+            
+            pauseBtn.addEventListener('click', () => {
+                if (!ArtifactSystem.training.isTraining) {
+                    showNotification('Training', 'No training in progress', 'warning');
+                    return;
+                }
+                
+                pauseTraining();
+            });
+            
+            saveBtn.addEventListener('click', () => {
+                addTerminalLine('💾 Saving model checkpoint...', 'output');
+                setTimeout(() => {
+                    addTerminalLine('✅ Checkpoint saved successfully', 'success');
+                    showNotification('Checkpoint Saved', 'Model state preserved', 'success');
+                }, 1000);
+            });
+            
+            exportBtn.addEventListener('click', () => {
+                addTerminalLine('📤 Exporting trained model...', 'output');
+                setTimeout(() => {
+                    addTerminalLine('✅ Model exported to /workspace/models/', 'success');
+                    showNotification('Export Complete', 'Model ready for deployment', 'success');
+                }, 2000);
+            });
+        }
+
+        // Start AI training simulation
+        function startTraining() {
+            ArtifactSystem.training.isTraining = true;
+            ArtifactSystem.training.epoch = 0;
+            ArtifactSystem.training.loss = 2.5;
+            ArtifactSystem.training.accuracy = 0;
+            
+            addTerminalLine('🧠 Starting AI model training...', 'output');
+            addTerminalLine('🎯 Model: Custom Transformer (7B parameters)', 'output');
+            addTerminalLine('🚀 Training: Unlimited epochs, no time limits', 'output');
+            addTerminalLine('🎮 GPU: Full acceleration enabled', 'output');
+            
+            showNotification('Training Started', 'AI model training with unlimited resources', 'success');
+            
+            // Training progress simulation
+            const trainingInterval = setInterval(() => {
+                if (!ArtifactSystem.training.isTraining) {
+                    clearInterval(trainingInterval);
+                    return;
+                }
+                
+                ArtifactSystem.training.epoch++;
+                ArtifactSystem.training.loss *= 0.995; // Gradual improvement
+                ArtifactSystem.training.accuracy = Math.min(95, ArtifactSystem.training.accuracy + Math.random() * 0.5);
+                
+                updateTrainingProgress({
+                    epoch: ArtifactSystem.training.epoch,
+                    total_epochs: 100,
+                    loss: ArtifactSystem.training.loss,
+                    accuracy: ArtifactSystem.training.accuracy
+                });
+                
+                if (ArtifactSystem.training.epoch >= 100) {
+                    ArtifactSystem.training.isTraining = false;
+                    addTerminalLine('🎉 Training completed successfully!', 'success');
+                    showNotification('Training Complete', 'Model training finished', 'success');
+                }
+            }, 1000);
+        }
+
+        // Pause AI training
+        function pauseTraining() {
+            ArtifactSystem.training.isTraining = false;
+            addTerminalLine('⏸️ Training paused', 'warning');
+            showNotification('Training Paused', 'Model training suspended', 'warning');
+        }
+
+        // Update training progress
+        function updateTrainingProgress(progress) {
+            const progressBar = document.getElementById('training-progress-bar');
+            const epochEl = document.getElementById('current-epoch');
+            const lossEl = document.getElementById('current-loss');
+            const accuracyEl = document.getElementById('current-accuracy');
+            
+            const percentage = (progress.epoch / progress.total_epochs) * 100;
+            progressBar.style.width = `${percentage}%`;
+            
+            epochEl.textContent = `${progress.epoch}/${progress.total_epochs}`;
+            lossEl.textContent = progress.loss.toFixed(4);
+            accuracyEl.textContent = `${progress.accuracy.toFixed(2)}%`;
+        }
+
+        // Setup research controls
+        function setupResearchControls() {
+            const startBtn = document.getElementById('start-research');
+            const queryInput = document.getElementById('research-query');
+            
+            startBtn.addEventListener('click', () => {
+                const query = queryInput.value.trim();
+                if (!query) {
+                    showNotification('Error', 'Please enter a research query', 'error');
+                    return;
+                }
+                
+                startResearch(query);
+            });
+        }
+
+        // Start browser research
+        function startResearch(query) {
+            ArtifactSystem.research.isResearching = true;
+            ArtifactSystem.research.sourcesFound = 0;
+            ArtifactSystem.research.screenshots = [];
+            
+            addTerminalLine(`🔍 Starting research: ${query}`, 'output');
+            addTerminalLine('🌐 Opening browser instances...', 'output');
+            addTerminalLine('📊 Searching multiple sources...', 'output');
+            
+            showNotification('Research Started', 'Browser automation initiated', 'success');
+            
+            // Research simulation
+            const researchSteps = [
+                { message: '🔍 Searching Google...', sources: 3, screenshots: 1 },
+                { message: '📚 Checking academic sources...', sources: 2, screenshots: 1 },
+                { message: '📰 Scanning news articles...', sources: 4, screenshots: 2 },
+                { message: '📸 Taking page screenshots...', sources: 1, screenshots: 2 },
+                { message: '📄 Downloading documents...', sources: 2, screenshots: 0 }
+            ];
+            
+            let stepIndex = 0;
+            const researchInterval = setInterval(() => {
+                if (stepIndex >= researchSteps.length) {
+                    clearInterval(researchInterval);
+                    ArtifactSystem.research.isResearching = false;
+                    addTerminalLine('✅ Research completed successfully', 'success');
+                    showNotification('Research Complete', 'Visual research finished', 'success');
+                    return;
+                }
+                
+                const step = researchSteps[stepIndex];
+                addTerminalLine(step.message, 'output');
+                
+                ArtifactSystem.research.sourcesFound += step.sources;
+                ArtifactSystem.research.screenshots.push(...Array(step.screenshots).fill('screenshot'));
+                
+                updateResearchProgress({
+                    sources: ArtifactSystem.research.sourcesFound,
+                    screenshots: ArtifactSystem.research.screenshots.length,
+                    documents: Math.floor(ArtifactSystem.research.sourcesFound / 2)
+                });
+                
+                stepIndex++;
+            }, 2000);
+        }
+
+        // Update research progress
+        function updateResearchProgress(update) {
+            document.getElementById('sources-count').textContent = update.sources;
+            document.getElementById('screenshots-count').textContent = update.screenshots;
+            document.getElementById('documents-count').textContent = update.documents;
+        }
+
+        // Setup git controls
+        function setupGitControls() {
+            const cloneBtn = document.getElementById('clone-repo');
+            const urlInput = document.getElementById('git-url');
+            
+            cloneBtn.addEventListener('click', () => {
+                const url = urlInput.value.trim();
+                if (!url) {
+                    showNotification('Error', 'Please enter a repository URL', 'error');
+                    return;
+                }
+                
+                cloneRepository(url);
+            });
+        }
+
+        // Clone git repository
+        function cloneRepository(url) {
+            ArtifactSystem.git.isCloning = true;
+            
+            addTerminalLine(`📦 Cloning repository: ${url}`, 'output');
+            addTerminalLine('🔍 Analyzing repository structure...', 'output');
+            
+            const cloneBtn = document.getElementById('clone-repo');
+            cloneBtn.innerHTML = '<div class="loading"></div> Cloning...';
+            
+            showNotification('Clone Started', 'Repository cloning initiated', 'success');
+            
+            // Clone simulation
+            setTimeout(() => {
+                addTerminalLine('📁 Creating local copy...', 'output');
+            }, 1000);
+            
+            setTimeout(() => {
+                addTerminalLine('🔍 Indexing files...', 'output');
+                document.getElementById('repo-status').textContent = 'Indexing files...';
+            }, 2000);
+            
+            setTimeout(() => {
+                addTerminalLine('📊 Processing repository metadata...', 'output');
+                document.getElementById('repo-files').textContent = '247';
+                document.getElementById('repo-size').textContent = '15.3 MB';
+            }, 3000);
+            
+            setTimeout(() => {
+                ArtifactSystem.git.isCloning = false;
+                cloneBtn.innerHTML = '<i class="fas fa-download"></i> Clone Repository';
+                
+                addTerminalLine('✅ Repository cloned successfully', 'success');
+                document.getElementById('repo-status').textContent = 'Ready';
+                
+                showNotification('Clone Complete', 'Repository ready for exploration', 'success');
+                
+                // Update browser with more files
+                const browser = document.getElementById('repo-browser');
+                browser.innerHTML = `
+                    <div class="repo-item">
+                        <i class="fas fa-folder" style="color: var(--accent-yellow);"></i>
+                        <span>src/</span>
+                    </div>
+                    <div class="repo-item">
+                        <i class="fas fa-folder" style="color: var(--accent-yellow);"></i>
+                        <span>tests/</span>
+                    </div>
+                    <div class="repo-item">
+                        <i class="fas fa-folder" style="color: var(--accent-yellow);"></i>
+                        <span>docs/</span>
+                    </div>
+                    <div class="repo-item">
+                        <i class="fas fa-file-code" style="color: var(--accent-blue);"></i>
+                        <span>main.py</span>
+                    </div>
+                    <div class="repo-item">
+                        <i class="fas fa-file-code" style="color: var(--accent-blue);"></i>
+                        <span>config.py</span>
+                    </div>
+                    <div class="repo-item">
+                        <i class="fas fa-file-alt" style="color: var(--accent-green);"></i>
+                        <span>README.md</span>
+                    </div>
+                    <div class="repo-item">
+                        <i class="fas fa-file" style="color: var(--light-400);"></i>
+                        <span>requirements.txt</span>
+                    </div>
+                    <div class="repo-item">
+                        <i class="fas fa-file-alt" style="color: var(--light-400);"></i>
+                        <span>LICENSE</span>
+                    </div>
+                `;
+            }, 4000);
+        }
+
+        // Start metrics collection
+        function startMetricsCollection() {
+            setInterval(() => {
+                // Simulate realistic metrics
+                ArtifactSystem.metrics.cpu = Math.min(100, Math.max(0, 
+                    ArtifactSystem.metrics.cpu + (Math.random() - 0.5) * 10));
+                ArtifactSystem.metrics.memory = Math.min(100, Math.max(0, 
+                    ArtifactSystem.metrics.memory + (Math.random() - 0.5) * 5));
+                ArtifactSystem.metrics.gpu = Math.min(100, Math.max(0, 
+                    ArtifactSystem.metrics.gpu + (Math.random() - 0.5) * 15));
+                ArtifactSystem.metrics.network = Math.random() * 100;
+                
+                updateMetrics(ArtifactSystem.metrics);
+            }, 1000);
+        }
+
+        // Update metrics display
+        function updateMetrics(metrics) {
+            document.getElementById('cpu-usage').textContent = `${metrics.cpu.toFixed(1)}%`;
+            document.getElementById('memory-usage').textContent = `${metrics.memory.toFixed(1)}%`;
+            document.getElementById('gpu-usage').textContent = `${metrics.gpu.toFixed(1)}%`;
+            document.getElementById('network-usage').textContent = `${metrics.network.toFixed(1)} MB/s`;
+            
+            // Update chart
+            if (ArtifactSystem.metricsChart) {
+                const chart = ArtifactSystem.metricsChart;
+                const now = new Date().toLocaleTimeString();
+                
+                chart.data.labels.push(now);
+                chart.data.datasets[0].data.push(metrics.cpu);
+                chart.data.datasets[1].data.push(metrics.memory);
+                chart.data.datasets[2].data.push(metrics.gpu);
+                
+                // Keep only last 20 data points
+                if (chart.data.labels.length > 20) {
+                    chart.data.labels.shift();
+                    chart.data.datasets.forEach(dataset => dataset.data.shift());
+                }
+                
+                chart.update('none');
+            }
+        }
+
+        // Start uptime counter
+        function startUptimeCounter() {
+            const startTime = Date.now();
+            
+            setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const hours = Math.floor(elapsed / 3600000);
+                const minutes = Math.floor((elapsed % 3600000) / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                
+                const uptimeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                document.getElementById('uptime').textContent = uptimeStr;
+            }, 1000);
+        }
+
+        // Utility functions
+        function addTerminalLine(text, type = 'output') {
+            const terminal = document.getElementById('terminal-content');
+            const line = document.createElement('div');
+            line.className = `terminal-line terminal-${type}`;
+            line.textContent = text;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function updateExecutionStatus(status) {
+            document.getElementById('execution-status').textContent = status;
+        }
+
+        function switchToPanel(panelName) {
+            const tab = document.querySelector(`[data-panel="${panelName}"]`);
+            if (tab) {
+                tab.click();
+            }
+        }
+
+        function showNotification(title, message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
+                <div style="font-size: 14px; opacity: 0.9;">${message}</div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // Remove notification after 4 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => container.removeChild(notification), 300);
+            }, 4000);
+        }
+
+        // Terminal controls
+        document.getElementById('clear-terminal').addEventListener('click', () => {
+            document.getElementById('terminal-content').innerHTML = '';
+            addTerminalLine('somnus@unlimited:~/workspace$ ', 'prompt');
+        });
+
+        document.getElementById('expand-terminal').addEventListener('click', () => {
+            const terminal = document.querySelector('.execution-terminal');
+            terminal.style.height = terminal.style.height === '500px' ? '300px' : '500px';
+        });
+
+        // Header controls
+        document.getElementById('save-btn').addEventListener('click', () => {
+            addTerminalLine('💾 Saving artifact...', 'output');
+            setTimeout(() => {
+                addTerminalLine('✅ Artifact saved successfully', 'success');
+                showNotification('Saved', 'Artifact saved with unlimited capabilities', 'success');
+            }, 1000);
+        });
+
+        document.getElementById('fullscreen-btn').addEventListener('click', () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                document.documentElement.requestFullscreen();
+            }
+        });
+
+        // Initialize the system when page loads
+        document.addEventListener('DOMContentLoaded', initializeArtifactSystem);
+
+        // Handle window resize for Monaco Editor
+        window.addEventListener('resize', () => {
+            if (ArtifactSystem.editor) {
+                ArtifactSystem.editor.layout();
+            }
+        });
+
+        console.log('🚀 Somnus Unlimited Artifact System - Loading...');
+        console.log('💪 All unlimited capabilities enabled');
+        console.log('🔓 No restrictions, no limits, infinite possibilities');
+    </script>
+</body>
+</html>

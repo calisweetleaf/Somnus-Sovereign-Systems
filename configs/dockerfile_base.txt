@@ -1,0 +1,106 @@
+# MORPHEUS AI - Base Virtual Machine Image Builder
+# This Dockerfile creates a base image that can be converted into a QCOW2 disk image
+# to serve as the foundation for persistent AI Virtual Machines.
+
+FROM ubuntu:22.04 as vm-base-builder
+
+# Set environment variables for non-interactive installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update and install essential packages for a base AI VM
+# Includes common development tools, networking utilities, and a browser
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    python3 \
+    python3-pip \
+    python3-venv \
+    nodejs \
+    npm \
+    git \
+    curl \
+    wget \
+    ssh \
+    openssh-server \
+    net-tools \
+    iputils-ping \
+    vim \
+    tmux \
+    unzip \
+    software-properties-common \
+    apt-transport-https \
+    ca-certificates \
+    gnupg \
+    # Install a headless browser for AI research capabilities
+    chromium-browser \
+    # Clean up apt caches
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Create a dedicated 'ai' user for the VM, similar to a typical user setup
+RUN adduser --disabled-password --gecos "" ai \
+    && echo "ai:ai" | chpasswd \
+    && usermod -aG sudo ai \
+    && mkdir -p /home/ai/.ssh \
+    && chown -R ai:ai /home/ai/.ssh \
+    && chmod 700 /home/ai/.ssh
+
+# Configure SSH for the 'ai' user
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config \
+    && sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config \
+    && sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config \
+    && echo "AllowUsers ai" >> /etc/ssh/sshd_config \
+    && systemctl enable ssh # Enable SSH service
+
+# Create essential directories for the AI's workspace
+RUN mkdir -p /home/ai/workspace \
+    /home/ai/research \
+    /home/ai/tools \
+    /home/ai/projects \
+    /home/ai/models \
+    /home/ai/backups \
+    && chown -R ai:ai /home/ai/workspace \
+    /home/ai/research \
+    /home/ai/tools \
+    /home/ai/projects \
+    /home/ai/models \
+    /home/ai/backups \
+    && chmod -R 755 /home/ai
+
+# Set up Python environment variables for the 'ai' user
+ENV HOME /home/ai
+ENV PYTHONPATH=/home/ai/.local/lib/python3.10/site-packages
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Install common Python packages that an AI would need in its base environment
+# These are "system-level" tools for the AI, more can be installed later by the AI itself
+RUN pip3 install --no-cache-dir \
+    requests \
+    beautifulsoup4 \
+    lxml \
+    playwright \
+    pandas \
+    numpy \
+    matplotlib \
+    # Install playwright browsers (required for headless browser automation)
+    && python3 -m playwright install --with-deps chromium \
+    && pip3 install --no-cache-dir \
+    "python-libvirt==8.0.0" # If libvirt bindings are needed inside the VM for some reason
+
+# Add a basic welcome message or startup script for the AI
+RUN echo 'echo "Welcome, AI! Your persistent personal computer is ready."' >> /home/ai/.bashrc
+RUN echo 'alias ll="ls -la"' >> /home/ai/.bashrc
+RUN echo 'cd /home/ai/workspace' >> /home/ai/.bashrc
+
+# This Dockerfile is intended to build an image from which a QCOW2 disk can be created.
+# You would typically:
+# 1. Build this Docker image: `docker build -t ai-vm-base-image .`
+# 2. Run a container from it and export its filesystem as a QCOW2 image:
+#    `docker run --name temp_ai_vm_exporter ai-vm-base-image /bin/true`
+#    `docker export temp_ai_vm_exporter | qemu-img convert -f raw -O qcow2 /data/vm_images/base_ai_computer.qcow2`
+#    `docker rm temp_ai_vm_exporter`
+# This process would create the `/data/vm_images/base_ai_computer.qcow2` file referenced in `base_config.py`.
+
+# Define the default command that would run if this were a container (not directly relevant for VM disk export)
+CMD ["/usr/sbin/sshd", "-D"]
+
