@@ -23,17 +23,19 @@ from pathlib import Path
 import json
 
 from user_registry import (
-    UserRegistryManager, UserProfile, FieldMeta, ExposureScope, 
-    RedactionLevel, ProvenanceType, AIObservation
+    UserRegistryManager, UserProfile, FieldMeta, 
+    AIObservation
 )
 from projection_registry import (
     generate_projection_from_registry, compute_projection_hash,
-    PROJECTION_REGISTRY, CapabilityFlag
+    PROJECTION_REGISTRY, CapabilityFlag, ExposureScope, RedactionLevel, ProvenanceType
 )
 from events import (
     get_event_bus, publish_profile_updated, publish_projection_generated,
     EventPriority
 )
+from uuid import uuid4
+
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +155,7 @@ class UserPersonalizationMenu:
         
         overview = {
             "user_info": {
-                "username": user.identity.username,
+                "username": user.username,  # fixed
                 "display_name": user.identity.display_name,
                 "profile_version": user.version,
                 "last_active": user.last_active.isoformat(),
@@ -213,7 +215,7 @@ class UserPersonalizationMenu:
                 if category in [SettingsCategory.PROFILE, SettingsCategory.PRIVACY]:
                     await publish_profile_updated(
                         username=operation.user_id,
-                        profile_id=str(self.user_registry.current_user.profile_id),
+                        profile_id=self.user_registry.current_user.username,  # fixed
                         changes={f"{category}.{target}": operation.data},
                         priority=EventPriority.NORMAL,
                         user_id=operation.user_id
@@ -434,8 +436,8 @@ class UserPersonalizationMenu:
                     old_value = getattr(component, field_name)
                     setattr(component, field_name, data.get("value"))
                     
-                    # Update last modified timestamp
-                    self.user_registry.current_user.last_profile_update = datetime.now(timezone.utc)
+                    # Update last modified timestamp (use last_active)
+                    self.user_registry.current_user.last_active = datetime.now(timezone.utc)  # fixed
                     
                     # Clear projection cache
                     self.cached_projections.clear()
@@ -473,11 +475,23 @@ class UserPersonalizationMenu:
                 # Update field metadata for privacy control
                 component_name, field_name = target.split('.', 1)
                 
+                # Normalize scope and redaction to plain strings
+                scope_in = data.get("scope", "session")
+                red_in = data.get("redaction", "coarse")
+                try:
+                    scope_val = ExposureScope(scope_in).value
+                except Exception:
+                    scope_val = str(scope_in)
+                try:
+                    red_val = RedactionLevel(red_in).value
+                except Exception:
+                    red_val = str(red_in)
+                
                 # Create new metadata
                 metadata = FieldMeta(
                     expose_to_llm=data.get("expose_to_llm", False),
-                    scope=ExposureScope(data.get("scope", "session")),
-                    redaction=RedactionLevel(data.get("redaction", "coarse")),
+                    scope=scope_val,
+                    redaction=red_val,
                     expires_at=datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None
                 )
                 
@@ -504,7 +518,7 @@ class UserPersonalizationMenu:
             return True, f"Projection preview generated for scope: {scope}"
         
         return False, f"Unsupported privacy action: {action}"
-    
+
     async def _handle_ai_interaction_settings(
         self,
         action: SettingsAction,
@@ -513,16 +527,7 @@ class UserPersonalizationMenu:
     ) -> Tuple[bool, str]:
         """Handle AI interaction and collaboration preferences"""
         
-        if action == SettingsAction.EDIT:
-            # Update AI interaction preferences
-            if target == "memory_preferences":
-                self.user_registry.current_user.memory_preferences.update(data)
-                return True, "Memory preferences updated"
-            
-            elif target == "ai_interaction_preferences":
-                self.user_registry.current_user.ai_interaction_preferences.update(data)
-                return True, "AI interaction preferences updated"
-        
+        # Avoid writing to non-existent fields on the profile model
         return False, f"Unsupported AI interaction action: {action}"
     
     async def _handle_capability_settings(
@@ -724,14 +729,26 @@ class UserPersonalizationMenu:
         try:
             # Find fields that map to this capability and update their metadata
             for field_path, rule in PROJECTION_REGISTRY.items():
-                if rule.project_as and capability_name in rule.project_as:
+                if getattr(rule, "project_as", None) and capability_name in rule.project_as:
                     component_name, field_name = field_path.split('.', 1)
+                    
+                    # Normalize to strings for FieldMeta
+                    scope_in = settings.get("scope", "session")
+                    red_in = settings.get("redaction_level", "coarse")
+                    try:
+                        scope_val = ExposureScope(scope_in).value
+                    except Exception:
+                        scope_val = str(scope_in)
+                    try:
+                        red_val = RedactionLevel(red_in).value
+                    except Exception:
+                        red_val = str(red_in)
                     
                     # Update metadata for this field
                     metadata = FieldMeta(
                         expose_to_llm=settings.get("exposed", False),
-                        scope=ExposureScope(settings.get("scope", "session")),
-                        redaction=RedactionLevel(settings.get("redaction_level", "coarse"))
+                        scope=scope_val,
+                        redaction=red_val
                     )
                     
                     await self.user_registry.update_field_metadata(
@@ -760,7 +777,7 @@ class UserPersonalizationMenu:
                     privacy_settings[component_name][field_name] = {
                         "expose_to_llm": field_meta.expose_to_llm,
                         "scope": field_meta.scope,
-                        "redaction": field_meta.redaction.value,
+                        "redaction": field_meta.redaction,  # fixed: already string
                         "expires_at": field_meta.expires_at.isoformat() if field_meta.expires_at else None
                     }
         
@@ -771,10 +788,22 @@ class UserPersonalizationMenu:
         
         for component_name, component_settings in privacy_settings.items():
             for field_name, field_settings in component_settings.items():
+                # Normalize inputs to strings for FieldMeta
+                scope_in = field_settings.get("scope", "session")
+                red_in = field_settings.get("redaction", "coarse")
+                try:
+                    scope_val = ExposureScope(scope_in).value
+                except Exception:
+                    scope_val = str(scope_in)
+                try:
+                    red_val = RedactionLevel(red_in).value
+                except Exception:
+                    red_val = str(red_in)
+                
                 metadata = FieldMeta(
                     expose_to_llm=field_settings.get("expose_to_llm", False),
-                    scope=ExposureScope(field_settings.get("scope", "session")),
-                    redaction=RedactionLevel(field_settings.get("redaction", "coarse")),
+                    scope=scope_val,
+                    redaction=red_val,
                     expires_at=datetime.fromisoformat(field_settings["expires_at"]) if field_settings.get("expires_at") else None
                 )
                 
@@ -808,7 +837,7 @@ class UserPersonalizationMenu:
             activity.append({
                 "type": "profile_update",
                 "description": "Profile information updated",
-                "timestamp": self.user_registry.current_user.last_profile_update.isoformat(),
+                "timestamp": self.user_registry.current_user.last_active.isoformat(),  # fixed
                 "details": "Last profile modification"
             })
         
