@@ -564,15 +564,15 @@ The SOMNUS Artifact System is founded on the principle of **Separation of Comput
 │  │    │• CUDA       │ │• YT-DLP     │ │• BeautifulS │     │  │
 │  │    │             │ │             │ │             │     │  │
 │  │    └─────────────┘ └─────────────┘ └─────────────┘     │  │
-│  │           ▲               ▲               ▲             │  │
-│  │           │               │               │             │  │
+│  │           ▲               ▲               ▲            │  │
+│  │           │               │               │            │  │
 │  │    AI Orchestration   AI Control    AI Management      │  │
-│  │           ▼               ▼               ▼             │  │
-│  │    User Interface    User Commands   User Interaction   │  │
+│  │           ▼               ▼               ▼            │  │
+│  │    User Interface    User Commands   User Interaction  │  │
 │  └────────────────────────────────────────────────────────┘  │
 ├──────────────────────────────────────────────────────────────┤
 │                    Container Runtime Engine                  │
-│                    VM Hypervisor (libvirt/QEMU)             │
+│                    VM Hypervisor (libvirt/QEMU)              │
 └──────────────────────────────────────────────────────────────┘
 ```
 
