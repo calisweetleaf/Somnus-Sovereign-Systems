@@ -4,16 +4,21 @@ Somnus Sovereign Systems - Virtual Machine AI Browser Research System - 1 of 3 m
 A comprehensive browser-based AI research system with visual interaction,
 intelligent content extraction, and automated research workflows.
 """
-from ast import Import
-from flask import logging
-logging.basicConfig(level=logging.INFO)
+import logging
 import asyncio
 import json
 import time
+import re
+import hashlib
+from uuid import uuid4
 from typing import Dict, List, Any, Optional
 from pathlib import Path
+from collections import Counter, defaultdict
 
 from backend.virtual_machine.ai_action_orchestrator import AIActionOrchestrator
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
 
 class AIBrowserResearch:
@@ -77,7 +82,7 @@ class AIBrowserResearch:
         }
         
         for step in research_plan['steps']:
-            step_results = await self._execute_research_step(browser_session, step)
+            step_results = await self._execute_research_step(browser_session, step, results)
             self._merge_step_results(results, step_results)
         
         # Synthesize findings and generate insights
@@ -150,7 +155,7 @@ class AIBrowserResearch:
         
         return research_plan
     
-    async def _execute_research_step(self, browser, step: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_research_step(self, browser, step: Dict[str, Any], results: Dict[str, Any]) -> Dict[str, Any]:
         """Execute individual research step and return results"""
         step_type = step['type']
         
@@ -263,140 +268,140 @@ class AIBrowserResearch:
         return results
     
     async def _execute_deep_read_phase(self, browser, step: Dict[str, Any], results: Dict[str, Any]) -> Dict[str, Any]:
-    """Execute deep reading phase with intelligent article selection"""
-    import logging
-    logger = logging.getLogger(__name__)
-    
-    deep_read_results = {
-        'articles_analyzed': [],
-        'content_extracted': [],
-        'key_insights': [],
-        'citations_found': []
-    }
+        """Execute deep reading phase with intelligent article selection"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        deep_read_results = {
+            'articles_analyzed': [],
+            'content_extracted': [],
+            'key_insights': [],
+            'citations_found': []
+        }
 
-    # Get sources from previous search steps
-    sources_found = []
-    
-    # Collect sources from all previous search results
-    if 'sources_found' in results:
-        sources_found.extend(results['sources_found'])
-    
-    # Also check if there are specific URLs in the step
-    if 'urls' in step:
-        for url in step['urls']:
-            sources_found.append({'url': url, 'title': 'Direct URL', 'snippet': ''})
-    
-    if not sources_found:
-        logger.warning("No sources found for deep reading phase")
-        return deep_read_results
+        # Get sources from previous search steps
+        sources_found = []
+        
+        # Collect sources from all previous search results
+        if 'sources_found' in results:
+            sources_found.extend(results['sources_found'])
+        
+        # Also check if there are specific URLs in the step
+        if 'urls' in step:
+            for url in step['urls']:
+                sources_found.append({'url': url, 'title': 'Direct URL', 'snippet': ''})
+        
+        if not sources_found:
+            logger.warning("No sources found for deep reading phase")
+            return deep_read_results
 
-    # 1. Score and rank sources by relevance
-    scored_sources = []
-    query = results.get('query', '')
-    
-    for source in sources_found:
-        try:
-            score = self._calculate_relevance_score(
-                source, 
-                step.get('selection_criteria', 'relevance_score'), 
-                query
-            )
-            scored_sources.append((score, source))
-        except Exception as e:
-            logger.warning(f"Failed to score source {source.get('url', 'unknown')}: {e}")
-            scored_sources.append((0.0, source))
+        # 1. Score and rank sources by relevance
+        scored_sources = []
+        query = results.get('query', '')
+        
+        for source in sources_found:
+            try:
+                score = self._calculate_relevance_score(
+                    source, 
+                    step.get('selection_criteria', 'relevance_score'), 
+                    query
+                )
+                scored_sources.append((score, source))
+            except Exception as e:
+                logger.warning(f"Failed to score source {source.get('url', 'unknown')}: {e}")
+                scored_sources.append((0.0, source))
 
-    # Sort by score in descending order
-    scored_sources.sort(key=lambda x: x[0], reverse=True)
+        # Sort by score in descending order
+        scored_sources.sort(key=lambda x: x[0], reverse=True)
 
-    # 2. Select the top articles for deep reading
-    max_articles = step.get('max_articles', 10)
-    selected_articles = [source for score, source in scored_sources[:max_articles]]
-    
-    logger.info(f"Selected {len(selected_articles)} articles for deep reading")
+        # 2. Select the top articles for deep reading
+        max_articles = step.get('max_articles', 10)
+        selected_articles = [source for score, source in scored_sources[:max_articles]]
+        
+        logger.info(f"Selected {len(selected_articles)} articles for deep reading")
 
-    # 3. Process each selected article
-    for i, article_source in enumerate(selected_articles):
-        url = article_source.get('url')
-        if not url:
-            continue
-            
-        try:
-            logger.info(f"Deep reading article {i+1}/{len(selected_articles)}: {url}")
-            
-            # Add small delay to be respectful to servers
-            if i > 0:
-                await asyncio.sleep(2)
-            
-            article_analysis = await self._deep_read_article(browser, url)
-            
-            if article_analysis and not article_analysis.get('error'):
-                deep_read_results['articles_analyzed'].append(article_analysis)
+        # 3. Process each selected article
+        for i, article_source in enumerate(selected_articles):
+            url = article_source.get('url')
+            if not url:
+                continue
                 
-                # Extract content and insights
-                article_data = article_analysis.get('article_data', {})
-                analysis = article_analysis.get('analysis', {})
+            try:
+                logger.info(f"Deep reading article {i+1}/{len(selected_articles)}: {url}")
                 
-                if article_data.get('content'):
-                    deep_read_results['content_extracted'].append({
-                        'url': url,
-                        'title': article_data.get('title', ''),
-                        'content': article_data.get('content', ''),
-                        'word_count': article_data.get('word_count', 0)
-                    })
+                # Add small delay to be respectful to servers
+                if i > 0:
+                    await asyncio.sleep(2)
                 
-                # Collect insights
-                if analysis.get('key_topics'):
-                    deep_read_results['key_insights'].extend([
-                        {'url': url, 'topic': topic} 
-                        for topic in analysis['key_topics']
-                    ])
+                article_analysis = await self._deep_read_article(browser, url)
                 
-                # Collect citations
-                citation_analysis = analysis.get('citation_analysis', {})
-                if citation_analysis.get('citations'):
-                    deep_read_results['citations_found'].extend([
-                        {'url': url, 'citation': citation}
-                        for citation in citation_analysis['citations']
-                    ])
+                if article_analysis and not article_analysis.get('error'):
+                    deep_read_results['articles_analyzed'].append(article_analysis)
                     
-            else:
-                error_msg = article_analysis.get('error', 'Unknown error') if article_analysis else 'No response'
-                logger.error(f"Failed to analyze article {url}: {error_msg}")
+                    # Extract content and insights
+                    article_data = article_analysis.get('article_data', {})
+                    analysis = article_analysis.get('analysis', {})
+                    
+                    if article_data.get('content'):
+                        deep_read_results['content_extracted'].append({
+                            'url': url,
+                            'title': article_data.get('title', ''),
+                            'content': article_data.get('content', ''),
+                            'word_count': article_data.get('word_count', 0)
+                        })
+                    
+                    # Collect insights
+                    if analysis.get('key_topics'):
+                        deep_read_results['key_insights'].extend([
+                            {'url': url, 'topic': topic} 
+                            for topic in analysis['key_topics']
+                        ])
+                    
+                    # Collect citations
+                    citation_analysis = analysis.get('citation_analysis', {})
+                    if citation_analysis.get('citations'):
+                        deep_read_results['citations_found'].extend([
+                            {'url': url, 'citation': citation}
+                            for citation in citation_analysis['citations']
+                        ])
+                        
+                else:
+                    error_msg = article_analysis.get('error', 'Unknown error') if article_analysis else 'No response'
+                    logger.error(f"Failed to analyze article {url}: {error_msg}")
+                    deep_read_results['articles_analyzed'].append({
+                        'url': url, 
+                        'error': error_msg,
+                        'timestamp': time.time()
+                    })
+                    
+            except Exception as e:
+                logger.error(f"Exception while deep reading article {url}: {e}")
                 deep_read_results['articles_analyzed'].append({
                     'url': url, 
-                    'error': error_msg,
+                    'error': str(e),
                     'timestamp': time.time()
                 })
-                
-        except Exception as e:
-            logger.error(f"Exception while deep reading article {url}: {e}")
-            deep_read_results['articles_analyzed'].append({
-                'url': url, 
-                'error': str(e),
-                'timestamp': time.time()
-            })
 
-    # 4. Generate summary statistics
-    successful_analyses = [a for a in deep_read_results['articles_analyzed'] if 'error' not in a]
-    
-    deep_read_results['summary'] = {
-        'total_articles_attempted': len(selected_articles),
-        'successful_analyses': len(successful_analyses),
-        'failed_analyses': len(selected_articles) - len(successful_analyses),
-        'total_content_words': sum([
-            content.get('word_count', 0) 
-            for content in deep_read_results['content_extracted']
-        ]),
-        'unique_insights': len(set([
-            insight['topic'] for insight in deep_read_results['key_insights']
-        ])),
-        'total_citations': len(deep_read_results['citations_found'])
-    }
-    
-    logger.info(f"Deep reading phase completed: {deep_read_results['summary']}")
-    
-    return deep_read_results
+        # 4. Generate summary statistics
+        successful_analyses = [a for a in deep_read_results['articles_analyzed'] if 'error' not in a]
+        
+        deep_read_results['summary'] = {
+            'total_articles_attempted': len(selected_articles),
+            'successful_analyses': len(successful_analyses),
+            'failed_analyses': len(selected_articles) - len(successful_analyses),
+            'total_content_words': sum([
+                content.get('word_count', 0) 
+                for content in deep_read_results['content_extracted']
+            ]),
+            'unique_insights': len(set([
+                insight['topic'] for insight in deep_read_results['key_insights']
+            ])),
+            'total_citations': len(deep_read_results['citations_found'])
+        }
+        
+        logger.info(f"Deep reading phase completed: {deep_read_results['summary']}")
+        
+        return deep_read_results
     
 async def _execute_cross_reference_phase(self, browser, step: Dict[str, Any], results: Dict[str, Any]) -> Dict[str, Any]:
     """Execute cross-referencing phase for fact verification and source consistency analysis"""
@@ -803,17 +808,17 @@ def _detect_contradictions(
                     let bestContent = '';
                     let bestScore = 0;
                     
-                    for (const selector of contentSelectors) {
+                    for (const selector of contentSelectors) {{
                         const element = document.querySelector(selector);
-                        if (element) {
+                        if (element) {{
                             const text = element.textContent || '';
                             const score = text.length * (text.split(' ').length > 100 ? 1 : 0.5);
-                            if (score > bestScore) {
+                            if (score > bestScore) {{
                                 bestContent = text;
                                 bestScore = score;
-                            }
-                        }
-                    }
+                            }}
+                        }}
+                    }}
                     
                     // Extract metadata and structural information
                     return {
@@ -1585,7 +1590,6 @@ def _extract_quantitative_claims(self, content: str, source_url: str, credibilit
     quant_patterns = [
         r'(\d+(?:\.\d+)?%)\s+([^.!?]{10,}[.!?])',  # Percentage claims
         r'(\d+(?:,\d{3})*(?:\.\d+)?)\s+(million|billion|thousand)\s+([^.!?]{10,}[.!?])',  # Large numbers
-        r'(increased|decreased|rose|fell|grew|declined)\s+by\s+(\d+(?:\.\d+)?%?)\s+([^.!?]{10,}[.!?])',  # Changes
         r'(\d+(?:\.\d+)?)\s+(times|fold)\s+(more|less|higher|lower)\s+([^.!?]{10,}[.!?])'  # Comparisons
     ]
     
@@ -1712,44 +1716,44 @@ def _identify_contradictions(self, finding_groups: Dict[str, List[Dict[str, Any]
                     break
     
     return contradictions[:5]  # Limit to 5 contradictions
-
-def _generate_primary_findings(self, finding_groups: Dict[str, List[Dict[str, Any]]], source_credibility: Dict[str, float], consensus_points: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Generate primary findings from the research"""
-    primary_findings = []
     
-    # Include all consensus points as primary findings
-    for consensus in consensus_points:
-        if consensus['consensus_strength'] > 0.7:  # High consensus threshold
-            primary_findings.append({
-                'finding': consensus['finding'],
-                'confidence': consensus['consensus_strength'],
-                'support_level': 'strong_consensus',
-                'source_count': consensus['supporting_sources']
-            })
-    
-    # Add high-credibility individual findings
-    for group_key, findings in finding_groups.items():
-        if len(findings) == 1:  # Single source findings
-            finding = findings[0]
-            source_cred = source_credibility.get(finding.get('source_url', ''), 0.5)
-            
-            if source_cred > 0.8:  # Very high credibility source
+    def _generate_primary_findings(self, finding_groups: Dict[str, List[Dict[str, Any]]], source_credibility: Dict[str, float], consensus_points: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Generate primary findings from the research"""
+        primary_findings = []
+        
+        # Include all consensus points as primary findings
+        for consensus in consensus_points:
+            if consensus['consensus_strength'] > 0.7:  # High consensus threshold
                 primary_findings.append({
-                    'finding': finding.get('content', ''),
-                    'confidence': source_cred,
-                    'support_level': 'high_credibility_source',
-                    'source_count': 1
+                    'finding': consensus['finding'],
+                    'confidence': consensus['consensus_strength'],
+                    'support_level': 'strong_consensus',
+                    'source_count': consensus['supporting_sources']
                 })
-    
-    # Sort by confidence and limit
-    primary_findings.sort(key=lambda x: x['confidence'], reverse=True)
-    return primary_findings[:10]
+        
+        # Add high-credibility individual findings
+        for group_key, findings in finding_groups.items():
+            if len(findings) == 1:  # Single source findings
+                finding = findings[0]
+                source_cred = source_credibility.get(finding.get('source_url', ''), 0.5)
+                
+                if source_cred > 0.8:  # Very high credibility source
+                    primary_findings.append({
+                        'finding': finding.get('content', ''),
+                        'confidence': source_cred,
+                        'support_level': 'high_credibility_source',
+                        'source_count': 1
+                    })
+        
+        # Sort by confidence and limit
+        primary_findings.sort(key=lambda x: x['confidence'], reverse=True)
+        return primary_findings[:10]
 
-def _calculate_confidence_levels(self, consensus_points: List[Dict[str, Any]], contradictions: List[Dict[str, Any]], source_credibility: Dict[str, float]) -> Dict[str, float]:
-    """Calculate overall confidence levels for the research"""
-    
-    if not source_credibility:
-        return {'overall': 0.0, 'consensus': 0.0, 'source_quality': 0.0}
+    def _calculate_confidence_levels(self, consensus_points: List[Dict[str, Any]], contradictions: List[Dict[str, Any]], source_credibility: Dict[str, float]) -> Dict[str, float]:
+        """Calculate overall confidence levels for the research"""
+        
+        if not source_credibility:
+            return {'overall': 0.0, 'consensus': 0.0, 'source_quality': 0.0}
     
     # Overall source quality
     avg_source_credibility = sum(source_credibility.values()) / len(source_credibility)
@@ -2086,7 +2090,7 @@ def _generate_implications(self, synthesis: Dict[str, Any]) -> List[Dict[str, An
     
     return implications
 
-def _generate_recommendations(self, synthesis: Dict[str, Any]], query: str) -> List[Dict[str, Any]]:
+def _generate_recommendations(self, synthesis: Dict[str, Any], query: str) -> List[Dict[str, Any]]:
     """Generate actionable recommendations based on research findings"""
     
     recommendations = []
@@ -2768,152 +2772,152 @@ if __name__ == "__main__":
         return script_path
     
     async def _finalize_research_session(self, browser, results: Dict[str, Any]):
-    """Cleanup and finalize research session with comprehensive artifact creation"""
-    import logging
-    import json
-    
-    logger = logging.getLogger(__name__)
-    
-    try:
-        # 1. Close browser gracefully
-        if browser:
-            try:
-                await browser.close()
-                logger.info("Browser session closed successfully")
-            except Exception as e:
-                logger.warning(f"Error closing browser: {e}")
+        """Cleanup and finalize research session with comprehensive artifact creation"""
+        import logging
+        import json
         
-        # 2. Generate comprehensive session metadata
-        session_metadata = {
-            'session_info': {
-                'timestamp': time.time(),
-                'session_id': str(uuid4()),
-                'query': results.get('query', ''),
-                'workflow_type': results.get('workflow_type', 'comprehensive'),
-                'completion_time': time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
-            },
-            'research_metrics': {
-                'sources_found': len(results.get('sources_found', [])),
-                'articles_analyzed': len([a for a in results.get('articles_analyzed', []) if 'error' not in a]),
-                'failed_articles': len([a for a in results.get('articles_analyzed', []) if 'error' in a]),
-                'screenshots_taken': len(results.get('screenshots', [])),
-                'documents_downloaded': len(results.get('downloaded_documents', [])),
-                'research_notes_created': len(results.get('research_notes', [])),
-                'fact_checks_performed': len(results.get('fact_check_results', [])),
-                'cross_references_analyzed': len(results.get('cross_reference_analysis', []))
-            },
-            'quality_metrics': self._calculate_session_quality_metrics(results),
-            'synthesis_summary': results.get('synthesis', {}).get('summary', {}),
-            'insights_summary': results.get('insights', {}).get('summary', {}),
-            'research_scope': self._analyze_research_scope(results),
-            'session_outcome': self._assess_session_outcome(results)
-        }
-        
-        # 3. Save session metadata to VM
-        session_timestamp = int(time.time())
-        metadata_filename = f'research_session_{session_timestamp}_metadata.json'
-        metadata_path = f'/home/ai/research/sessions/{metadata_filename}'
+        logger = logging.getLogger(__name__)
         
         try:
-            # Ensure directory exists
-            await self.vm.execute_command('mkdir -p /home/ai/research/sessions')
-            
-            # Write metadata file
-            metadata_json = json.dumps(session_metadata, indent=2)
-            await self.vm.write_file(metadata_path, metadata_json)
-            
-            logger.info(f"Session metadata saved to: {metadata_path}")
-            
-        except Exception as e:
-            logger.error(f"Failed to save session metadata: {e}")
-        
-        # 4. Create research report artifact on host
-        research_report = self._generate_research_report(results, session_metadata)
-        
-        try:
-            await self.orchestrator.create_and_setup_artifact(
-                name=f"Research Report: {results.get('query', 'Untitled')[:50]}",
-                content=research_report,
-                artifact_type="text/markdown",
-                description=f"Comprehensive AI research report for query: {results.get('query', '')}",
-                execution_environment="documentation",
-                enabled_capabilities=["unlimited_power"]
-            )
-            
-            logger.info("Research report artifact created successfully")
-            
-        except Exception as e:
-            logger.error(f"Failed to create research report artifact: {e}")
-        
-        # 5. Create session data artifact (JSON)
-        try:
-            session_data_json = json.dumps(results, indent=2, default=str)
-            
-            await self.orchestrator.create_and_setup_artifact(
-                name=f"Research Data: {results.get('query', 'Untitled')[:50]}",
-                content=session_data_json,
-                artifact_type="application/json",
-                description="Raw research session data and analysis results",
-                execution_environment="data_processing",
-                enabled_capabilities=["data_analysis"]
-            )
-            
-            logger.info("Research data artifact created successfully")
-            
-        except Exception as e:
-            logger.error(f"Failed to create research data artifact: {e}")
-        
-        # 6. Update AI's research database
-        await self._update_research_database(results, session_metadata)
-        
-        # 7. Generate and save automation script if patterns detected
-        automation_script = await self._generate_automation_script_if_needed(results, session_metadata)
-        if automation_script:
-            try:
-                script_path = f'/home/ai/tools/auto_research_{session_timestamp}.py'
-                await self.vm.write_file(script_path, automation_script)
-                await self.vm.execute_command(f'chmod +x {script_path}')
-                
-                # Add to installed tools
-                if not hasattr(self.vm, 'installed_tools'):
-                    self.vm.installed_tools = []
-                self.vm.installed_tools.append(f'auto_research_{session_timestamp}')
-                
-                logger.info(f"Automation script generated: {script_path}")
-                
-            except Exception as e:
-                logger.error(f"Failed to generate automation script: {e}")
-        
-        # 8. Log session completion event
-        try:
-            await self.orchestrator.log_event(
-                event_type="research_session_completed",
-                content=f"AI research session completed: {results.get('query', '')}",
-                metadata={
-                    "session_timestamp": session_timestamp,
-                    "query": results.get('query', ''),
-                    "sources_analyzed": session_metadata['research_metrics']['sources_found'],
-                    "quality_score": session_metadata['quality_metrics']['overall_quality_score'],
-                    "outcome": session_metadata['session_outcome']
-                }
-            )
-            
-        except Exception as e:
-            logger.error(f"Failed to log session completion event: {e}")
-        
-        # 9. Cleanup temporary files
-        await self._cleanup_session_temp_files(session_timestamp)
-        
-        logger.info(f"Research session finalized successfully: {session_metadata['session_info']['session_id']}")
-        
-    except Exception as e:
-        logger.error(f"Error during research session finalization: {e}")
-        # Ensure browser is closed even if other cleanup fails
-        try:
+            # 1. Close browser gracefully
             if browser:
-                await browser.close()
-        except:
-            pass
+                try:
+                    await browser.close()
+                    logger.info("Browser session closed successfully")
+                except Exception as e:
+                    logger.warning(f"Error closing browser: {e}")
+            
+            # 2. Generate comprehensive session metadata
+            session_metadata = {
+                'session_info': {
+                    'timestamp': time.time(),
+                    'session_id': str(uuid4()),
+                    'query': results.get('query', ''),
+                    'workflow_type': results.get('workflow_type', 'comprehensive'),
+                    'completion_time': time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+                },
+                'research_metrics': {
+                    'sources_found': len(results.get('sources_found', [])),
+                    'articles_analyzed': len([a for a in results.get('articles_analyzed', []) if 'error' not in a]),
+                    'failed_articles': len([a for a in results.get('articles_analyzed', []) if 'error' in a]),
+                    'screenshots_taken': len(results.get('screenshots', [])),
+                    'documents_downloaded': len(results.get('downloaded_documents', [])),
+                    'research_notes_created': len(results.get('research_notes', [])),
+                    'fact_checks_performed': len(results.get('fact_check_results', [])),
+                    'cross_references_analyzed': len(results.get('cross_reference_analysis', []))
+                },
+                'quality_metrics': self._calculate_session_quality_metrics(results),
+                'synthesis_summary': results.get('synthesis', {}).get('summary', {}),
+                'insights_summary': results.get('insights', {}).get('summary', {}),
+                'research_scope': self._analyze_research_scope(results),
+                'session_outcome': self._assess_session_outcome(results)
+            }
+            
+            # 3. Save session metadata to VM
+            session_timestamp = int(time.time())
+            metadata_filename = f'research_session_{session_timestamp}_metadata.json'
+            metadata_path = f'/home/ai/research/sessions/{metadata_filename}'
+            
+            try:
+                # Ensure directory exists
+                await self.vm.execute_command('mkdir -p /home/ai/research/sessions')
+                
+                # Write metadata file
+                metadata_json = json.dumps(session_metadata, indent=2)
+                await self.vm.write_file(metadata_path, metadata_json)
+                
+                logger.info(f"Session metadata saved to: {metadata_path}")
+                
+            except Exception as e:
+                logger.error(f"Failed to save session metadata: {e}")
+            
+            # 4. Create research report artifact on host
+            research_report = self._generate_research_report(results, session_metadata)
+        
+            try:
+                await self.orchestrator.create_and_setup_artifact(
+                    name=f"Research Report: {results.get('query', 'Untitled')[:50]}",
+                    content=research_report,
+                    artifact_type="text/markdown",
+                    description=f"Comprehensive AI research report for query: {results.get('query', '')}",
+                    execution_environment="documentation",
+                    enabled_capabilities=["unlimited_power"]
+                )
+                
+                logger.info("Research report artifact created successfully")
+                
+            except Exception as e:
+                logger.error(f"Failed to create research report artifact: {e}")
+        
+            # 5. Create session data artifact (JSON)
+            try:
+                session_data_json = json.dumps(results, indent=2, default=str)
+                
+                await self.orchestrator.create_and_setup_artifact(
+                    name=f"Research Data: {results.get('query', 'Untitled')[:50]}",
+                    content=session_data_json,
+                    artifact_type="application/json",
+                    description="Raw research session data and analysis results",
+                    execution_environment="data_processing",
+                    enabled_capabilities=["data_analysis"]
+                )
+                
+                logger.info("Research data artifact created successfully")
+                
+            except Exception as e:
+                logger.error(f"Failed to create research data artifact: {e}")
+        
+            # 6. Update AI's research database
+            await self._update_research_database(results, session_metadata)
+        
+            # 7. Generate and save automation script if patterns detected
+            automation_script = await self._generate_automation_script_if_needed(results, session_metadata)
+            if automation_script:
+                try:
+                    script_path = f'/home/ai/tools/auto_research_{session_timestamp}.py'
+                    await self.vm.write_file(script_path, automation_script)
+                    await self.vm.execute_command(f'chmod +x {script_path}')
+                    
+                    # Add to installed tools
+                    if not hasattr(self.vm, 'installed_tools'):
+                        self.vm.installed_tools = []
+                    self.vm.installed_tools.append(f'auto_research_{session_timestamp}')
+                    
+                    logger.info(f"Automation script generated: {script_path}")
+                    
+                except Exception as e:
+                    logger.error(f"Failed to generate automation script: {e}")
+        
+            # 8. Log session completion event
+            try:
+                await self.orchestrator.log_event(
+                    event_type="research_session_completed",
+                    content=f"AI research session completed: {results.get('query', '')}",
+                    metadata={
+                        "session_timestamp": session_timestamp,
+                        "query": results.get('query', ''),
+                        "sources_analyzed": session_metadata['research_metrics']['sources_found'],
+                        "quality_score": session_metadata['quality_metrics']['overall_quality_score'],
+                        "outcome": session_metadata['session_outcome']
+                    }
+                )
+                
+            except Exception as e:
+                logger.error(f"Failed to log session completion event: {e}")
+        
+            # 9. Cleanup temporary files
+            await self._cleanup_session_temp_files(session_timestamp)
+        
+            logger.info(f"Research session finalized successfully: {session_metadata['session_info']['session_id']}")
+        
+        except Exception as e:
+            logger.error(f"Error during research session finalization: {e}")
+            # Ensure browser is closed even if other cleanup fails
+            try:
+                if browser:
+                    await browser.close()
+            except:
+                pass
 
 def _calculate_session_quality_metrics(self, results: Dict[str, Any]) -> Dict[str, Any]:
     """Calculate quality metrics for the research session"""
@@ -3119,166 +3123,43 @@ def _generate_research_report(self, results: Dict[str, Any], session_metadata: D
                 report += f"- **Rationale:** {rec['rationale']}\n"
             if 'specific_actions' in rec:
                 report += "- **Specific Actions:**\n"
-                elif 'survey' in content or 'questionnaire' in content:
-                    methodology_types.append('survey')
-                elif 'interview' in content or 'qualitative' in content:
-                    methodology_types.append('qualitative')
-                elif 'meta-analysis' in content or 'systematic review' in content:
-                    methodology_types.append('review')
-                elif 'observational' in content or 'cohort' in content:
-                    methodology_types.append('observational')
-        
-        return {
-            'query_complexity': len(query.split()),
-            'topic_coverage': len(unique_topics),
-            'unique_topics': unique_topics[:10],  # Top 10 topics
-            'temporal_scope': temporal_analysis.get('date_range', 'Unknown'),
-            'has_geographic_scope': has_geographic_scope,
-            'methodology_diversity': list(set(methodology_types)),
-            'scope_rating': self._rate_research_scope(len(unique_topics), len(set(methodology_types)), has_geographic_scope)
-        }
-
-    def _assess_session_outcome(self, results: Dict[str, Any]) -> str:
-        """Assess the overall outcome of the research session"""
-        
-        # Check for successful data collection
-        articles_analyzed = results.get('articles_analyzed', [])
-        successful_articles = [a for a in articles_analyzed if 'error' not in a]
-        
-        if not articles_analyzed:
-            return 'failed_no_data'
-        
-        success_rate = len(successful_articles) / len(articles_analyzed)
-        
-        # Check synthesis quality
-        synthesis = results.get('synthesis', {})
-        confidence = synthesis.get('confidence_levels', {}).get('overall', 0.0)
-        primary_findings = len(synthesis.get('primary_findings', []))
-        
-        # Check insights quality
-        insights = results.get('insights', {})
-        actionable_recommendations = len(insights.get('recommendations', []))
-        
-        # Determine outcome
-        if success_rate > 0.8 and confidence > 0.7 and primary_findings >= 3:
-            return 'excellent'
-        elif success_rate > 0.6 and confidence > 0.5 and primary_findings >= 2:
-            return 'good'
-        elif success_rate > 0.4 and confidence > 0.3 and primary_findings >= 1:
-            return 'acceptable'
-        elif success_rate > 0.2:
-            return 'limited_success'
-        else:
-            return 'poor'
-
-    def _generate_research_report(self, results: Dict[str, Any], session_metadata: Dict[str, Any]) -> str:
-        """Generate a comprehensive research report in markdown format"""
-        
-        query = results.get('query', 'Research Query')
-        synthesis = results.get('synthesis', {})
-        insights = results.get('insights', {})
-        
-        report = f"""# AI Research Report: {query}
-
-## Executive Summary
-
-**Research Query:** {query}  
-**Session Date:** {session_metadata['session_info']['completion_time']}  
-**Overall Quality Score:** {session_metadata['quality_metrics']['overall_quality_score']:.2f}/1.0  
-**Session Outcome:** {session_metadata['session_outcome'].replace('_', ' ').title()}
-
-## Research Metrics
-
-- **Sources Found:** {session_metadata['research_metrics']['sources_found']}
-- **Articles Successfully Analyzed:** {session_metadata['research_metrics']['articles_analyzed']}
-- **Documents Downloaded:** {session_metadata['research_metrics']['documents_downloaded']}
-- **Fact Checks Performed:** {session_metadata['research_metrics']['fact_checks_performed']}
-
-## Key Findings
-
-"""
+                for action in rec['specific_actions']:
+                    report += f"  - {action}\n"
+            report += "\n"
     
-        # Add primary findings
-        primary_findings = synthesis.get('primary_findings', [])
-        if primary_findings:
-            report += "### Primary Research Findings\n\n"
-            for i, finding in enumerate(primary_findings[:5], 1):
-                confidence = finding.get('confidence', 0.0)
-                report += f"{i}. **{finding.get('finding', '')}**\n"
-                report += f"   - Confidence Level: {confidence:.2f}\n"
-                report += f"   - Support: {finding.get('support_level', 'Unknown')}\n\n"
+    # Add contradictions if any
+    contradictions = synthesis.get('contradictions', [])
+    if contradictions:
+        report += "## Contradictory Evidence\n\n"
+        for contradiction in contradictions[:3]:
+            report += f"- **Issue:** {contradiction.get('contradiction_type', 'Unknown')}\n"
+            report += f"  - Finding 1: {contradiction.get('group1_finding', '')}\n"
+            report += f"  - Finding 2: {contradiction.get('group2_finding', '')}\n"
+            report += f"  - Requires further investigation\n\n"
     
-        # Add consensus points
-        consensus_points = synthesis.get('consensus_points', [])
-        if consensus_points:
-            report += "### Consensus Points\n\n"
-            for point in consensus_points[:3]:
-                report += f"- {point.get('finding', '')}\n"
-                report += f"  - Consensus Strength: {point.get('consensus_strength', 0.0):.2f}\n"
-                report += f"  - Supporting Sources: {point.get('supporting_sources', 0)}\n\n"
+    # Add quality assessment
+    report += "## Research Quality Assessment\n\n"
+    quality_metrics = session_metadata['quality_metrics']
+    report += f"- **Overall Quality:** {quality_metrics['quality_category'].replace('_', ' ').title()}\n"
+    report += f"- **Source Success Rate:** {quality_metrics['success_rate']:.1%}\n"
+    report += f"- **Content Quality:** {quality_metrics['avg_content_quality']:.2f}/1.0\n"
+    report += f"- **Evidence Strength:** {quality_metrics['evidence_strength']:.2f}/1.0\n"
+    report += f"- **Source Diversity:** {quality_metrics['source_diversity']:.2f}/1.0\n\n"
     
-        # Add insights
-        key_insights = insights.get('key_insights', [])
-        if key_insights:
-            report += "## Key Insights\n\n"
-            for insight in key_insights[:5]:
-                report += f"- **{insight.get('insight', '')}**\n"
-                report += f"  - Significance: {insight.get('significance', 0.0):.2f}\n"
-                report += f"  - Category: {insight.get('category', 'Unknown')}\n"
-                if 'explanation' in insight:
-                    report += f"  - {insight['explanation']}\n"
-                report += "\n"
+    # Add knowledge gaps
+    knowledge_gaps = insights.get('knowledge_gaps', [])
+    if knowledge_gaps:
+        report += "## Identified Knowledge Gaps\n\n"
+        for gap in knowledge_gaps[:3]:
+            if isinstance(gap, dict):
+                report += f"- **{gap.get('gap_type', 'Unknown')}:** {gap.get('description', '')}\n"
+                report += f"  - Severity: {gap.get('severity', 'Unknown')}\n"
+                report += f"  - Research Needed: {gap.get('research_needed', 'Unknown')}\n\n"
+            else:
+                report += f"- {gap}\n\n"
     
-        # Add recommendations
-        recommendations = insights.get('recommendations', [])
-        if recommendations:
-            report += "## Recommendations\n\n"
-            for rec in recommendations[:5]:
-                report += f"### {rec.get('recommendation', '')}\n\n"
-                report += f"- **Type:** {rec.get('type', 'Unknown')}\n"
-                report += f"- **Priority:** {rec.get('priority', 'Medium')}\n"
-                report += f"- **Timeframe:** {rec.get('timeframe', 'Unknown')}\n"
-                if 'rationale' in rec:
-                    report += f"- **Rationale:** {rec['rationale']}\n"
-                if 'specific_actions' in rec:
-                    report += "- **Specific Actions:**\n"
-                    for action in rec['specific_actions']:
-                        report += f"  - {action}\n"
-                report += "\n"
-    
-        # Add contradictions if any
-        contradictions = synthesis.get('contradictions', [])
-        if contradictions:
-            report += "## Contradictory Evidence\n\n"
-            for contradiction in contradictions[:3]:
-                report += f"- **Issue:** {contradiction.get('contradiction_type', 'Unknown')}\n"
-                report += f"  - Finding 1: {contradiction.get('group1_finding', '')}\n"
-                report += f"  - Finding 2: {contradiction.get('group2_finding', '')}\n"
-                report += f"  - Requires further investigation\n\n"
-    
-        # Add quality assessment
-        report += "## Research Quality Assessment\n\n"
-        quality_metrics = session_metadata['quality_metrics']
-        report += f"- **Overall Quality:** {quality_metrics['quality_category'].replace('_', ' ').title()}\n"
-        report += f"- **Source Success Rate:** {quality_metrics['success_rate']:.1%}\n"
-        report += f"- **Content Quality:** {quality_metrics['avg_content_quality']:.2f}/1.0\n"
-        report += f"- **Evidence Strength:** {quality_metrics['evidence_strength']:.2f}/1.0\n"
-        report += f"- **Source Diversity:** {quality_metrics['source_diversity']:.2f}/1.0\n\n"
-    
-        # Add knowledge gaps
-        knowledge_gaps = insights.get('knowledge_gaps', [])
-        if knowledge_gaps:
-            report += "## Identified Knowledge Gaps\n\n"
-            for gap in knowledge_gaps[:3]:
-                if isinstance(gap, dict):
-                    report += f"- **{gap.get('gap_type', 'Unknown')}:** {gap.get('description', '')}\n"
-                    report += f"  - Severity: {gap.get('severity', 'Unknown')}\n"
-                    report += f"  - Research Needed: {gap.get('research_needed', 'Unknown')}\n\n"
-                else:
-                    report += f"- {gap}\n\n"
-    
-        # Add footer
-        report += f"""## Session Information
+    # Add footer
+    report += f"""## Session Information
 
 - **Session ID:** {session_metadata['session_info']['session_id']}
 - **Generated by:** Somnus AI Research System
@@ -3290,10 +3171,12 @@ def _generate_research_report(self, results: Dict[str, Any], session_metadata: D
 *This report was automatically generated by the Somnus AI Browser Research System. All findings should be verified through additional sources when making important decisions.*
 """
     
-        return report
+    return report
 
     async def _update_research_database(self, results: Dict[str, Any], session_metadata: Dict[str, Any]):
         """Update AI's personal research database with session results"""
+        
+        logger = logging.getLogger(__name__)
         
         try:
             # Create research database entry
@@ -3327,6 +3210,8 @@ def _generate_research_report(self, results: Dict[str, Any], session_metadata: D
     async def _update_research_index(self, db_entry: Dict[str, Any]):
         """Update searchable research index"""
         
+        logger = logging.getLogger(__name__)
+        
         try:
             # Create/update topic index
             topics_index_path = '/home/ai/research/database/topics_index.json'
@@ -3356,27 +3241,27 @@ def _generate_research_report(self, results: Dict[str, Any], session_metadata: D
         except Exception as e:
             logger.error(f"Failed to update research index: {e}")
 
-    async def _generate_automation_script_if_needed(self, results: Dict[str, Any], session_metadata: Dict[str, Any]) -> Optional[str]:
-        """Generate automation script if research patterns are detected"""
-        
-        # Check if this query type appears frequently
-        query = results.get('query', '').lower()
-        quality_score = session_metadata['quality_metrics']['overall_quality_score']
-        
-        # Only generate automation for high-quality research
-        if quality_score < 0.7:
-            return None
-        
-        # Detect automation-worthy patterns
-        automation_indicators = [
-            'daily', 'weekly', 'monthly', 'regular', 'ongoing', 'monitor', 'track', 'update'
-        ]
-        
-        if not any(indicator in query for indicator in automation_indicators):
-            return None
-        
-        # Generate automation script
-        script_content = f'''#!/usr/bin/env python3
+async def _generate_automation_script_if_needed(self, results: Dict[str, Any], session_metadata: Dict[str, Any]) -> Optional[str]:
+    """Generate automation script if research patterns are detected"""
+    
+    # Check if this query type appears frequently
+    query = results.get('query', '').lower()
+    quality_score = session_metadata['quality_metrics']['overall_quality_score']
+    
+    # Only generate automation for high-quality research
+    if quality_score < 0.7:
+        return None
+    
+    # Detect automation-worthy patterns
+    automation_indicators = [
+        'daily', 'weekly', 'monthly', 'regular', 'ongoing', 'monitor', 'track', 'update'
+    ]
+    
+    if not any(indicator in query for indicator in automation_indicators):
+        return None
+    
+    # Generate automation script
+    script_content = f'''#!/usr/bin/env python3
 """
 AI Research Automation Script
 Generated from successful research session: {session_metadata['session_info']['session_id']}
@@ -3386,6 +3271,8 @@ Quality Score: {quality_score:.2f}
 
 import asyncio
 import json
+import time
+from datetime import datetime
 from ai_browser_research_system import AIBrowserResearch
 
 class AutomatedResearch:
@@ -3448,10 +3335,12 @@ if __name__ == "__main__":
     asyncio.run(main())
 '''
     
-        return script_content
+    return script_content
 
     async def _cleanup_session_temp_files(self, session_timestamp: int):
         """Clean up temporary files from the research session"""
+        
+        logger = logging.getLogger(__name__)
         
         try:
             # Clean old temporary screenshots (keep only last 10 sessions)
@@ -3470,54 +3359,54 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"Session cleanup failed: {e}")
 
-    def _categorize_quality_score(self, score: float) -> str:
-        """Categorize quality score into human-readable categories"""
-        
-        if score >= 0.9:
-            return 'excellent'
-        elif score >= 0.8:
-            return 'very_good'
-        elif score >= 0.7:
-            return 'good'
-        elif score >= 0.6:
-            return 'acceptable'
-        elif score >= 0.4:
-            return 'poor'
-        else:
-            return 'very_poor'
+def _categorize_quality_score(self, score: float) -> str:
+    """Categorize quality score into human-readable categories"""
     
-    def _rate_research_scope(self, topic_count: int, methodology_count: int, has_geographic: bool) -> str:
-        """Rate the scope of research coverage"""
-        
-        scope_score = 0
-        
-        # Topic diversity
-        if topic_count >= 10:
-            scope_score += 3
-        elif topic_count >= 5:
-            scope_score += 2
-        elif topic_count >= 2:
-            scope_score += 1
-        
-        # Methodology diversity
-        if methodology_count >= 3:
-            scope_score += 2
-        elif methodology_count >= 2:
-            scope_score += 1
-        
-        # Geographic scope
-        if has_geographic:
-            scope_score += 1
-        
-        # Convert to rating
-        if scope_score >= 5:
-            return 'comprehensive'
-        elif scope_score >= 3:
-            return 'good'
-        elif scope_score >= 2:
-            return 'moderate'
-        else:
-            return 'limited'
+    if score >= 0.9:
+        return 'excellent'
+    elif score >= 0.8:
+        return 'very_good'
+    elif score >= 0.7:
+        return 'good'
+    elif score >= 0.6:
+        return 'acceptable'
+    elif score >= 0.4:
+        return 'poor'
+    else:
+        return 'very_poor'
+
+def _rate_research_scope(self, topic_count: int, methodology_count: int, has_geographic: bool) -> str:
+    """Rate the scope of research coverage"""
+    
+    scope_score = 0
+    
+    # Topic diversity
+    if topic_count >= 10:
+        scope_score += 3
+    elif topic_count >= 5:
+        scope_score += 2
+    elif topic_count >= 2:
+        scope_score += 1
+    
+    # Methodology diversity
+    if methodology_count >= 3:
+        scope_score += 2
+    elif methodology_count >= 2:
+        scope_score += 1
+    
+    # Geographic scope
+    if has_geographic:
+        scope_score += 1
+    
+    # Convert to rating
+    if scope_score >= 5:
+        return 'comprehensive'
+    elif scope_score >= 3:
+        return 'good'
+    elif scope_score >= 2:
+        return 'moderate'
+    else:
+        return 'limited'
     
     # Utility methods
     def _sanitize_filename(self, url: str) -> str:
@@ -3618,182 +3507,3 @@ if __name__ == "__main__":
             'optimized_terms': optimized_terms
         }
     
-    def _calculate_readability(self, content: str) -> float:
-        """Calculate content readability score"""
-        # Implement readability calculation (e.g., Flesch-Kincaid)
-        words = len(content.split())
-        sentences = content.count('.') + content.count('!') + content.count('?')
-        if sentences == 0:
-            return 0.0
-        avg_sentence_length = words / sentences
-        return max(0, min(100, 206.835 - 1.015 * avg_sentence_length))
-    
-    def _extract_key_topics(self, content: str) -> List[str]:
-        """Extract key topics from content using simple keyword extraction."""
-        # This is a simplified implementation. For production, consider spaCy, NLTK, or an LLM.
-        words = content.lower().split()
-        # Filter out common words and single-character words
-        stop_words = set(["the", "a", "an", "is", "are", "and", "or", "to", "of", "in", "for", "on", "with", "as", "by", "at", "from", "it", "its", "that", "this", "was", "were", "be", "been", "has", "have", "had", "do", "does", "did", "will", "would", "should", "could", "may", "might", "must", "can", "cannot", "this", "that", "these", "those", "it", "its", "they", "them", "their", "he", "she", "his", "her", "him", "we", "us", "our", "you", "your", "i", "me", "my", "said", "say", "says", "about", "into", "through", "during", "before", "after", "above", "below", "up", "down", "out", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very"
-    ])
-        
-        # Count word frequency
-        word_counts = {}
-        for word in words:
-            if word.isalpha() and word not in stop_words:
-                word_counts[word] = word_counts.get(word, 0) + 1
-        
-        # Sort by frequency and return top 5-10
-        sorted_words = sorted(word_counts.items(), key=lambda item: item[1], reverse=True)
-        return [word for word, count in sorted_words[:10]]
-    
-    def _analyze_sentiment(self, content: str) -> Dict[str, float]:
-        """Analyze content sentiment using a simple keyword-based approach."""
-        # For production, consider using NLTK's Vader or a transformer-based model.
-        positive_keywords = ["good", "great", "excellent", "positive", "happy", "success", "benefit", "advantage"]
-        negative_keywords = ["bad", "poor", "terrible", "negative", "sad", "failure", "disadvantage", "problem"]
-
-        content_lower = content.lower()
-        positive_score = sum(content_lower.count(kw) for kw in positive_keywords)
-        negative_score = sum(content_lower.count(kw) for kw in negative_keywords)
-
-        total_score = positive_score + negative_score
-        if total_score == 0:
-            return {'positive': 0.0, 'negative': 0.0, 'neutral': 1.0, 'compound': 0.0}
-
-        positive_ratio = positive_score / total_score
-        negative_ratio = negative_score / total_score
-        neutral_ratio = 1.0 - (positive_ratio + negative_ratio)
-
-        # Simple compound score: positive - negative
-        compound_score = positive_score - negative_score
-
-        return {
-            'positive': positive_ratio,
-            'negative': negative_ratio,
-            'neutral': neutral_ratio,
-            'compound': compound_score
-        }
-    
-    def _calculate_fact_density(self, content: str) -> float:
-        """Calculate density of factual statements using a simplified approach."""
-        sentences = re.split(r'(?<=[.!?])\s+', content)
-        total_sentences = len(sentences)
-        if total_sentences == 0:
-            return 0.0
-
-        factual_indicators = [
-            "is a", "are", "was", "were", "has", "have", "states that", "shows that",
-            "according to", "data indicates", "research found", "study reveals"
-        ]
-        
-        factual_sentence_count = 0
-        for sentence in sentences:
-            sentence_lower = sentence.lower()
-            if any(indicator in sentence_lower for indicator in factual_indicators):
-                factual_sentence_count += 1
-        
-        return factual_sentence_count / total_sentences
-    
-    def _assess_source_quality(self, article_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Assess source quality indicators"""
-        return {
-            'has_author': bool(article_data.get('author')),
-            'has_date': bool(article_data.get('publish_date')),
-            'word_count': article_data.get('word_count', 0),
-            'has_citations': len(article_data.get('links', [])) > 0
-        }
-    
-    def _analyze_citations(self, content: str) -> Dict[str, Any]:
-        """Analyze citations in content"""
-        return {'citation_count': 0, 'citation_quality': 'unknown'}
-    
-    def _detect_bias_indicators(self, content: str) -> Dict[str, Any]:
-        """Detect potential bias indicators using keyword matching."""
-        # For a more robust solution, consider fine-tuned LLMs or advanced NLP techniques.
-        biased_words = [
-            "always", "never", "only", "just", "simply", "clearly", "obviously",
-            "everyone knows", "undoubtedly", "unquestionably", "pathetic", "brilliant",
-            "disaster", "triumph", "radical", "extremist", "propaganda", "agenda"
-        ]
-        loaded_language = [
-            "freedom", "tyranny", "justice", "oppression", "hero", "villain",
-            "crisis", "opportunity", "threat", "promise"
-        ]
-
-        content_lower = content.lower()
-        indicators_found = []
-        bias_score = 0.0
-
-        for word in biased_words:
-            if word in content_lower:
-                indicators_found.append(f"Biased word: {word}")
-                bias_score += 0.1
-
-        for phrase in loaded_language:
-            if phrase in content_lower:
-                indicators_found.append(f"Loaded language: {phrase}")
-                bias_score += 0.05
-
-        # Simple heuristic: more indicators, higher bias score
-        bias_score = min(1.0, bias_score) # Cap at 1.0
-
-        return {'bias_score': bias_score, 'indicators': indicators_found}
-
-# Bind module-level helper functions as class methods (in case some are defined at module scope)
-try:
-    AIBrowserResearch._extract_claims_from_content = _extract_claims_from_content
-    AIBrowserResearch._group_similar_claims = _group_similar_claims
-    AIBrowserResearch._verify_claim_group = _verify_claim_group
-    AIBrowserResearch._calculate_source_credibility = _calculate_source_credibility
-    AIBrowserResearch._analyze_source_consistency = _analyze_source_consistency
-    AIBrowserResearch._calculate_claim_similarity = _calculate_claim_similarity
-    AIBrowserResearch._detect_contradictions = _detect_contradictions
-    AIBrowserResearch._deep_read_article = _deep_read_article
-    AIBrowserResearch._analyze_article_content = _analyze_article_content
-    AIBrowserResearch._calculate_readability = _calculate_readability
-    AIBrowserResearch._extract_key_topics = _extract_key_topics
-    AIBrowserResearch._analyze_sentiment = _analyze_sentiment
-    AIBrowserResearch._calculate_fact_density = _calculate_fact_density
-    AIBrowserResearch._assess_source_quality = _assess_source_quality
-    AIBrowserResearch._analyze_citations = _analyze_citations
-    AIBrowserResearch._detect_bias_indicators = _detect_bias_indicators
-    AIBrowserResearch._analyze_content_structure = _analyze_content_structure
-    AIBrowserResearch._calculate_information_density = _calculate_information_density
-    AIBrowserResearch._detect_expertise_indicators = _detect_expertise_indicators
-    AIBrowserResearch._calculate_overall_quality = _calculate_overall_quality
-    AIBrowserResearch._synthesize_research_findings = _synthesize_research_findings
-    AIBrowserResearch._calculate_source_credibility_for_synthesis = _calculate_source_credibility_for_synthesis
-    AIBrowserResearch._extract_findings_from_article = _extract_findings_from_article
-    AIBrowserResearch._extract_conclusion_statements = _extract_conclusion_statements
-    AIBrowserResearch._extract_quantitative_claims = _extract_quantitative_claims
-    AIBrowserResearch._group_similar_findings = _group_similar_findings
-    AIBrowserResearch._analyze_consensus = _analyze_consensus
-    AIBrowserResearch._identify_contradictions = _identify_contradictions
-    AIBrowserResearch._generate_primary_findings = _generate_primary_findings
-    AIBrowserResearch._calculate_confidence_levels = _calculate_confidence_levels
-    AIBrowserResearch._analyze_source_diversity = _analyze_source_diversity
-    AIBrowserResearch._perform_temporal_analysis = _perform_temporal_analysis
-    AIBrowserResearch._generate_weighted_conclusions = _generate_weighted_conclusions
-    AIBrowserResearch._identify_knowledge_gaps = _identify_knowledge_gaps
-    AIBrowserResearch._assess_evidence_strength = _assess_evidence_strength
-    AIBrowserResearch._generate_synthesis_summary = _generate_synthesis_summary
-    AIBrowserResearch._categorize_research_quality = _categorize_research_quality
-    AIBrowserResearch._generate_research_insights = _generate_research_insights
-    AIBrowserResearch._extract_key_insights = _extract_key_insights
-    AIBrowserResearch._generate_implications = _generate_implications
-    AIBrowserResearch._generate_recommendations = _generate_recommendations
-    AIBrowserResearch._identify_enhanced_knowledge_gaps = _identify_enhanced_knowledge_gaps
-    AIBrowserResearch._suggest_research_directions = _suggest_research_directions
-    AIBrowserResearch._assess_insights_confidence = _assess_insights_confidence
-    AIBrowserResearch._identify_practical_applications = _identify_practical_applications
-    AIBrowserResearch._identify_risk_factors = _identify_risk_factors
-    AIBrowserResearch._identify_opportunities = _identify_opportunities
-    AIBrowserResearch._generate_insights_summary = _generate_insights_summary
-    AIBrowserResearch._assess_insight_significance = _assess_insight_significance
-    AIBrowserResearch._categorize_insight = _categorize_insight
-    AIBrowserResearch._generate_insight_explanation = _generate_insight_explanation
-    AIBrowserResearch._generate_finding_based_recommendation = _generate_finding_based_recommendation
-    AIBrowserResearch._derive_practical_application = _derive_practical_application
-    AIBrowserResearch._assess_overall_usefulness = _assess_overall_usefulness
-    AIBrowserResearch._download_research_documents = _download_research_documents
-    AIBrowserResearch.install_research_extension = install_research_extension
