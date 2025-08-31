@@ -1,0 +1,17 @@
+sequenceDiagram
+  participant Chat as Chat VM
+  participant Cache as Unified Cache
+  participant Res as Research VM
+
+  Chat->>Cache: set(chat_vm_state, priority=HIGH)
+  Chat->>Cache: set(user_context, priority=CRITICAL)
+  Chat-->>User: transitioning...
+  Res->>Cache: get(research_session_context)
+  alt cache hit
+    Cache-->>Res: context
+  else miss
+    Res->>Memory: reconstruct from persistent
+    Memory-->>Res: reconstructed
+    Res->>Cache: set(research_session_context)
+  end
+  Res-->>User: research ready (~50ms)

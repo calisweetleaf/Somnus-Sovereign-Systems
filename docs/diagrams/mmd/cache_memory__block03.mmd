@@ -1,0 +1,7 @@
+stateDiagram-v2
+  [*] --> HOT
+  HOT --> WARM: LRU decay
+  WARM --> COLD: eviction candidate
+  COLD --> HOT: re-reference
+  COLD --> EVICTED: background cleanup
+  EVICTED --> [*]

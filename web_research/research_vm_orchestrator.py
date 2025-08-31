@@ -708,7 +708,7 @@ chrome.action.onClicked.addListener((tab) => {
             if (data) {
                 console.log('Extracted research data:', data);
                 // Send to Somnus research system
-                fetch('http://localhost:8000/api/research/extracted_data', {
+                fetch('http://localhost:8888/api/research/extracted_data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -1027,16 +1027,14 @@ EOF"""
                 "quality_score": "REAL",
                 "credibility_score": "REAL",
                 "bias_score": "REAL",
-                "metadata": "JSON",
-                "FOREIGN KEY (session_id) REFERENCES research_sessions(session_id)"
+                "metadata": "JSON"
             },
             "research_analysis": {
                 "analysis_id": "TEXT PRIMARY KEY",
                 "source_id": "TEXT",
                 "analysis_type": "TEXT NOT NULL",
                 "result": "JSON",
-                "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-                "FOREIGN KEY (source_id) REFERENCES research_sources(source_id)"
+                "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
             },
             "research_cache": {
                 "cache_key": "TEXT PRIMARY KEY",
@@ -1211,6 +1209,34 @@ def analyze_content():
         return jsonify({'success': True, 'analysis': analysis_result})
     else:
         return jsonify({'success': False, 'error': result.stderr})
+
+@app.route('/api/research/extracted_data', methods=['POST'])
+def extracted_data():
+    data = request.json or {}
+    # Map extension payload into research_sources
+    session_id = data.get('session_id', 'unknown')
+    url = data.get('url', '')
+    title = data.get('title', '')
+    abstract = data.get('abstract', '')
+    source_id = data.get('source_id', f"ext_{int(datetime.now(timezone.utc).timestamp())}")
+    metadata = {
+        'citations': data.get('citations', []),
+        'authors': data.get('authors', []),
+        'publication_date': data.get('publicationDate')
+    }
+    # Insert with a basic quality score if no content
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO research_sources 
+        (source_id, session_id, url, title, content, quality_score, metadata)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        source_id, session_id, url, title, abstract, 0.0, json.dumps(metadata)
+    ))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True, 'source_id': source_id})
 
 @app.route('/api/research/sessions', methods=['GET'])
 def get_research_sessions():

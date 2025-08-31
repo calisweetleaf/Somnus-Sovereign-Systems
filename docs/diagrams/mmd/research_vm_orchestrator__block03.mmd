@@ -1,0 +1,7 @@
+stateDiagram-v2
+  [*] --> CREATING
+  CREATING --> RUNNING
+  RUNNING --> SUSPENDED: inactive > 2h
+  SUSPENDED --> RUNNING: restore
+  RUNNING --> ERROR: capability verification failed
+  ERROR --> [*]

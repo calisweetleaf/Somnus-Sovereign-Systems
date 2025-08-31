@@ -24,11 +24,16 @@ from uuid import UUID, uuid4
 from dataclasses import dataclass, asdict
 from collections import defaultdict, deque
 
-import websockets
-from websockets.exceptions import ConnectionClosed, WebSocketException
+import os
+import base64
+import zlib
 from pydantic import BaseModel, Field, validator
 import redis.asyncio as redis
 from fastapi import WebSocket, WebSocketDisconnect
+try:
+    import jwt  # PyJWT for JWT validation
+except Exception:
+    jwt = None
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +134,7 @@ class ResearchConnection:
     last_heartbeat: datetime
     rate_limit_tokens: int
     rate_limit_reset: datetime
+    filters: Dict[str, Any] = field(default_factory=dict)
     
     def __post_init__(self):
         if not hasattr(self, 'connection_id') or not self.connection_id:
@@ -154,6 +160,13 @@ class ResearchStreamConfig:
         self.redis_url = "redis://localhost:6379"
         self.enable_persistence = True
         self.enable_collaboration = True
+        # Security/auth
+        self.jwt_secret_env = "STREAM_JWT_SECRET"
+        self.jwt_algorithm = "HS256"
+        # Payload handling
+        self.compression_enabled = True  # zlib+base64
+        # Pub/Sub
+        self.enable_pubsub = True
 
 
 class ResearchStreamManager:
@@ -385,16 +398,19 @@ class ResearchStreamManager:
         # Persist to Redis if enabled
         if self.redis_client and self.config.enable_persistence:
             try:
+                serialized = json.dumps(event.to_dict())
                 await self.redis_client.lpush(
                     f"research:events:{event.session_id}",
-                    json.dumps(event.to_dict())
+                    serialized
                 )
                 await self.redis_client.expire(
                     f"research:events:{event.session_id}",
                     86400  # 24 hours
                 )
+                if self.config.enable_pubsub:
+                    await self.redis_client.publish(f"research:session:{event.session_id}", serialized)
             except Exception as e:
-                logger.warning(f"⚠️ Failed to persist event: {e}")
+                logger.warning(f"⚠️ Failed to persist/pubsub event: {e}")
         
         # Broadcast to session connections
         success_count = await self._broadcast_to_session(event.session_id, event)
@@ -538,13 +554,27 @@ class ResearchStreamManager:
     # Private methods
     
     async def _authenticate_user(self, user_id: str, auth_token: Optional[str]) -> bool:
-        """Authenticate user connection (integrate with your auth system)"""
-        # Placeholder implementation - replace with your auth system
-        if not auth_token:
+        """Authenticate user connection using JWT or local token.
+        - If STREAM_JWT_SECRET is set, expect a Bearer JWT token and validate subject == user_id.
+        - Otherwise, optionally accept a static token from STREAM_LOCAL_TOKEN env var.
+        """
+        try:
+            if not auth_token:
+                return False
+            token = auth_token.split()[-1]
+            jwt_secret = os.getenv(self.config.jwt_secret_env)
+            if jwt and jwt_secret:
+                # Validate JWT
+                decoded = jwt.decode(token, jwt_secret, algorithms=[self.config.jwt_algorithm])
+                sub = decoded.get("sub") or decoded.get("user_id")
+                if sub and str(sub) == str(user_id):
+                    return True
+                return False
+            # Fallback to static token check
+            local_token = os.getenv("STREAM_LOCAL_TOKEN")
+            return bool(local_token) and token == local_token
+        except Exception:
             return False
-        
-        # In production, validate JWT token, check permissions, etc.
-        return len(auth_token) > 10  # Simple placeholder
     
     async def _check_rate_limit(self, connection: ResearchConnection) -> bool:
         """Check if connection is within rate limits"""
@@ -565,7 +595,7 @@ class ResearchStreamManager:
         return True
     
     async def _send_event(self, event: StreamEvent, connection_id: str) -> bool:
-        """Send event to specific connection"""
+        """Send event to specific connection, with optional compression and retries."""
         if connection_id not in self.connections:
             return False
         
@@ -576,21 +606,39 @@ class ResearchStreamManager:
             event.event_type not in connection.subscribed_events):
             return True  # Skip but don't count as failure
         
-        try:
-            message = json.dumps(event.to_dict())
-            await connection.websocket.send_text(message)
-            
-            # Update metrics
-            self.metrics["bytes_sent"] += len(message)
-            
-            return True
-            
-        except (ConnectionClosed, WebSocketDisconnect):
-            await self._close_connection(connection_id, "connection_lost")
-            return False
-        except Exception as e:
-            logger.error(f"❌ Failed to send event to {connection_id}: {e}")
-            return False
+        # Prepare message
+        payload = event.to_dict()
+        message = json.dumps(payload)
+        if self.config.compression_enabled:
+            try:
+                compressed = base64.b64encode(zlib.compress(message.encode("utf-8"))).decode("ascii")
+                envelope = json.dumps({
+                    "compressed": True,
+                    "encoding": "zlib+base64",
+                    "payload": compressed
+                })
+                wire_message = envelope
+            except Exception:
+                # Fallback to uncompressed on error
+                wire_message = message
+        else:
+            wire_message = message
+        
+        # Retry send with backoff
+        for attempt in range(3):
+            try:
+                await connection.websocket.send_text(wire_message)
+                self.metrics["bytes_sent"] += len(wire_message)
+                return True
+            except WebSocketDisconnect:
+                await self._close_connection(connection_id, "connection_lost")
+                return False
+            except Exception as e:
+                if attempt == 2:
+                    logger.error(f"❌ Failed to send event to {connection_id}: {e}")
+                    return False
+                await asyncio.sleep(0.05 * (attempt + 1))
+        return False
     
     async def _broadcast_to_session(
         self,
@@ -676,16 +724,23 @@ class ResearchStreamManager:
                 logger.error(f"❌ Event handler failed: {e}")
     
     async def _heartbeat_monitor(self):
-        """Monitor connection health with heartbeats"""
+        """Monitor connection health with heartbeats (no ping; send lightweight status event)."""
         while self.is_running:
             try:
                 now = datetime.now(timezone.utc)
                 stale_connections = []
                 
                 for connection_id, connection in self.connections.items():
-                    # Send heartbeat ping
+                    # Send heartbeat as a lightweight event to confirm liveness
                     try:
-                        await connection.websocket.ping()
+                        hb_event = StreamEvent(
+                            event_type=StreamEventType.CONNECTION_STATUS,
+                            session_id=connection.session_id,
+                            user_id=connection.user_id,
+                            timestamp=now,
+                            data={"status": "heartbeat", "ts": now.isoformat()}
+                        )
+                        await self._send_event(hb_event, connection_id)
                         connection.last_heartbeat = now
                     except Exception:
                         stale_connections.append(connection_id)

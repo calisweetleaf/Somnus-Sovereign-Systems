@@ -859,6 +859,72 @@ class SecurityEnforcer:
         else:
             return float(memory_str) / (1024**3)
     
+    async def validate_provisioning_request(
+        self, 
+        user_id: str, 
+        requested_capabilities: List[str], 
+        session_title: str
+    ) -> Dict[str, Any]:
+        """
+        Validate VM provisioning request for security compliance.
+        Used by ai_orchestrator.py during environment provisioning.
+        """
+        try:
+            violations = []
+            threat_score = 0.0
+            
+            # Check user rate limits
+            if await self._check_rate_limits(user_id):
+                violations.append("rate_limit_exceeded")
+                threat_score += 0.3
+            
+            # Validate capability requests
+            for capability in requested_capabilities:
+                if capability not in ['base_tools', 'web_development', 'ai_research', 'data_analysis']:
+                    violations.append(f"unsupported_capability_{capability}")
+                    threat_score += 0.2
+                
+                # Check for high-risk capability combinations
+                if capability == 'ai_research' and 'web_development' in requested_capabilities:
+                    threat_score += 0.1  # Slightly elevated for ML + web combo
+            
+            # Check session title for suspicious content
+            if session_title:
+                content_allowed, content_violations, content_score = await self.content_classifier.is_content_allowed(session_title)
+                if not content_allowed:
+                    violations.extend(content_violations)
+                    threat_score += content_score * 0.5
+                
+                # Check for injection attempts in title
+                is_injection, injection_confidence, injection_patterns = await self.injection_detector.detect_injection(session_title)
+                if is_injection:
+                    violations.extend(injection_patterns)
+                    threat_score += injection_confidence * 0.7
+            
+            # Determine allowed status
+            allowed = len(violations) == 0 and threat_score < 0.7
+            reason = "Provisioning approved" if allowed else f"Security violations: {', '.join(violations)}"
+            
+            return {
+                "allowed": allowed,
+                "reason": reason,
+                "threat_score": min(threat_score, 1.0),
+                "violations": violations,
+                "user_id": user_id,
+                "capabilities_approved": requested_capabilities if allowed else [],
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Provisioning validation failed: {e}")
+            return {
+                "allowed": False,
+                "reason": f"Security validation error: {str(e)}",
+                "threat_score": 1.0,
+                "violations": ["validation_error"],
+                "user_id": user_id
+            }
+    
     def get_security_metrics(self) -> Dict[str, Any]:
         """Get comprehensive security metrics"""
         return {

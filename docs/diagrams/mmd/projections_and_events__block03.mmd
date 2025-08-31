@@ -1,0 +1,19 @@
+requirementDiagram
+  requirement local_only {
+    id: PRIV-001
+    text: All processing must remain local by default
+    risk: low
+    verifymethod: test
+  }
+  requirement capability_abstraction {
+    id: PRIV-002
+    text: AI sees only capabilities, not raw personal data
+    risk: medium
+    verifymethod: review
+  }
+  requirement explicit_consent {
+    id: PRIV-003
+    text: Any expansion of AI visibility requires explicit user consent
+    risk: medium
+    verifymethod: test
+  }

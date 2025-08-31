@@ -1,0 +1,2901 @@
+backend/virtual_machine/ai_browser_research_system.py:949: SyntaxWarning: invalid escape sequence '\s'
+  """)
+backend/virtual_machine/ai_browser_research_system.py:1397: SyntaxWarning: invalid escape sequence '\s'
+  """)
+backend/virtual_machine/ai_browser_research_system.py:1845: SyntaxWarning: invalid escape sequence '\s'
+  """)
+backend/virtual_machine/ai_browser_research_system.py:2293: SyntaxWarning: invalid escape sequence '\s'
+  """)
+backend/virtual_machine/ai_browser_research_system.py:2741: SyntaxWarning: invalid escape sequence '\s'
+  """)
+Listing 'backend'...
+Listing 'backend/artifacts'...
+Listing 'backend/virtual_machine'...
+Listing 'backend/virtual_machine/.analysis'...
+Compiling 'backend/virtual_machine/ai_browser_research_system.py'...
+***   File "backend/virtual_machine/ai_browser_research_system.py", line 5654
+    results = {
+              ^
+SyntaxError: '{' was never closed
+
+Compiling 'backend/virtual_machine/ai_personal_dev_environment.py'...
+***   File "backend/virtual_machine/ai_personal_dev_environment.py", line 416
+    "code": [
+            ^
+SyntaxError: '[' was never closed
+
+Listing 'core'...
+Compiling 'core/model_loader.py'...
+***   File "core/model_loader.py", line 2282
+    ```
+    ^
+SyntaxError: invalid syntax
+
+Listing 'projects'...
+Compiling 'projects/__init__.py'...
+***   File "projects/__init__.py", line 60
+    from .project_collaboration import (
+                                       ^
+SyntaxError: '(' was never closed
+
+Compiling 'projects/project_memory.py'...
+***   File "projects/project_memory.py", line 148
+    **(tags or set())
+    ^^
+SyntaxError: invalid syntax
+
+Command 'ruff' not found, but can be installed with:
+sudo snap install ruff
+pyflakes: command not found
+F401 [*] `html` imported but unused
+  --> backend/artifacts/artifact_config.py:16:8
+   |
+14 | import base64
+15 | import hashlib
+16 | import html
+   |        ^^^^
+17 | import json
+18 | import logging
+   |
+help: Remove unused import: `html`
+
+F401 [*] `traceback` imported but unused
+  --> backend/artifacts/artifact_config.py:25:8
+   |
+23 | import threading
+24 | import time
+25 | import traceback
+   |        ^^^^^^^^^
+26 | from datetime import datetime, timezone, timedelta
+27 | from pathlib import Path
+   |
+help: Remove unused import: `traceback`
+
+F401 [*] `datetime.timedelta` imported but unused
+  --> backend/artifacts/artifact_config.py:26:42
+   |
+24 | import time
+25 | import traceback
+26 | from datetime import datetime, timezone, timedelta
+   |                                          ^^^^^^^^^
+27 | from pathlib import Path
+28 | from typing import Dict, List, Optional, Any, Set, Union, Tuple, AsyncGenerator
+   |
+help: Remove unused import: `datetime.timedelta`
+
+F401 [*] `typing.Union` imported but unused
+  --> backend/artifacts/artifact_config.py:28:52
+   |
+26 | from datetime import datetime, timezone, timedelta
+27 | from pathlib import Path
+28 | from typing import Dict, List, Optional, Any, Set, Union, Tuple, AsyncGenerator
+   |                                                    ^^^^^
+29 | from uuid import UUID, uuid4
+30 | from dataclasses import dataclass, field
+   |
+help: Remove unused import
+
+F401 [*] `typing.Tuple` imported but unused
+  --> backend/artifacts/artifact_config.py:28:59
+   |
+26 | from datetime import datetime, timezone, timedelta
+27 | from pathlib import Path
+28 | from typing import Dict, List, Optional, Any, Set, Union, Tuple, AsyncGenerator
+   |                                                           ^^^^^
+29 | from uuid import UUID, uuid4
+30 | from dataclasses import dataclass, field
+   |
+help: Remove unused import
+
+F401 [*] `typing.AsyncGenerator` imported but unused
+  --> backend/artifacts/artifact_config.py:28:66
+   |
+26 | from datetime import datetime, timezone, timedelta
+27 | from pathlib import Path
+28 | from typing import Dict, List, Optional, Any, Set, Union, Tuple, AsyncGenerator
+   |                                                                  ^^^^^^^^^^^^^^
+29 | from uuid import UUID, uuid4
+30 | from dataclasses import dataclass, field
+   |
+help: Remove unused import
+
+F401 [*] `contextlib.asynccontextmanager` imported but unused
+  --> backend/artifacts/artifact_config.py:32:24
+   |
+30 | from dataclasses import dataclass, field
+31 | from enum import Enum
+32 | from contextlib import asynccontextmanager
+   |                        ^^^^^^^^^^^^^^^^^^^
+33 | import signal
+   |
+help: Remove unused import: `contextlib.asynccontextmanager`
+
+F401 [*] `signal` imported but unused
+  --> backend/artifacts/artifact_config.py:33:8
+   |
+31 | from enum import Enum
+32 | from contextlib import asynccontextmanager
+33 | import signal
+   |        ^^^^^^
+34 |
+35 | import aiofiles
+   |
+help: Remove unused import: `signal`
+
+F401 [*] `bleach` imported but unused
+  --> backend/artifacts/artifact_config.py:37:8
+   |
+35 | import aiofiles
+36 | import aiofiles.os
+37 | import bleach
+   |        ^^^^^^
+38 | import markdown
+39 | import psutil
+   |
+help: Remove unused import: `bleach`
+
+F401 [*] `markdown` imported but unused
+  --> backend/artifacts/artifact_config.py:38:8
+   |
+36 | import aiofiles.os
+37 | import bleach
+38 | import markdown
+   |        ^^^^^^^^
+39 | import psutil
+40 | from fastapi import (
+   |
+help: Remove unused import: `markdown`
+
+F401 [*] `fastapi.FastAPI` imported but unused
+  --> backend/artifacts/artifact_config.py:41:5
+   |
+39 | import psutil
+40 | from fastapi import (
+41 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+   |     ^^^^^^^
+42 |     BackgroundTasks, Request, Response, status, Depends, APIRouter
+43 | )
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.BackgroundTasks` imported but unused
+  --> backend/artifacts/artifact_config.py:42:5
+   |
+40 | from fastapi import (
+41 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+42 |     BackgroundTasks, Request, Response, status, Depends, APIRouter
+   |     ^^^^^^^^^^^^^^^
+43 | )
+44 | from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.Request` imported but unused
+  --> backend/artifacts/artifact_config.py:42:22
+   |
+40 | from fastapi import (
+41 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+42 |     BackgroundTasks, Request, Response, status, Depends, APIRouter
+   |                      ^^^^^^^
+43 | )
+44 | from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.Response` imported but unused
+  --> backend/artifacts/artifact_config.py:42:31
+   |
+40 | from fastapi import (
+41 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+42 |     BackgroundTasks, Request, Response, status, Depends, APIRouter
+   |                               ^^^^^^^^
+43 | )
+44 | from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.status` imported but unused
+  --> backend/artifacts/artifact_config.py:42:41
+   |
+40 | from fastapi import (
+41 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+42 |     BackgroundTasks, Request, Response, status, Depends, APIRouter
+   |                                         ^^^^^^
+43 | )
+44 | from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.Depends` imported but unused
+  --> backend/artifacts/artifact_config.py:42:49
+   |
+40 | from fastapi import (
+41 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+42 |     BackgroundTasks, Request, Response, status, Depends, APIRouter
+   |                                                 ^^^^^^^
+43 | )
+44 | from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.responses.JSONResponse` imported but unused
+  --> backend/artifacts/artifact_config.py:44:31
+   |
+42 |     BackgroundTasks, Request, Response, status, Depends, APIRouter
+43 | )
+44 | from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
+   |                               ^^^^^^^^^^^^
+45 | from pydantic import BaseModel, Field, validator
+46 | from starlette.websockets import WebSocketState
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.responses.StreamingResponse` imported but unused
+  --> backend/artifacts/artifact_config.py:44:45
+   |
+42 |     BackgroundTasks, Request, Response, status, Depends, APIRouter
+43 | )
+44 | from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
+   |                                             ^^^^^^^^^^^^^^^^^
+45 | from pydantic import BaseModel, Field, validator
+46 | from starlette.websockets import WebSocketState
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.responses.HTMLResponse` imported but unused
+  --> backend/artifacts/artifact_config.py:44:64
+   |
+42 |     BackgroundTasks, Request, Response, status, Depends, APIRouter
+43 | )
+44 | from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
+   |                                                                ^^^^^^^^^^^^
+45 | from pydantic import BaseModel, Field, validator
+46 | from starlette.websockets import WebSocketState
+   |
+help: Remove unused import
+
+F401 [*] `pydantic.validator` imported but unused
+  --> backend/artifacts/artifact_config.py:45:40
+   |
+43 | )
+44 | from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
+45 | from pydantic import BaseModel, Field, validator
+   |                                        ^^^^^^^^^
+46 | from starlette.websockets import WebSocketState
+47 | import uvicorn
+   |
+help: Remove unused import: `pydantic.validator`
+
+F401 [*] `uvicorn` imported but unused
+  --> backend/artifacts/artifact_config.py:47:8
+   |
+45 | from pydantic import BaseModel, Field, validator
+46 | from starlette.websockets import WebSocketState
+47 | import uvicorn
+   |        ^^^^^^^
+48 |
+49 | from core.git_integration_module import GitHubIntegrationManager
+   |
+help: Remove unused import: `uvicorn`
+
+F401 `docker` imported but unused; consider using `importlib.util.find_spec` to test for availability
+  --> backend/artifacts/artifact_config.py:56:12
+   |
+54 | # Optional dependencies for enhanced features
+55 | try:
+56 |     import docker
+   |            ^^^^^^
+57 |     DOCKER_AVAILABLE = True
+58 | except ImportError:
+   |
+help: Remove unused import: `docker`
+
+F401 `pygments.highlight` imported but unused; consider using `importlib.util.find_spec` to test for availability
+  --> backend/artifacts/artifact_config.py:62:26
+   |
+61 | try:
+62 |     from pygments import highlight
+   |                          ^^^^^^^^^
+63 |     from pygments.lexers import get_lexer_by_name, guess_lexer
+64 |     from pygments.formatters import HtmlFormatter
+   |
+help: Remove unused import: `pygments.highlight`
+
+F401 `pygments.lexers.get_lexer_by_name` imported but unused; consider using `importlib.util.find_spec` to test for availability
+  --> backend/artifacts/artifact_config.py:63:33
+   |
+61 | try:
+62 |     from pygments import highlight
+63 |     from pygments.lexers import get_lexer_by_name, guess_lexer
+   |                                 ^^^^^^^^^^^^^^^^^
+64 |     from pygments.formatters import HtmlFormatter
+65 |     SYNTAX_HIGHLIGHTING = True
+   |
+help: Remove unused import
+
+F401 `pygments.lexers.guess_lexer` imported but unused; consider using `importlib.util.find_spec` to test for availability
+  --> backend/artifacts/artifact_config.py:63:52
+   |
+61 | try:
+62 |     from pygments import highlight
+63 |     from pygments.lexers import get_lexer_by_name, guess_lexer
+   |                                                    ^^^^^^^^^^^
+64 |     from pygments.formatters import HtmlFormatter
+65 |     SYNTAX_HIGHLIGHTING = True
+   |
+help: Remove unused import
+
+F401 `pygments.formatters.HtmlFormatter` imported but unused; consider using `importlib.util.find_spec` to test for availability
+  --> backend/artifacts/artifact_config.py:64:37
+   |
+62 |     from pygments import highlight
+63 |     from pygments.lexers import get_lexer_by_name, guess_lexer
+64 |     from pygments.formatters import HtmlFormatter
+   |                                     ^^^^^^^^^^^^^
+65 |     SYNTAX_HIGHLIGHTING = True
+66 | except ImportError:
+   |
+help: Remove unused import: `pygments.formatters.HtmlFormatter`
+
+E722 Do not use bare `except`
+   --> backend/artifacts/artifact_config.py:895:13
+    |
+893 |             try:
+894 |                 await self._install_package("pip", package, work_dir)
+895 |             except:
+    |             ^^^^^^
+896 |                 pass  # Continue if package fails
+    |
+
+E722 Do not use bare `except`
+    --> backend/artifacts/artifact_config.py:1018:21
+     |
+1016 |                         if gpus:
+1017 |                             gpu_util = max(gpu.load * 100 for gpu in gpus)
+1018 |                     except:
+     |                     ^^^^^^
+1019 |                         pass
+     |
+
+E722 Do not use bare `except`
+    --> backend/artifacts/artifact_config.py:1556:17
+     |
+1554 |                 try:
+1555 |                     await ws.close()
+1556 |                 except:
+     |                 ^^^^^^
+1557 |                     pass
+     |
+
+F541 [*] f-string without any placeholders
+    --> backend/artifacts/artifact_config.py:2068:11
+     |
+2066 |     )
+2067 |     
+2068 |     print(f"\\nCreated unlimited artifacts:")
+     |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2069 |     print(f"  - Training artifact: {training_artifact.metadata.artifact_id}")
+2070 |     print(f"  - Video artifact: {video_artifact.metadata.artifact_id}")
+     |
+help: Remove extraneous `f` prefix
+
+F401 [*] `base64` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:17:8
+   |
+16 | import asyncio
+17 | import base64
+   |        ^^^^^^
+18 | import json
+19 | import logging
+   |
+help: Remove unused import: `base64`
+
+F401 [*] `os` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:20:8
+   |
+18 | import json
+19 | import logging
+20 | import os
+   |        ^^
+21 | import shutil
+22 | import signal
+   |
+help: Remove unused import: `os`
+
+F401 [*] `signal` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:22:8
+   |
+20 | import os
+21 | import shutil
+22 | import signal
+   |        ^^^^^^
+23 | import subprocess
+24 | import tempfile
+   |
+help: Remove unused import: `signal`
+
+F401 [*] `subprocess` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:23:8
+   |
+21 | import shutil
+22 | import signal
+23 | import subprocess
+   |        ^^^^^^^^^^
+24 | import tempfile
+25 | import threading
+   |
+help: Remove unused import: `subprocess`
+
+F401 [*] `threading` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:25:8
+   |
+23 | import subprocess
+24 | import tempfile
+25 | import threading
+   |        ^^^^^^^^^
+26 | import time
+27 | import traceback
+   |
+help: Remove unused import: `threading`
+
+F401 [*] `traceback` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:27:8
+   |
+25 | import threading
+26 | import time
+27 | import traceback
+   |        ^^^^^^^^^
+28 | from datetime import datetime, timezone, timedelta
+29 | from pathlib import Path
+   |
+help: Remove unused import: `traceback`
+
+F401 [*] `contextlib.asynccontextmanager` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:34:24
+   |
+32 | from dataclasses import dataclass, field
+33 | from enum import Enum
+34 | from contextlib import asynccontextmanager
+   |                        ^^^^^^^^^^^^^^^^^^^
+35 | import tarfile
+36 | import io
+   |
+help: Remove unused import: `contextlib.asynccontextmanager`
+
+F401 [*] `psutil` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:40:8
+   |
+38 | # Core dependencies
+39 | import docker
+40 | import psutil
+   |        ^^^^^^
+41 | import aiofiles
+42 | from fastapi import (
+   |
+help: Remove unused import: `psutil`
+
+F401 [*] `aiofiles` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:41:8
+   |
+39 | import docker
+40 | import psutil
+41 | import aiofiles
+   |        ^^^^^^^^
+42 | from fastapi import (
+43 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+   |
+help: Remove unused import: `aiofiles`
+
+F401 [*] `fastapi.FastAPI` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:43:5
+   |
+41 | import aiofiles
+42 | from fastapi import (
+43 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+   |     ^^^^^^^
+44 |     BackgroundTasks, Request, Response, status, Depends, APIRouter, File, UploadFile
+45 | )
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.BackgroundTasks` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:44:5
+   |
+42 | from fastapi import (
+43 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+44 |     BackgroundTasks, Request, Response, status, Depends, APIRouter, File, UploadFile
+   |     ^^^^^^^^^^^^^^^
+45 | )
+46 | from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.Request` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:44:22
+   |
+42 | from fastapi import (
+43 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+44 |     BackgroundTasks, Request, Response, status, Depends, APIRouter, File, UploadFile
+   |                      ^^^^^^^
+45 | )
+46 | from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.Response` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:44:31
+   |
+42 | from fastapi import (
+43 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+44 |     BackgroundTasks, Request, Response, status, Depends, APIRouter, File, UploadFile
+   |                               ^^^^^^^^
+45 | )
+46 | from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.status` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:44:41
+   |
+42 | from fastapi import (
+43 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+44 |     BackgroundTasks, Request, Response, status, Depends, APIRouter, File, UploadFile
+   |                                         ^^^^^^
+45 | )
+46 | from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.Depends` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:44:49
+   |
+42 | from fastapi import (
+43 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+44 |     BackgroundTasks, Request, Response, status, Depends, APIRouter, File, UploadFile
+   |                                                 ^^^^^^^
+45 | )
+46 | from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.File` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:44:69
+   |
+42 | from fastapi import (
+43 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+44 |     BackgroundTasks, Request, Response, status, Depends, APIRouter, File, UploadFile
+   |                                                                     ^^^^
+45 | )
+46 | from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.UploadFile` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:44:75
+   |
+42 | from fastapi import (
+43 |     FastAPI, HTTPException, WebSocket, WebSocketDisconnect,
+44 |     BackgroundTasks, Request, Response, status, Depends, APIRouter, File, UploadFile
+   |                                                                           ^^^^^^^^^^
+45 | )
+46 | from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.responses.JSONResponse` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:46:31
+   |
+44 |     BackgroundTasks, Request, Response, status, Depends, APIRouter, File, UploadFile
+45 | )
+46 | from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+   |                               ^^^^^^^^^^^^
+47 | from pydantic import BaseModel, Field, validator
+48 | from starlette.websockets import WebSocketState
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.responses.FileResponse` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:46:64
+   |
+44 |     BackgroundTasks, Request, Response, status, Depends, APIRouter, File, UploadFile
+45 | )
+46 | from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+   |                                                                ^^^^^^^^^^^^
+47 | from pydantic import BaseModel, Field, validator
+48 | from starlette.websockets import WebSocketState
+   |
+help: Remove unused import
+
+F401 [*] `pydantic.Field` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:47:33
+   |
+45 | )
+46 | from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+47 | from pydantic import BaseModel, Field, validator
+   |                                 ^^^^^
+48 | from starlette.websockets import WebSocketState
+   |
+help: Remove unused import
+
+F401 [*] `pydantic.validator` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:47:40
+   |
+45 | )
+46 | from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+47 | from pydantic import BaseModel, Field, validator
+   |                                        ^^^^^^^^^
+48 | from starlette.websockets import WebSocketState
+   |
+help: Remove unused import
+
+F401 [*] `complete_artifact_system.UnlimitedExecutionResult` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:53:47
+   |
+51 | from complete_artifact_system import (
+52 |     UnlimitedArtifact, UnlimitedArtifactManager, ArtifactType, 
+53 |     ExecutionEnvironment, ArtifactCapability, UnlimitedExecutionResult,
+   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^
+54 |     UnlimitedExecutionConfig
+55 | )
+   |
+help: Remove unused import
+
+F401 [*] `complete_artifact_system.UnlimitedExecutionConfig` imported but unused
+  --> backend/artifacts/artifact_container_runtime.py:54:5
+   |
+52 |     UnlimitedArtifact, UnlimitedArtifactManager, ArtifactType, 
+53 |     ExecutionEnvironment, ArtifactCapability, UnlimitedExecutionResult,
+54 |     UnlimitedExecutionConfig
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^
+55 | )
+   |
+help: Remove unused import
+
+F401 `core.memory_core.MemoryManager` imported but unused; consider using `importlib.util.find_spec` to test for availability
+  --> backend/artifacts/artifact_container_runtime.py:60:34
+   |
+58 | try:
+59 |     from schemas.session import SessionID, UserID
+60 |     from core.memory_core import MemoryManager, MemoryType, MemoryImportance
+   |                                  ^^^^^^^^^^^^^
+61 |     from backend.virtual_machine.vm_supervisor import VMInstanceManager
+62 |     SOMNUS_INTEGRATION = True
+   |
+help: Remove unused import: `core.memory_core.MemoryManager`
+
+F401 `backend.virtual_machine.vm_supervisor.VMInstanceManager` imported but unused; consider using `importlib.util.find_spec` to test for availability
+  --> backend/artifacts/artifact_container_runtime.py:61:55
+   |
+59 |     from schemas.session import SessionID, UserID
+60 |     from core.memory_core import MemoryManager, MemoryType, MemoryImportance
+61 |     from backend.virtual_machine.vm_supervisor import VMInstanceManager
+   |                                                       ^^^^^^^^^^^^^^^^^
+62 |     SOMNUS_INTEGRATION = True
+63 | except ImportError:
+   |
+help: Remove unused import: `backend.virtual_machine.vm_supervisor.VMInstanceManager`
+
+E722 Do not use bare `except`
+   --> backend/artifacts/artifact_container_runtime.py:430:13
+    |
+428 |             try:
+429 |                 shutil.rmtree(build_path)
+430 |             except:
+    |             ^^^^^^
+431 |                 pass
+    |
+
+F841 Local variable `error_buffer` is assigned to but never used
+   --> backend/artifacts/artifact_container_runtime.py:709:13
+    |
+708 |             output_buffer = ""
+709 |             error_buffer = ""
+    |             ^^^^^^^^^^^^
+710 |             
+711 |             # Stream output in real-time
+    |
+help: Remove assignment to unused variable `error_buffer`
+
+E722 Do not use bare `except`
+   --> backend/artifacts/artifact_container_runtime.py:935:13
+    |
+933 |                             metrics.gpu_memory_mb = float(gpu_parts[1].strip())
+934 |                             metrics.gpu_memory_total_mb = float(gpu_parts[2].strip())
+935 |             except:
+    |             ^^^^^^
+936 |                 pass  # GPU metrics not available
+    |
+
+E722 Do not use bare `except`
+   --> backend/artifacts/artifact_container_runtime.py:979:17
+    |
+977 |                 try:
+978 |                     await ws.close()
+979 |                 except:
+    |                 ^^^^^^
+980 |                     pass
+    |
+
+F541 [*] f-string without any placeholders
+    --> backend/artifacts/artifact_container_runtime.py:1019:29
+     |
+1017 |                 await self.memory_manager.store_memory(
+1018 |                     user_id=context.config.environment_vars.get("USER_ID", "unknown"),
+1019 |                     content=f"Container state snapshot for artifact",
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1020 |                     memory_type=MemoryType.ARTIFACT_STATE,
+1021 |                     importance=MemoryImportance.MEDIUM,
+     |
+help: Remove extraneous `f` prefix
+
+E722 Do not use bare `except`
+    --> backend/artifacts/artifact_container_runtime.py:1153:13
+     |
+1151 |             try:
+1152 |                 await ws.close()
+1153 |             except:
+     |             ^^^^^^
+1154 |                 pass
+     |
+
+F541 [*] f-string without any placeholders
+    --> backend/artifacts/artifact_container_runtime.py:1532:15
+     |
+1530 |     metrics = await container_runtime.get_container_metrics(artifact.metadata.artifact_id)
+1531 |     if metrics:
+1532 |         print(f"\\nContainer metrics:")
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^
+1533 |         print(f"  CPU: {metrics.cpu_percent:.1f}%")
+1534 |         print(f"  Memory: {metrics.memory_usage_mb:.1f} MB ({metrics.memory_percent:.1f}%)")
+     |
+help: Remove extraneous `f` prefix
+
+F401 [*] `hashlib` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:17:8
+   |
+16 | import asyncio
+17 | import hashlib
+   |        ^^^^^^^
+18 | import json
+19 | import logging
+   |
+help: Remove unused import: `hashlib`
+
+F401 [*] `os` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:20:8
+   |
+18 | import json
+19 | import logging
+20 | import os
+   |        ^^
+21 | import re
+22 | import tempfile
+   |
+help: Remove unused import: `os`
+
+F401 [*] `re` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:21:8
+   |
+19 | import logging
+20 | import os
+21 | import re
+   |        ^^
+22 | import tempfile
+23 | import time
+   |
+help: Remove unused import: `re`
+
+F401 [*] `tempfile` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:22:8
+   |
+20 | import os
+21 | import re
+22 | import tempfile
+   |        ^^^^^^^^
+23 | import time
+24 | import uuid
+   |
+help: Remove unused import: `tempfile`
+
+F401 [*] `datetime.timedelta` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:25:42
+   |
+23 | import time
+24 | import uuid
+25 | from datetime import datetime, timezone, timedelta
+   |                                          ^^^^^^^^^
+26 | from enum import Enum
+27 | from pathlib import Path
+   |
+help: Remove unused import: `datetime.timedelta`
+
+F401 [*] `typing.Union` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:28:47
+   |
+26 | from enum import Enum
+27 | from pathlib import Path
+28 | from typing import Dict, List, Optional, Any, Union, Tuple, Set
+   |                                               ^^^^^
+29 | from dataclasses import dataclass, field
+30 | from contextlib import asynccontextmanager
+   |
+help: Remove unused import
+
+F401 [*] `typing.Tuple` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:28:54
+   |
+26 | from enum import Enum
+27 | from pathlib import Path
+28 | from typing import Dict, List, Optional, Any, Union, Tuple, Set
+   |                                                      ^^^^^
+29 | from dataclasses import dataclass, field
+30 | from contextlib import asynccontextmanager
+   |
+help: Remove unused import
+
+F401 [*] `contextlib.asynccontextmanager` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:30:24
+   |
+28 | from typing import Dict, List, Optional, Any, Union, Tuple, Set
+29 | from dataclasses import dataclass, field
+30 | from contextlib import asynccontextmanager
+   |                        ^^^^^^^^^^^^^^^^^^^
+31 | from concurrent.futures import ThreadPoolExecutor
+   |
+help: Remove unused import: `contextlib.asynccontextmanager`
+
+F401 [*] `aioredis` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:34:8
+   |
+33 | import aiofiles
+34 | import aioredis
+   |        ^^^^^^^^
+35 | import bleach
+36 | import psutil
+   |
+help: Remove unused import: `aioredis`
+
+F401 [*] `bleach` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:35:8
+   |
+33 | import aiofiles
+34 | import aioredis
+35 | import bleach
+   |        ^^^^^^
+36 | import psutil
+37 | import websockets
+   |
+help: Remove unused import: `bleach`
+
+F401 [*] `websockets` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:37:8
+   |
+35 | import bleach
+36 | import psutil
+37 | import websockets
+   |        ^^^^^^^^^^
+38 | from fastapi import FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks
+39 | from fastapi.staticfiles import StaticFiles
+   |
+help: Remove unused import: `websockets`
+
+F401 [*] `fastapi.FastAPI` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:38:21
+   |
+36 | import psutil
+37 | import websockets
+38 | from fastapi import FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks
+   |                     ^^^^^^^
+39 | from fastapi.staticfiles import StaticFiles
+40 | from jinja2 import Environment, FileSystemLoader, select_autoescape
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.BackgroundTasks` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:38:62
+   |
+36 | import psutil
+37 | import websockets
+38 | from fastapi import FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks
+   |                                                              ^^^^^^^^^^^^^^^
+39 | from fastapi.staticfiles import StaticFiles
+40 | from jinja2 import Environment, FileSystemLoader, select_autoescape
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.staticfiles.StaticFiles` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:39:33
+   |
+37 | import websockets
+38 | from fastapi import FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks
+39 | from fastapi.staticfiles import StaticFiles
+   |                                 ^^^^^^^^^^^
+40 | from jinja2 import Environment, FileSystemLoader, select_autoescape
+41 | from markdown import markdown
+   |
+help: Remove unused import: `fastapi.staticfiles.StaticFiles`
+
+F401 [*] `jinja2.Environment` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:40:20
+   |
+38 | from fastapi import FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks
+39 | from fastapi.staticfiles import StaticFiles
+40 | from jinja2 import Environment, FileSystemLoader, select_autoescape
+   |                    ^^^^^^^^^^^
+41 | from markdown import markdown
+42 | from pygments import highlight
+   |
+help: Remove unused import
+
+F401 [*] `jinja2.FileSystemLoader` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:40:33
+   |
+38 | from fastapi import FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks
+39 | from fastapi.staticfiles import StaticFiles
+40 | from jinja2 import Environment, FileSystemLoader, select_autoescape
+   |                                 ^^^^^^^^^^^^^^^^
+41 | from markdown import markdown
+42 | from pygments import highlight
+   |
+help: Remove unused import
+
+F401 [*] `jinja2.select_autoescape` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:40:51
+   |
+38 | from fastapi import FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks
+39 | from fastapi.staticfiles import StaticFiles
+40 | from jinja2 import Environment, FileSystemLoader, select_autoescape
+   |                                                   ^^^^^^^^^^^^^^^^^
+41 | from markdown import markdown
+42 | from pygments import highlight
+   |
+help: Remove unused import
+
+F401 [*] `markdown.markdown` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:41:22
+   |
+39 | from fastapi.staticfiles import StaticFiles
+40 | from jinja2 import Environment, FileSystemLoader, select_autoescape
+41 | from markdown import markdown
+   |                      ^^^^^^^^
+42 | from pygments import highlight
+43 | from pygments.lexers import get_lexer_by_name
+   |
+help: Remove unused import: `markdown.markdown`
+
+F401 [*] `pygments.highlight` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:42:22
+   |
+40 | from jinja2 import Environment, FileSystemLoader, select_autoescape
+41 | from markdown import markdown
+42 | from pygments import highlight
+   |                      ^^^^^^^^^
+43 | from pygments.lexers import get_lexer_by_name
+44 | from pygments.formatters import HtmlFormatter
+   |
+help: Remove unused import: `pygments.highlight`
+
+F401 [*] `pygments.lexers.get_lexer_by_name` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:43:29
+   |
+41 | from markdown import markdown
+42 | from pygments import highlight
+43 | from pygments.lexers import get_lexer_by_name
+   |                             ^^^^^^^^^^^^^^^^^
+44 | from pygments.formatters import HtmlFormatter
+45 | from pydantic import BaseModel, Field, validator
+   |
+help: Remove unused import: `pygments.lexers.get_lexer_by_name`
+
+F401 [*] `pygments.formatters.HtmlFormatter` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:44:33
+   |
+42 | from pygments import highlight
+43 | from pygments.lexers import get_lexer_by_name
+44 | from pygments.formatters import HtmlFormatter
+   |                                 ^^^^^^^^^^^^^
+45 | from pydantic import BaseModel, Field, validator
+46 | from watchdog.observers import Observer
+   |
+help: Remove unused import: `pygments.formatters.HtmlFormatter`
+
+F401 [*] `pydantic.validator` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:45:40
+   |
+43 | from pygments.lexers import get_lexer_by_name
+44 | from pygments.formatters import HtmlFormatter
+45 | from pydantic import BaseModel, Field, validator
+   |                                        ^^^^^^^^^
+46 | from watchdog.observers import Observer
+47 | from watchdog.events import FileSystemEventHandler
+   |
+help: Remove unused import: `pydantic.validator`
+
+F401 [*] `watchdog.observers.Observer` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:46:32
+   |
+44 | from pygments.formatters import HtmlFormatter
+45 | from pydantic import BaseModel, Field, validator
+46 | from watchdog.observers import Observer
+   |                                ^^^^^^^^
+47 | from watchdog.events import FileSystemEventHandler
+   |
+help: Remove unused import: `watchdog.observers.Observer`
+
+F401 [*] `watchdog.events.FileSystemEventHandler` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:47:29
+   |
+45 | from pydantic import BaseModel, Field, validator
+46 | from watchdog.observers import Observer
+47 | from watchdog.events import FileSystemEventHandler
+   |                             ^^^^^^^^^^^^^^^^^^^^^^
+48 |
+49 | from schemas.session import SessionID, UserID
+   |
+help: Remove unused import: `watchdog.events.FileSystemEventHandler`
+
+F401 [*] `schemas.session.SessionID` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:49:29
+   |
+47 | from watchdog.events import FileSystemEventHandler
+48 |
+49 | from schemas.session import SessionID, UserID
+   |                             ^^^^^^^^^
+50 | from core.memory_core import MemoryManager, MemoryType, MemoryImportance
+51 | from core.security_layer import SecurityEnforcer
+   |
+help: Remove unused import: `schemas.session.SessionID`
+
+F401 [*] `core.security_layer.SecurityEnforcer` imported but unused
+  --> backend/artifacts/artifact_system_extension.py:51:33
+   |
+49 | from schemas.session import SessionID, UserID
+50 | from core.memory_core import MemoryManager, MemoryType, MemoryImportance
+51 | from core.security_layer import SecurityEnforcer
+   |                                 ^^^^^^^^^^^^^^^^
+52 |
+53 | logger = logging.getLogger(__name__)
+   |
+help: Remove unused import: `core.security_layer.SecurityEnforcer`
+
+F401 [*] `fastapi.Depends` imported but unused
+   --> backend/artifacts/artifact_system_extension.py:968:62
+    |
+966 |     """Create FastAPI routes for the artifact system"""
+967 |     
+968 |     from fastapi import APIRouter, HTTPException, WebSocket, Depends
+    |                                                              ^^^^^^^
+969 |     
+970 |     router = APIRouter(prefix="/artifacts", tags=["artifacts"])
+    |
+help: Remove unused import: `fastapi.Depends`
+
+F401 [*] `asyncio` imported but unused
+ --> backend/artifacts/artifact_system_fastapi.py:6:8
+  |
+4 | """
+5 |
+6 | import asyncio
+  |        ^^^^^^^
+7 | import json
+8 | import logging
+  |
+help: Remove unused import: `asyncio`
+
+F401 [*] `traceback` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:10:8
+   |
+ 8 | import logging
+ 9 | import time
+10 | import traceback
+   |        ^^^^^^^^^
+11 | from datetime import datetime, timezone
+12 | from typing import Dict, List, Optional, Any, Union
+   |
+help: Remove unused import: `traceback`
+
+F401 [*] `typing.Union` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:12:47
+   |
+10 | import traceback
+11 | from datetime import datetime, timezone
+12 | from typing import Dict, List, Optional, Any, Union
+   |                                               ^^^^^
+13 | from uuid import UUID, uuid4
+   |
+help: Remove unused import: `typing.Union`
+
+F401 [*] `uuid.uuid4` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:13:24
+   |
+11 | from datetime import datetime, timezone
+12 | from typing import Dict, List, Optional, Any, Union
+13 | from uuid import UUID, uuid4
+   |                        ^^^^^
+14 |
+15 | import psutil
+   |
+help: Remove unused import: `uuid.uuid4`
+
+F401 [*] `fastapi.Depends` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:18:5
+   |
+16 | from fastapi import (
+17 |     APIRouter, HTTPException, WebSocket, WebSocketDisconnect,
+18 |     Depends, BackgroundTasks, Request, Response, status, Query
+   |     ^^^^^^^
+19 | )
+20 | from fastapi.middleware.base import BaseHTTPMiddleware
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.Response` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:18:40
+   |
+16 | from fastapi import (
+17 |     APIRouter, HTTPException, WebSocket, WebSocketDisconnect,
+18 |     Depends, BackgroundTasks, Request, Response, status, Query
+   |                                        ^^^^^^^^
+19 | )
+20 | from fastapi.middleware.base import BaseHTTPMiddleware
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.responses.JSONResponse` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:21:31
+   |
+19 | )
+20 | from fastapi.middleware.base import BaseHTTPMiddleware
+21 | from fastapi.responses import JSONResponse, StreamingResponse
+   |                               ^^^^^^^^^^^^
+22 | from pydantic import BaseModel, Field, validator
+23 | from starlette.websockets import WebSocketState
+   |
+help: Remove unused import
+
+F401 [*] `fastapi.responses.StreamingResponse` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:21:45
+   |
+19 | )
+20 | from fastapi.middleware.base import BaseHTTPMiddleware
+21 | from fastapi.responses import JSONResponse, StreamingResponse
+   |                                             ^^^^^^^^^^^^^^^^^
+22 | from pydantic import BaseModel, Field, validator
+23 | from starlette.websockets import WebSocketState
+   |
+help: Remove unused import
+
+F401 [*] `pydantic.validator` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:22:40
+   |
+20 | from fastapi.middleware.base import BaseHTTPMiddleware
+21 | from fastapi.responses import JSONResponse, StreamingResponse
+22 | from pydantic import BaseModel, Field, validator
+   |                                        ^^^^^^^^^
+23 | from starlette.websockets import WebSocketState
+   |
+help: Remove unused import: `pydantic.validator`
+
+F401 [*] `starlette.websockets.WebSocketState` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:23:34
+   |
+21 | from fastapi.responses import JSONResponse, StreamingResponse
+22 | from pydantic import BaseModel, Field, validator
+23 | from starlette.websockets import WebSocketState
+   |                                  ^^^^^^^^^^^^^^
+24 |
+25 | from schemas.session import SessionID, UserID
+   |
+help: Remove unused import: `starlette.websockets.WebSocketState`
+
+F401 [*] `.artifact_system.ArtifactManager` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:29:5
+   |
+27 | from core.security_layer import SecurityEnforcer
+28 | from .artifact_system import (
+29 |     ArtifactManager, ArtifactContent, ArtifactType, ArtifactStatus,
+   |     ^^^^^^^^^^^^^^^
+30 |     SecurityLevel, ExecutionResult, ArtifactMetrics
+31 | )
+   |
+help: Remove unused import
+
+F401 [*] `.artifact_system.ArtifactContent` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:29:22
+   |
+27 | from core.security_layer import SecurityEnforcer
+28 | from .artifact_system import (
+29 |     ArtifactManager, ArtifactContent, ArtifactType, ArtifactStatus,
+   |                      ^^^^^^^^^^^^^^^
+30 |     SecurityLevel, ExecutionResult, ArtifactMetrics
+31 | )
+   |
+help: Remove unused import
+
+F401 [*] `.artifact_system.ArtifactStatus` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:29:53
+   |
+27 | from core.security_layer import SecurityEnforcer
+28 | from .artifact_system import (
+29 |     ArtifactManager, ArtifactContent, ArtifactType, ArtifactStatus,
+   |                                                     ^^^^^^^^^^^^^^
+30 |     SecurityLevel, ExecutionResult, ArtifactMetrics
+31 | )
+   |
+help: Remove unused import
+
+F401 [*] `.artifact_system.ExecutionResult` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:30:20
+   |
+28 | from .artifact_system import (
+29 |     ArtifactManager, ArtifactContent, ArtifactType, ArtifactStatus,
+30 |     SecurityLevel, ExecutionResult, ArtifactMetrics
+   |                    ^^^^^^^^^^^^^^^
+31 | )
+32 | from .morpheus_artifact_v2 import (
+   |
+help: Remove unused import
+
+F401 [*] `.artifact_system.ArtifactMetrics` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:30:37
+   |
+28 | from .artifact_system import (
+29 |     ArtifactManager, ArtifactContent, ArtifactType, ArtifactStatus,
+30 |     SecurityLevel, ExecutionResult, ArtifactMetrics
+   |                                     ^^^^^^^^^^^^^^^
+31 | )
+32 | from .morpheus_artifact_v2 import (
+   |
+help: Remove unused import
+
+F401 [*] `.morpheus_artifact_v2.CollaborationState` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:33:49
+   |
+31 | )
+32 | from .morpheus_artifact_v2 import (
+33 |     EnhancedArtifactManager, CollaborationMode, CollaborationState,
+   |                                                 ^^^^^^^^^^^^^^^^^^
+34 |     ModelComparison, TerminalSession
+35 | )
+   |
+help: Remove unused import
+
+F401 [*] `.morpheus_artifact_v2.ModelComparison` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:34:5
+   |
+32 | from .morpheus_artifact_v2 import (
+33 |     EnhancedArtifactManager, CollaborationMode, CollaborationState,
+34 |     ModelComparison, TerminalSession
+   |     ^^^^^^^^^^^^^^^
+35 | )
+   |
+help: Remove unused import
+
+F401 [*] `.morpheus_artifact_v2.TerminalSession` imported but unused
+  --> backend/artifacts/artifact_system_fastapi.py:34:22
+   |
+32 | from .morpheus_artifact_v2 import (
+33 |     EnhancedArtifactManager, CollaborationMode, CollaborationState,
+34 |     ModelComparison, TerminalSession
+   |                      ^^^^^^^^^^^^^^^
+35 | )
+   |
+help: Remove unused import
+
+F821 Undefined name `Set`
+   --> backend/artifacts/artifact_system_fastapi.py:211:39
+    |
+209 |     def __init__(self):
+210 |         self.connections: Dict[str, Dict[str, WebSocket]] = {}  # session_id -> {user_id: websocket}
+211 |         self.user_sessions: Dict[str, Set[str]] = {}  # user_id -> {session_ids}
+    |                                       ^^^
+212 |     
+213 |     async def connect(self, websocket: WebSocket, session_id: str, user_id: str):
+    |
+
+F401 [*] `html` imported but unused
+  --> backend/artifacts/base_layer.py:11:8
+   |
+ 9 | import asyncio
+10 | import hashlib
+11 | import html
+   |        ^^^^
+12 | import io
+13 | import json
+   |
+help: Remove unused import: `html`
+
+F401 [*] `shutil` imported but unused
+  --> backend/artifacts/base_layer.py:16:8
+   |
+14 | import logging
+15 | import os
+16 | import shutil
+   |        ^^^^^^
+17 | import subprocess
+18 | import sys
+   |
+help: Remove unused import: `shutil`
+
+F401 [*] `contextlib.asynccontextmanager` imported but unused
+  --> backend/artifacts/base_layer.py:23:24
+   |
+21 | import zipfile
+22 | from collections import defaultdict
+23 | from contextlib import asynccontextmanager, redirect_stderr, redirect_stdout
+   |                        ^^^^^^^^^^^^^^^^^^^
+24 | from dataclasses import dataclass, field
+25 | from datetime import datetime, timedelta, timezone
+   |
+help: Remove unused import
+
+F401 [*] `contextlib.redirect_stderr` imported but unused
+  --> backend/artifacts/base_layer.py:23:45
+   |
+21 | import zipfile
+22 | from collections import defaultdict
+23 | from contextlib import asynccontextmanager, redirect_stderr, redirect_stdout
+   |                                             ^^^^^^^^^^^^^^^
+24 | from dataclasses import dataclass, field
+25 | from datetime import datetime, timedelta, timezone
+   |
+help: Remove unused import
+
+F401 [*] `contextlib.redirect_stdout` imported but unused
+  --> backend/artifacts/base_layer.py:23:62
+   |
+21 | import zipfile
+22 | from collections import defaultdict
+23 | from contextlib import asynccontextmanager, redirect_stderr, redirect_stdout
+   |                                                              ^^^^^^^^^^^^^^^
+24 | from dataclasses import dataclass, field
+25 | from datetime import datetime, timedelta, timezone
+   |
+help: Remove unused import
+
+F401 [*] `datetime.timedelta` imported but unused
+  --> backend/artifacts/base_layer.py:25:32
+   |
+23 | from contextlib import asynccontextmanager, redirect_stderr, redirect_stdout
+24 | from dataclasses import dataclass, field
+25 | from datetime import datetime, timedelta, timezone
+   |                                ^^^^^^^^^
+26 | from enum import Enum
+27 | from pathlib import Path
+   |
+help: Remove unused import: `datetime.timedelta`
+
+F401 [*] `typing.AsyncGenerator` imported but unused
+  --> backend/artifacts/base_layer.py:28:25
+   |
+26 | from enum import Enum
+27 | from pathlib import Path
+28 | from typing import Any, AsyncGenerator, Dict, List, Optional, Set, Union, Tuple
+   |                         ^^^^^^^^^^^^^^
+29 | from uuid import UUID, uuid4
+30 | import signal
+   |
+help: Remove unused import
+
+F401 [*] `typing.Union` imported but unused
+  --> backend/artifacts/base_layer.py:28:68
+   |
+26 | from enum import Enum
+27 | from pathlib import Path
+28 | from typing import Any, AsyncGenerator, Dict, List, Optional, Set, Union, Tuple
+   |                                                                    ^^^^^
+29 | from uuid import UUID, uuid4
+30 | import signal
+   |
+help: Remove unused import
+
+F401 [*] `signal` imported but unused
+  --> backend/artifacts/base_layer.py:30:8
+   |
+28 | from typing import Any, AsyncGenerator, Dict, List, Optional, Set, Union, Tuple
+29 | from uuid import UUID, uuid4
+30 | import signal
+   |        ^^^^^^
+31 | import threading
+   |
+help: Remove unused import: `signal`
+
+F401 [*] `threading` imported but unused
+  --> backend/artifacts/base_layer.py:31:8
+   |
+29 | from uuid import UUID, uuid4
+30 | import signal
+31 | import threading
+   |        ^^^^^^^^^
+32 |
+33 | from pydantic import BaseModel, Field
+   |
+help: Remove unused import: `threading`
+
+F401 [*] `pydantic.BaseModel` imported but unused
+  --> backend/artifacts/base_layer.py:33:22
+   |
+31 | import threading
+32 |
+33 | from pydantic import BaseModel, Field
+   |                      ^^^^^^^^^
+34 |
+35 | try:
+   |
+help: Remove unused import
+
+F401 [*] `pydantic.Field` imported but unused
+  --> backend/artifacts/base_layer.py:33:33
+   |
+31 | import threading
+32 |
+33 | from pydantic import BaseModel, Field
+   |                                 ^^^^^
+34 |
+35 | try:
+   |
+help: Remove unused import
+
+F401 `docker.errors.DockerException` imported but unused; consider using `importlib.util.find_spec` to test for availability
+  --> backend/artifacts/base_layer.py:37:31
+   |
+35 | try:
+36 |     import docker
+37 |     from docker.errors import DockerException, BuildError, ImageNotFound, ContainerError, NotFound
+   |                               ^^^^^^^^^^^^^^^
+38 |     DOCKER_AVAILABLE = True
+39 | except ImportError:
+   |
+help: Remove unused import
+
+F401 `docker.errors.BuildError` imported but unused; consider using `importlib.util.find_spec` to test for availability
+  --> backend/artifacts/base_layer.py:37:48
+   |
+35 | try:
+36 |     import docker
+37 |     from docker.errors import DockerException, BuildError, ImageNotFound, ContainerError, NotFound
+   |                                                ^^^^^^^^^^
+38 |     DOCKER_AVAILABLE = True
+39 | except ImportError:
+   |
+help: Remove unused import
+
+F401 `docker.errors.ImageNotFound` imported but unused; consider using `importlib.util.find_spec` to test for availability
+  --> backend/artifacts/base_layer.py:37:60
+   |
+35 | try:
+36 |     import docker
+37 |     from docker.errors import DockerException, BuildError, ImageNotFound, ContainerError, NotFound
+   |                                                            ^^^^^^^^^^^^^
+38 |     DOCKER_AVAILABLE = True
+39 | except ImportError:
+   |
+help: Remove unused import
+
+F401 `docker.errors.ContainerError` imported but unused; consider using `importlib.util.find_spec` to test for availability
+  --> backend/artifacts/base_layer.py:37:75
+   |
+35 | try:
+36 |     import docker
+37 |     from docker.errors import DockerException, BuildError, ImageNotFound, ContainerError, NotFound
+   |                                                                           ^^^^^^^^^^^^^^
+38 |     DOCKER_AVAILABLE = True
+39 | except ImportError:
+   |
+help: Remove unused import
+
+F401 `docker.errors.NotFound` imported but unused; consider using `importlib.util.find_spec` to test for availability
+  --> backend/artifacts/base_layer.py:37:91
+   |
+35 | try:
+36 |     import docker
+37 |     from docker.errors import DockerException, BuildError, ImageNotFound, ContainerError, NotFound
+   |                                                                                           ^^^^^^^^
+38 |     DOCKER_AVAILABLE = True
+39 | except ImportError:
+   |
+help: Remove unused import
+
+F601 Dictionary key literal `'.yml'` repeated
+   --> backend/artifacts/base_layer.py:421:13
+    |
+419 |             # Infrastructure
+420 |             '.tf': ArtifactType.TERRAFORM,
+421 |             '.yml': ArtifactType.ANSIBLE,  # Context dependent
+    |             ^^^^^^
+422 |             
+423 |             # Data formats
+    |
+help: Remove repeated key literal `'.yml'`
+
+F821 Undefined name `aiofiles`
+    --> backend/artifacts/base_layer.py:1203:20
+     |
+1201 |         artifact_data = artifact.to_dict()
+1202 |         
+1203 |         async with aiofiles.open(storage_file, 'w') as f:
+     |                    ^^^^^^^^
+1204 |             await f.write(json.dumps(artifact_data, indent=2, default=str))
+     |
+
+F401 [*] `termios` imported but unused
+  --> backend/artifacts/collaborative_artifact_core.py:14:8
+   |
+12 | import signal
+13 | import subprocess
+14 | import termios
+   |        ^^^^^^^
+15 | import threading
+16 | import time
+   |
+help: Remove unused import: `termios`
+
+F401 [*] `tty` imported but unused
+  --> backend/artifacts/collaborative_artifact_core.py:17:8
+   |
+15 | import threading
+16 | import time
+17 | import tty
+   |        ^^^
+18 | from datetime import datetime, timezone, timedelta
+19 | from typing import Dict, List, Optional, Any, Set, Callable
+   |
+help: Remove unused import: `tty`
+
+F401 [*] `datetime.timedelta` imported but unused
+  --> backend/artifacts/collaborative_artifact_core.py:18:42
+   |
+16 | import time
+17 | import tty
+18 | from datetime import datetime, timezone, timedelta
+   |                                          ^^^^^^^^^
+19 | from typing import Dict, List, Optional, Any, Set, Callable
+20 | from uuid import UUID, uuid4
+   |
+help: Remove unused import: `datetime.timedelta`
+
+F401 [*] `concurrent.futures.ThreadPoolExecutor` imported but unused
+  --> backend/artifacts/collaborative_artifact_core.py:22:32
+   |
+20 | from uuid import UUID, uuid4
+21 | from dataclasses import dataclass, field
+22 | from concurrent.futures import ThreadPoolExecutor
+   |                                ^^^^^^^^^^^^^^^^^^
+23 | import websockets
+24 | import psutil
+   |
+help: Remove unused import: `concurrent.futures.ThreadPoolExecutor`
+
+F401 [*] `websockets` imported but unused
+  --> backend/artifacts/collaborative_artifact_core.py:23:8
+   |
+21 | from dataclasses import dataclass, field
+22 | from concurrent.futures import ThreadPoolExecutor
+23 | import websockets
+   |        ^^^^^^^^^^
+24 | import psutil
+25 | from pathlib import Path
+   |
+help: Remove unused import: `websockets`
+
+F401 [*] `pathlib.Path` imported but unused
+  --> backend/artifacts/collaborative_artifact_core.py:25:21
+   |
+23 | import websockets
+24 | import psutil
+25 | from pathlib import Path
+   |                     ^^^^
+26 |
+27 | from pydantic import BaseModel, Field
+   |
+help: Remove unused import: `pathlib.Path`
+
+F401 [*] `pydantic.BaseModel` imported but unused
+  --> backend/artifacts/collaborative_artifact_core.py:27:22
+   |
+25 | from pathlib import Path
+26 |
+27 | from pydantic import BaseModel, Field
+   |                      ^^^^^^^^^
+28 | from .artifact_system import (
+29 |     ArtifactManager, ArtifactContent, ArtifactType, ArtifactStatus,
+   |
+help: Remove unused import
+
+F401 [*] `pydantic.Field` imported but unused
+  --> backend/artifacts/collaborative_artifact_core.py:27:33
+   |
+25 | from pathlib import Path
+26 |
+27 | from pydantic import BaseModel, Field
+   |                                 ^^^^^
+28 | from .artifact_system import (
+29 |     ArtifactManager, ArtifactContent, ArtifactType, ArtifactStatus,
+   |
+help: Remove unused import
+
+F401 [*] `.artifact_system.ArtifactStatus` imported but unused
+  --> backend/artifacts/collaborative_artifact_core.py:29:53
+   |
+27 | from pydantic import BaseModel, Field
+28 | from .artifact_system import (
+29 |     ArtifactManager, ArtifactContent, ArtifactType, ArtifactStatus,
+   |                                                     ^^^^^^^^^^^^^^
+30 |     SecurityLevel, ExecutionResult, ArtifactMetrics
+31 | )
+   |
+help: Remove unused import
+
+F401 [*] `.artifact_system.ArtifactMetrics` imported but unused
+  --> backend/artifacts/collaborative_artifact_core.py:30:37
+   |
+28 | from .artifact_system import (
+29 |     ArtifactManager, ArtifactContent, ArtifactType, ArtifactStatus,
+30 |     SecurityLevel, ExecutionResult, ArtifactMetrics
+   |                                     ^^^^^^^^^^^^^^^
+31 | )
+32 | from schemas.session import SessionID, UserID
+   |
+help: Remove unused import
+
+F821 Undefined name `Enum`
+  --> backend/artifacts/collaborative_artifact_core.py:38:30
+   |
+38 | class CollaborationMode(str, Enum):
+   |                              ^^^^
+39 |     """Collaboration types"""
+40 |     SOLO = "solo"
+   |
+
+F841 Local variable `script_path` is assigned to but never used
+   --> backend/artifacts/collaborative_artifact_core.py:334:13
+    |
+332 |             # Create temporary script file
+333 |             script_content = artifact.raw_content
+334 |             script_path = f"/tmp/artifact_{artifact.metadata.artifact_id}.py"
+    |             ^^^^^^^^^^^
+335 |             
+336 |             # Write script to VM (would use VM manager API)
+    |
+help: Remove assignment to unused variable `script_path`
+
+F821 Undefined name `Tuple`
+   --> backend/artifacts/collaborative_artifact_core.py:690:116
+    |
+688 |         return result
+689 |     
+690 |     async def create_terminal_artifact(self, user_id: UserID, session_id: SessionID, working_dir: str = "/tmp") -> Tuple[ArtifactCont…
+    |                                                                                                                    ^^^^^
+691 |         """Create terminal artifact with live session"""
+    |
+
+F401 [*] `shlex` imported but unused
+  --> backend/virtual_machine/advanced_ai_shell.py:23:8
+   |
+21 | import logging
+22 | import os
+23 | import shlex
+   |        ^^^^^
+24 | import socket
+25 | import subprocess
+   |
+help: Remove unused import: `shlex`
+
+F401 [*] `subprocess` imported but unused
+  --> backend/virtual_machine/advanced_ai_shell.py:25:8
+   |
+23 | import shlex
+24 | import socket
+25 | import subprocess
+   |        ^^^^^^^^^^
+26 | import time
+27 | import uuid
+   |
+help: Remove unused import: `subprocess`
+
+F401 [*] `uuid` imported but unused
+  --> backend/virtual_machine/advanced_ai_shell.py:27:8
+   |
+25 | import subprocess
+26 | import time
+27 | import uuid
+   |        ^^^^
+28 | from datetime import datetime, timezone
+29 | from pathlib import Path
+   |
+help: Remove unused import: `uuid`
+
+F401 [*] `pathlib.Path` imported but unused
+  --> backend/virtual_machine/advanced_ai_shell.py:29:21
+   |
+27 | import uuid
+28 | from datetime import datetime, timezone
+29 | from pathlib import Path
+   |                     ^^^^
+30 | from typing import Dict, List, Optional, Tuple, Any, Union
+31 | from dataclasses import dataclass, field
+   |
+help: Remove unused import: `pathlib.Path`
+
+F401 [*] `typing.Union` imported but unused
+  --> backend/virtual_machine/advanced_ai_shell.py:30:54
+   |
+28 | from datetime import datetime, timezone
+29 | from pathlib import Path
+30 | from typing import Dict, List, Optional, Tuple, Any, Union
+   |                                                      ^^^^^
+31 | from dataclasses import dataclass, field
+32 | from enum import Enum
+   |
+help: Remove unused import: `typing.Union`
+
+F401 [*] `pydantic.BaseModel` imported but unused
+  --> backend/virtual_machine/advanced_ai_shell.py:38:22
+   |
+36 | import docker
+37 | import artifact_system  # new local API for VM commands
+38 | from pydantic import BaseModel, Field
+   |                      ^^^^^^^^^
+39 | from pydantic_settings import BaseSettings
+   |
+help: Remove unused import
+
+F401 [*] `pydantic.Field` imported but unused
+  --> backend/virtual_machine/advanced_ai_shell.py:38:33
+   |
+36 | import docker
+37 | import artifact_system  # new local API for VM commands
+38 | from pydantic import BaseModel, Field
+   |                                 ^^^^^
+39 | from pydantic_settings import BaseSettings
+   |
+help: Remove unused import
+
+F841 Local variable `timeout` is assigned to but never used
+   --> backend/virtual_machine/advanced_ai_shell.py:488:13
+    |
+487 |             # Execute command with proper timeout
+488 |             timeout = self.vm_manager.settings.command_timeout
+    |             ^^^^^^^
+489 |             exec_result = container.exec_run(
+490 |                 cmd=["/bin/bash", "-c", command],
+    |
+help: Remove assignment to unused variable `timeout`
+
+F541 [*] f-string without any placeholders
+   --> backend/virtual_machine/advanced_ai_shell.py:972:17
+    |
+970 |             # Build comprehensive synthesis
+971 |             synthesis_parts = [
+972 |                 f"# Multi-Agent Collaboration Result",
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+973 |                 f"**Session ID:** {session.session_id}",
+974 |                 f"**Task:** {session.task_description}",
+    |
+help: Remove extraneous `f` prefix
+
+F401 [*] `json` imported but unused
+  --> backend/virtual_machine/ai_action_orchestrator.py:19:8
+   |
+18 | import logging
+19 | import json
+   |        ^^^^
+20 | import os
+21 | from typing import List, Optional, Tuple, Dict, Any
+   |
+help: Remove unused import: `json`
+
+F401 [*] `typing.List` imported but unused
+  --> backend/virtual_machine/ai_action_orchestrator.py:21:20
+   |
+19 | import json
+20 | import os
+21 | from typing import List, Optional, Tuple, Dict, Any
+   |                    ^^^^
+22 | from uuid import UUID
+   |
+help: Remove unused import
+
+F401 [*] `typing.Tuple` imported but unused
+  --> backend/virtual_machine/ai_action_orchestrator.py:21:36
+   |
+19 | import json
+20 | import os
+21 | from typing import List, Optional, Tuple, Dict, Any
+   |                                    ^^^^^
+22 | from uuid import UUID
+   |
+help: Remove unused import
+
+E703 Statement ends with an unnecessary semicolon
+    --> backend/virtual_machine/ai_browser_research_system.py:1240:93
+     |
+1238 |                 if len(match.groups()) >= 2:
+1239 |                     quantity = match.group(1)
+1240 |                     context = match.group(-1) if len(match.groups()) > 2 else match.group(2);
+     |                                                                                             ^
+1241 |                     
+1242 |                     findings.append({
+     |
+help: Remove unnecessary semicolon
+
+E703 Statement ends with an unnecessary semicolon
+    --> backend/virtual_machine/ai_browser_research_system.py:1688:93
+     |
+1686 |                 if len(match.groups()) >= 2:
+1687 |                     quantity = match.group(1)
+1688 |                     context = match.group(-1) if len(match.groups()) > 2 else match.group(2);
+     |                                                                                             ^
+1689 |                     
+1690 |                     findings.append({
+     |
+help: Remove unnecessary semicolon
+
+E703 Statement ends with an unnecessary semicolon
+    --> backend/virtual_machine/ai_browser_research_system.py:2136:93
+     |
+2134 |                 if len(match.groups()) >= 2:
+2135 |                     quantity = match.group(1)
+2136 |                     context = match.group(-1) if len(match.groups()) > 2 else match.group(2);
+     |                                                                                             ^
+2137 |                     
+2138 |                     findings.append({
+     |
+help: Remove unnecessary semicolon
+
+E703 Statement ends with an unnecessary semicolon
+    --> backend/virtual_machine/ai_browser_research_system.py:2584:93
+     |
+2582 |                 if len(match.groups()) >= 2:
+2583 |                     quantity = match.group(1)
+2584 |                     context = match.group(-1) if len(match.groups()) > 2 else match.group(2);
+     |                                                                                             ^
+2585 |                     
+2586 |                     findings.append({
+     |
+help: Remove unnecessary semicolon
+
+invalid-syntax: unexpected EOF while parsing
+    --> backend/virtual_machine/ai_browser_research_system.py:5659:40
+     |
+5657 |             'sources_found': [],
+5658 |             'screenshots': [],
+5659 |             'downloaded_documents': [],
+     |                                        ^
+     |
+
+F401 [*] `backend.virtual_machine.vm_supervisor.AIVMInstance` imported but unused
+  --> backend/virtual_machine/ai_orchestrator.py:23:65
+   |
+21 | # Import all the necessary manager and schema components from your codebase
+22 | # Note: Adjust the import paths based on your final project structure.
+23 | from backend.virtual_machine.vm_supervisor import VMSupervisor, AIVMInstance
+   |                                                                 ^^^^^^^^^^^^
+24 | from ..schemas.dev_session_schemas import DevSession, DevSessionStatus
+25 | from ..core.session_manager import DevSessionManager
+   |
+help: Remove unused import: `backend.virtual_machine.vm_supervisor.AIVMInstance`
+
+F401 [*] `..schemas.dev_session_schemas.DevSession` imported but unused
+  --> backend/virtual_machine/ai_orchestrator.py:24:43
+   |
+22 | # Note: Adjust the import paths based on your final project structure.
+23 | from backend.virtual_machine.vm_supervisor import VMSupervisor, AIVMInstance
+24 | from ..schemas.dev_session_schemas import DevSession, DevSessionStatus
+   |                                           ^^^^^^^^^^
+25 | from ..core.session_manager import DevSessionManager
+26 | from ..core.memory_core import MemoryManager, MemoryType, MemoryImportance
+   |
+help: Remove unused import: `..schemas.dev_session_schemas.DevSession`
+
+F401 [*] `..core.memory_core.MemoryType` imported but unused
+  --> backend/virtual_machine/ai_orchestrator.py:26:47
+   |
+24 | from ..schemas.dev_session_schemas import DevSession, DevSessionStatus
+25 | from ..core.session_manager import DevSessionManager
+26 | from ..core.memory_core import MemoryManager, MemoryType, MemoryImportance
+   |                                               ^^^^^^^^^^
+27 | from ..security.security_layer import SecurityEnforcer
+   |
+help: Remove unused import
+
+F401 [*] `..core.memory_core.MemoryImportance` imported but unused
+  --> backend/virtual_machine/ai_orchestrator.py:26:59
+   |
+24 | from ..schemas.dev_session_schemas import DevSession, DevSessionStatus
+25 | from ..core.session_manager import DevSessionManager
+26 | from ..core.memory_core import MemoryManager, MemoryType, MemoryImportance
+   |                                                           ^^^^^^^^^^^^^^^^
+27 | from ..security.security_layer import SecurityEnforcer
+   |
+help: Remove unused import
+
+invalid-syntax: Expected ',', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:419:42
+    |
+417 | …     "wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg",
+418 | …     "sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/",
+419 | …     "sudo sh -c 'echo \\"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.micr…
+    |                            ^^^
+420 | …     "sudo apt update",
+421 | …     "sudo apt install -y code",
+    |
+
+invalid-syntax: Expected ':', found '='
+   --> backend/virtual_machine/ai_personal_dev_environment.py:419:51
+    |
+417 | …     "wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg",
+418 | …     "sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/",
+419 | …     "sudo sh -c 'echo \\"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.micr…
+    |                                     ^
+420 | …     "sudo apt update",
+421 | …     "sudo apt install -y code",
+    |
+
+invalid-syntax: Expected ',', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:419:70
+    |
+417 | …     "wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg",
+418 | …     "sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/",
+419 | …     "sudo sh -c 'echo \\"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.micr…
+    |                                                        ^^^^^^
+420 | …     "sudo apt update",
+421 | …     "sudo apt install -y code",
+    |
+
+invalid-syntax: Expected ',', found '='
+   --> backend/virtual_machine/ai_personal_dev_environment.py:419:79
+    |
+417 | …     "wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg",
+418 | …     "sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/",
+419 | …     "sudo sh -c 'echo \\"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.micr…
+    |                                                                 ^
+420 | …     "sudo apt update",
+421 | …     "sudo apt install -y code",
+    |
+
+invalid-syntax: Expected ',', found '/'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:419:80
+    |
+417 | …     "wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg",
+418 | …     "sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/",
+419 | …     "sudo sh -c 'echo \\"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.micr…
+    |                                                                  ^
+420 | …     "sudo apt update",
+421 | …     "sudo apt install -y code",
+    |
+
+invalid-syntax: Expected ',', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:419:127
+    |
+417 | …     "wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg",
+418 | …     "sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/",
+419 | …     "sudo sh -c 'echo \\"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.micr…
+    |                                                                                                                 ^^^^^
+420 | …     "sudo apt update",
+421 | …     "sudo apt install -y code",
+    |
+
+invalid-syntax: Expected an expression
+   --> backend/virtual_machine/ai_personal_dev_environment.py:419:133
+    |
+417 | …     "wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg",
+418 | …     "sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/",
+419 | …     "sudo sh -c 'echo \\"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.micr…
+    |                                                                                                                       ^^
+420 | …     "sudo apt update",
+421 | …     "sudo apt install -y code",
+    |
+
+invalid-syntax: Expected ',', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:419:169
+    |
+417 | …es.microsoft.gpg",
+418 | …
+419 | …kages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main\\" > /etc/apt/sources.list.d/vscode.list'",
+    |                                                                 ^^^^^^
+420 | …
+421 | …
+    |
+
+invalid-syntax: Expected ':', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:419:176
+    |
+417 | …rosoft.gpg",
+418 | …
+419 | …microsoft.gpg] https://packages.microsoft.com/repos/code stable main\\" > /etc/apt/sources.list.d/vscode.list'",
+    |                                                                  ^^^^
+420 | …
+421 | …
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:419:180
+    |
+417 | …oft.gpg",
+418 | …
+419 | …rosoft.gpg] https://packages.microsoft.com/repos/code stable main\\" > /etc/apt/sources.list.d/vscode.list'",
+    |                                                                   ^
+420 | …
+421 | …
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:419:181
+    |
+417 | …ft.gpg",
+418 | …
+419 | …osoft.gpg] https://packages.microsoft.com/repos/code stable main\\" > /etc/apt/sources.list.d/vscode.list'",
+    |                                                                   ^
+420 | …
+421 | …
+    |
+
+invalid-syntax: Expected ':', found ','
+   --> backend/virtual_machine/ai_personal_dev_environment.py:419:223
+    |
+417 | …
+418 | …
+419 | …repos/code stable main\\" > /etc/apt/sources.list.d/vscode.list'",
+    |                                                                   ^
+420 | …
+421 | …
+    |
+
+invalid-syntax: Expected ':', found ','
+   --> backend/virtual_machine/ai_personal_dev_environment.py:420:38
+    |
+418 | …         "sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/",
+419 | …         "sudo sh -c 'echo \\"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.…
+420 | …         "sudo apt update",
+    |                            ^
+421 | …         "sudo apt install -y code",
+422 | …     ],
+    |
+
+invalid-syntax: Expected ':', found ','
+   --> backend/virtual_machine/ai_personal_dev_environment.py:421:47
+    |
+419 | …         "sudo sh -c 'echo \\"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.…
+420 | …         "sudo apt update",
+421 | …         "sudo apt install -y code",
+    |                                     ^
+422 | …     ],
+423 | …     "jupyter": ["pip3 install jupyter jupyterlab"],
+    |
+
+invalid-syntax: Expected ',', found ']'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:422:17
+    |
+420 |                     "sudo apt update",
+421 |                     "sudo apt install -y code",
+422 |                 ],
+    |                 ^
+423 |                 "jupyter": ["pip3 install jupyter jupyterlab"],
+424 |                 "docker": [
+    |
+
+invalid-syntax: Expected an expression or a '}'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:422:18
+    |
+420 |                     "sudo apt update",
+421 |                     "sudo apt install -y code",
+422 |                 ],
+    |                  ^
+423 |                 "jupyter": ["pip3 install jupyter jupyterlab"],
+424 |                 "docker": [
+    |
+
+invalid-syntax: Expected ',', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:428:30
+    |
+426 | …     "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release",
+427 | …     "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg…
+428 | …     "echo \\"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(l…
+    |                ^^^
+429 | …     "sudo apt-get update",
+430 | …     "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
+    |
+
+invalid-syntax: Expected ':', found '='
+   --> backend/virtual_machine/ai_personal_dev_environment.py:428:39
+    |
+426 | …     "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release",
+427 | …     "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg…
+428 | …     "echo \\"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(l…
+    |                         ^
+429 | …     "sudo apt-get update",
+430 | …     "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
+    |
+
+invalid-syntax: Expected ',', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:428:46
+    |
+426 | …     "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release",
+427 | …     "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg…
+428 | …     "echo \\"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(l…
+    |                                ^^^^^^
+429 | …     "sudo apt-get update",
+430 | …     "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
+    |
+
+invalid-syntax: Expected ',', found '='
+   --> backend/virtual_machine/ai_personal_dev_environment.py:428:55
+    |
+426 | …     "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release",
+427 | …     "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg…
+428 | …     "echo \\"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(l…
+    |                                         ^
+429 | …     "sudo apt-get update",
+430 | …     "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
+    |
+
+invalid-syntax: Expected ',', found '/'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:428:56
+    |
+426 | …     "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release",
+427 | …     "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg…
+428 | …     "echo \\"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(l…
+    |                                          ^
+429 | …     "sudo apt-get update",
+430 | …     "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
+    |
+
+invalid-syntax: Expected ',', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:428:104
+    |
+426 | …     "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release",
+427 | …     "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg…
+428 | …     "echo \\"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(l…
+    |                                                                                          ^^^^^
+429 | …     "sudo apt-get update",
+430 | …     "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
+    |
+
+invalid-syntax: Expected an expression
+   --> backend/virtual_machine/ai_personal_dev_environment.py:428:110
+    |
+426 | …     "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release",
+427 | …     "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg…
+428 | …     "echo \\"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(l…
+    |                                                                                                ^^
+429 | …     "sudo apt-get update",
+430 | …     "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
+    |
+
+invalid-syntax: Got unexpected token $
+   --> backend/virtual_machine/ai_personal_dev_environment.py:428:145
+    |
+426 | …s curl gnupg lsb-release",
+427 | …sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg",
+428 | …er-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\\" | sudo tee /etc/apt/sources.list.d/doc…
+    |                                                                   ^
+429 | …
+430 | ….io",
+    |
+
+invalid-syntax: Expected ':', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:428:164
+    |
+426 | …ase",
+427 | … /usr/share/keyrings/docker-archive-keyring.gpg",
+428 | …g] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null",
+    |                                                                 ^^^^^^
+429 | …
+430 | …
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:428:170
+    |
+426 | …,
+427 | …r/share/keyrings/docker-archive-keyring.gpg",
+428 | …ttps://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null",
+    |                                                                   ^
+429 | …
+430 | …
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:428:171
+    |
+426 | …
+427 | …/share/keyrings/docker-archive-keyring.gpg",
+428 | …tps://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null",
+    |                                                                   ^
+429 | …
+430 | …
+    |
+
+invalid-syntax: Expected ':', found ','
+   --> backend/virtual_machine/ai_personal_dev_environment.py:428:233
+    |
+426 | …
+427 | …
+428 | …le\\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null",
+    |                                                                   ^
+429 | …
+430 | …
+    |
+
+invalid-syntax: Expected ':', found ','
+   --> backend/virtual_machine/ai_personal_dev_environment.py:429:42
+    |
+427 | …         "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring…
+428 | …         "echo \\"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu…
+429 | …         "sudo apt-get update",
+    |                                ^
+430 | …         "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
+431 | …     ],
+    |
+
+invalid-syntax: Expected ':', found ','
+   --> backend/virtual_machine/ai_personal_dev_environment.py:430:84
+    |
+428 | …         "echo \\"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu…
+429 | …         "sudo apt-get update",
+430 | …         "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
+    |                                                                          ^
+431 | …     ],
+432 | …     "kubectl": [
+    |
+
+invalid-syntax: Expected ',', found ']'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:431:17
+    |
+429 | …         "sudo apt-get update",
+430 | …         "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
+431 | …     ],
+    |       ^
+432 | …     "kubectl": [
+433 | …         "curl -LO \\"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\\"",
+    |
+
+invalid-syntax: Expected an expression or a '}'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:431:18
+    |
+429 | …         "sudo apt-get update",
+430 | …         "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
+431 | …     ],
+    |        ^
+432 | …     "kubectl": [
+433 | …         "curl -LO \\"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\\"",
+    |
+
+invalid-syntax: Expected ',', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:433:34
+    |
+431 | …     ],
+432 | …     "kubectl": [
+433 | …         "curl -LO \\"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\\"",
+    |                        ^^^^^
+434 | …         "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
+435 | …     ],
+    |
+
+invalid-syntax: Expected ',', found ':'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:433:39
+    |
+431 | …     ],
+432 | …     "kubectl": [
+433 | …         "curl -LO \\"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\\"",
+    |                             ^
+434 | …         "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
+435 | …     ],
+    |
+
+invalid-syntax: Expected ',', found '//'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:433:40
+    |
+431 | …     ],
+432 | …     "kubectl": [
+433 | …         "curl -LO \\"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\\"",
+    |                              ^^
+434 | …         "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
+435 | …     ],
+    |
+
+invalid-syntax: Got unexpected token $
+   --> backend/virtual_machine/ai_personal_dev_environment.py:433:60
+    |
+431 | …     ],
+432 | …     "kubectl": [
+433 | …         "curl -LO \\"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\\"",
+    |                                                  ^
+434 | …         "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
+435 | …     ],
+    |
+
+invalid-syntax: Expected ')', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:433:73
+    |
+431 | …     ],
+432 | …     "kubectl": [
+433 | …         "curl -LO \\"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\\"",
+    |                                                               ^^^^^
+434 | …         "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
+435 | …     ],
+    |
+
+invalid-syntax: Expected ',', found ':'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:433:78
+    |
+431 | …     ],
+432 | …     "kubectl": [
+433 | …         "curl -LO \\"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\\"",
+    |                                                                    ^
+434 | …         "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
+435 | …     ],
+    |
+
+invalid-syntax: Expected ',', found '//'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:433:79
+    |
+431 | …     ],
+432 | …     "kubectl": [
+433 | …         "curl -LO \\"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\\"",
+    |                                                                     ^^
+434 | …         "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
+435 | …     ],
+    |
+
+invalid-syntax: Expected ',', found ')'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:433:109
+    |
+431 | …     ],
+432 | …     "kubectl": [
+433 | …         "curl -LO \\"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\\"",
+    |                                                                                                   ^
+434 | …         "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
+435 | …     ],
+    |
+
+invalid-syntax: Expected ',', found '/'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:433:110
+    |
+431 | …     ],
+432 | …     "kubectl": [
+433 | …         "curl -LO \\"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\\"",
+    |                                                                                                    ^
+434 | …         "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
+435 | …     ],
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:433:134
+    |
+431 | …     ],
+432 | …     "kubectl": [
+433 | …         "curl -LO \\"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\\"",
+    |                                                                                                                            ^
+434 | …         "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
+435 | …     ],
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:433:135
+    |
+431 | …     ],
+432 | …     "kubectl": [
+433 | …         "curl -LO \\"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\\"",
+    |                                                                                                                             ^
+434 | …         "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
+435 | …     ],
+    |
+
+invalid-syntax: Expected ',', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:438:30
+    |
+436 | …     "terraform": [
+437 | …         "wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.g…
+438 | …         "echo \\"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release…
+    |                    ^^^
+439 | …         "sudo apt update && sudo apt install -y terraform",
+440 | …     ],
+    |
+
+invalid-syntax: Expected ':', found '='
+   --> backend/virtual_machine/ai_personal_dev_environment.py:438:44
+    |
+436 | …     "terraform": [
+437 | …         "wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.g…
+438 | …         "echo \\"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release…
+    |                                  ^
+439 | …         "sudo apt update && sudo apt install -y terraform",
+440 | …     ],
+    |
+
+invalid-syntax: Expected ',', found '/'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:438:45
+    |
+436 | …     "terraform": [
+437 | …         "wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.g…
+438 | …         "echo \\"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release…
+    |                                   ^
+439 | …         "sudo apt update && sudo apt install -y terraform",
+440 | …     ],
+    |
+
+invalid-syntax: Expected ',', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:438:96
+    |
+436 | …     "terraform": [
+437 | …         "wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.g…
+438 | …         "echo \\"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release…
+    |                                                                                      ^^^^^
+439 | …         "sudo apt update && sudo apt install -y terraform",
+440 | …     ],
+    |
+
+invalid-syntax: Expected an expression
+   --> backend/virtual_machine/ai_personal_dev_environment.py:438:102
+    |
+436 | …     "terraform": [
+437 | …         "wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.g…
+438 | …         "echo \\"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release…
+    |                                                                                            ^^
+439 | …         "sudo apt update && sudo apt install -y terraform",
+440 | …     ],
+    |
+
+invalid-syntax: Got unexpected token $
+   --> backend/virtual_machine/ai_personal_dev_environment.py:438:131
+    |
+436 | …     "terraform": [
+437 | …         "wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.g…
+438 | …         "echo \\"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release…
+    |                                                                                                                         ^
+439 | …         "sudo apt update && sudo apt install -y terraform",
+440 | …     ],
+    |
+
+invalid-syntax: Expected ':', found name
+   --> backend/virtual_machine/ai_personal_dev_environment.py:438:150
+    |
+436 | …
+437 | …| sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg",
+438 | …ring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main\\" | sudo tee /etc/apt/sources.list.d/hashicorp.list",
+    |                                                                  ^^^^
+439 | …
+440 | …
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:438:154
+    |
+436 | …
+437 | …udo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg",
+438 | …g.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main\\" | sudo tee /etc/apt/sources.list.d/hashicorp.list",
+    |                                                                   ^
+439 | …
+440 | …
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:438:155
+    |
+436 | …
+437 | …do tee /usr/share/keyrings/hashicorp-archive-keyring.gpg",
+438 | ….gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main\\" | sudo tee /etc/apt/sources.list.d/hashicorp.list",
+    |                                                                   ^
+439 | …
+440 | …
+    |
+
+invalid-syntax: Expected ':', found ','
+   --> backend/virtual_machine/ai_personal_dev_environment.py:438:208
+    |
+436 | …
+437 | …gpg",
+438 | …e -cs) main\\" | sudo tee /etc/apt/sources.list.d/hashicorp.list",
+    |                                                                   ^
+439 | …
+440 | …
+    |
+
+invalid-syntax: Expected ':', found ','
+   --> backend/virtual_machine/ai_personal_dev_environment.py:439:71
+    |
+437 | …             "wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyri…
+438 | …             "echo \\"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_rel…
+439 | …             "sudo apt update && sudo apt install -y terraform",
+    |                                                                 ^
+440 | …         ],
+441 | …     },
+    |
+
+invalid-syntax: Expected ',', found ']'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:440:17
+    |
+438 | …                 "echo \\"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb…
+439 | …                 "sudo apt update && sudo apt install -y terraform",
+440 | …             ],
+    |               ^
+441 | …         },
+442 | …     }
+    |
+
+invalid-syntax: Expected an expression or a '}'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:440:18
+    |
+438 | …                 "echo \\"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb…
+439 | …                 "sudo apt update && sudo apt install -y terraform",
+440 | …             ],
+    |                ^
+441 | …         },
+442 | …     }
+    |
+
+invalid-syntax: Expected ')', found '{'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:658:37
+    |
+656 | …         "setup.py": (
+657 | …             f"from setuptools import setup, find_packages\\n\\n"
+658 | …             f"setup(name=\\"{library_name}\\", version=\\"1.0.0\\", description=\\"{description}\\", packages=find_packages(), inst…
+    |                               ^
+659 | …         ),
+660 | …     }
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:658:51
+    |
+656 | …         "setup.py": (
+657 | …             f"from setuptools import setup, find_packages\\n\\n"
+658 | …             f"setup(name=\\"{library_name}\\", version=\\"1.0.0\\", description=\\"{description}\\", packages=find_packages(), inst…
+    |                                             ^
+659 | …         ),
+660 | …     }
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:658:52
+    |
+656 | …         "setup.py": (
+657 | …             f"from setuptools import setup, find_packages\\n\\n"
+658 | …             f"setup(name=\\"{library_name}\\", version=\\"1.0.0\\", description=\\"{description}\\", packages=find_packages(), inst…
+    |                                              ^
+659 | …         ),
+660 | …     }
+    |
+
+invalid-syntax: Expected ':', found float
+   --> backend/virtual_machine/ai_personal_dev_environment.py:658:67
+    |
+656 | …         "setup.py": (
+657 | …             f"from setuptools import setup, find_packages\\n\\n"
+658 | …             f"setup(name=\\"{library_name}\\", version=\\"1.0.0\\", description=\\"{description}\\", packages=find_packages(), inst…
+    |                                                             ^^^
+659 | …         ),
+660 | …     }
+    |
+
+invalid-syntax: Expected ',', found float
+   --> backend/virtual_machine/ai_personal_dev_environment.py:658:70
+    |
+656 | …         "setup.py": (
+657 | …             f"from setuptools import setup, find_packages\\n\\n"
+658 | …             f"setup(name=\\"{library_name}\\", version=\\"1.0.0\\", description=\\"{description}\\", packages=find_packages(), inst…
+    |                                                                ^^
+659 | …         ),
+660 | …     }
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:658:72
+    |
+656 | …         "setup.py": (
+657 | …             f"from setuptools import setup, find_packages\\n\\n"
+658 | …             f"setup(name=\\"{library_name}\\", version=\\"1.0.0\\", description=\\"{description}\\", packages=find_packages(), inst…
+    |                                                                  ^
+659 | …         ),
+660 | …     }
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:658:73
+    |
+656 | …         "setup.py": (
+657 | …             f"from setuptools import setup, find_packages\\n\\n"
+658 | …             f"setup(name=\\"{library_name}\\", version=\\"1.0.0\\", description=\\"{description}\\", packages=find_packages(), inst…
+    |                                                                   ^
+659 | …         ),
+660 | …     }
+    |
+
+invalid-syntax: Expected ':', found '{'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:658:92
+    |
+656 | …         "setup.py": (
+657 | …             f"from setuptools import setup, find_packages\\n\\n"
+658 | …             f"setup(name=\\"{library_name}\\", version=\\"1.0.0\\", description=\\"{description}\\", packages=find_packages(), inst…
+    |                                                                                      ^
+659 | …         ),
+660 | …     }
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:658:105
+    |
+656 | …         "setup.py": (
+657 | …             f"from setuptools import setup, find_packages\\n\\n"
+658 | …             f"setup(name=\\"{library_name}\\", version=\\"1.0.0\\", description=\\"{description}\\", packages=find_packages(), inst…
+    |                                                                                                   ^
+659 | …         ),
+660 | …     }
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:658:106
+    |
+656 | …         "setup.py": (
+657 | …             f"from setuptools import setup, find_packages\\n\\n"
+658 | …             f"setup(name=\\"{library_name}\\", version=\\"1.0.0\\", description=\\"{description}\\", packages=find_packages(), inst…
+    |                                                                                                    ^
+659 | …         ),
+660 | …     }
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:658:181
+    |
+656 | …
+657 | …
+658 | …es=find_packages(), install_requires=[], python_requires=\\">=3.8\\")\\n"
+    |                                                                   ^
+659 | …
+660 | …
+    |
+
+invalid-syntax: Expected a newline after line continuation character
+   --> backend/virtual_machine/ai_personal_dev_environment.py:658:182
+    |
+656 | …
+657 | …
+658 | …s=find_packages(), install_requires=[], python_requires=\\">=3.8\\")\\n"
+    |                                                                   ^
+659 | …
+660 | …
+    |
+
+invalid-syntax: Expected ':', found ')'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:659:17
+    |
+657 | …                 f"from setuptools import setup, find_packages\\n\\n"
+658 | …                 f"setup(name=\\"{library_name}\\", version=\\"1.0.0\\", description=\\"{description}\\", packages=find_packages(), …
+659 | …             ),
+    |               ^
+660 | …         }
+661 | …     else:
+    |
+
+invalid-syntax: Expected an expression or a '}'
+   --> backend/virtual_machine/ai_personal_dev_environment.py:659:18
+    |
+657 | …                 f"from setuptools import setup, find_packages\\n\\n"
+658 | …                 f"setup(name=\\"{library_name}\\", version=\\"1.0.0\\", description=\\"{description}\\", packages=find_packages(), …
+659 | …             ),
+    |                ^
+660 | …         }
+661 | …     else:
+    |
+
+F401 [*] `os` imported but unused
+  --> backend/virtual_machine/somnus_agent.py:27:8
+   |
+26 | import logging
+27 | import os
+   |        ^^
+28 | import json
+29 | import time
+   |
+help: Remove unused import: `os`
+
+F401 [*] `typing.List` imported but unused
+  --> backend/virtual_machine/somnus_agent.py:34:31
+   |
+32 | from datetime import datetime, timezone
+33 | from functools import lru_cache
+34 | from typing import Dict, Any, List, Optional
+   |                               ^^^^
+35 | from collections import deque
+   |
+help: Remove unused import: `typing.List`
+
+F401 [*] `flask.request` imported but unused
+  --> backend/virtual_machine/somnus_agent.py:38:35
+   |
+37 | import psutil
+38 | from flask import Flask, jsonify, request
+   |                                   ^^^^^^^
+39 |
+40 | # --- Agent Configuration ---
+   |
+help: Remove unused import: `flask.request`
+
+F541 [*] f-string without any placeholders
+   --> backend/virtual_machine/somnus_agent.py:145:23
+    |
+144 |     if not config_path:
+145 |         logging.error(f"Agent config file not found in any candidate location.")
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+146 |         return {}
+    |
+help: Remove extraneous `f` prefix
+
+F401 [*] `typing.Tuple` imported but unused
+  --> backend/virtual_machine/vm_supervisor.py:24:47
+   |
+22 | import threading
+23 | from datetime import datetime, timezone
+24 | from typing import Dict, List, Optional, Any, Tuple
+   |                                               ^^^^^
+25 | from uuid import UUID, uuid4
+26 | from pathlib import Path
+   |
+help: Remove unused import: `typing.Tuple`
+
+F401 [*] `psutil` imported but unused
+  --> backend/virtual_machine/vm_supervisor.py:30:8
+   |
+29 | import libvirt
+30 | import psutil
+   |        ^^^^^^
+31 | import requests
+32 | from pydantic import BaseModel, Field
+   |
+help: Remove unused import: `psutil`
+
+F401 [*] `xml.etree.ElementTree` imported but unused
+  --> backend/virtual_machine/vm_supervisor.py:33:23
+   |
+31 | import requests
+32 | from pydantic import BaseModel, Field
+33 | from xml.etree import ElementTree
+   |                       ^^^^^^^^^^^
+34 |
+35 | # --- Enhanced Schemas for Advanced VM Management ---
+   |
+help: Remove unused import: `xml.etree.ElementTree`
+
+F821 Undefined name `asyncio`
+   --> backend/virtual_machine/vm_supervisor.py:269:19
+    |
+267 |                 vm_instance.internal_ip = ip
+268 |                 break
+269 |             await asyncio.sleep(5)
+    |                   ^^^^^^^
+270 |         
+271 |         if not vm_instance.internal_ip:
+    |
+
+E701 Multiple statements on one line (colon)
+   --> backend/virtual_machine/vm_supervisor.py:318:27
+    |
+316 |         """Creates a snapshot of the VM's current state."""
+317 |         vm_instance = self.active_vms.get(vm_id)
+318 |         if not vm_instance: raise ValueError("VM not found.")
+    |                           ^
+319 |         domain = self._get_libvirt_domain(vm_instance)
+320 |         if not domain: raise RuntimeError("Libvirt domain not found.")
+    |
+
+E701 Multiple statements on one line (colon)
+   --> backend/virtual_machine/vm_supervisor.py:320:22
+    |
+318 |         if not vm_instance: raise ValueError("VM not found.")
+319 |         domain = self._get_libvirt_domain(vm_instance)
+320 |         if not domain: raise RuntimeError("Libvirt domain not found.")
+    |                      ^
+321 |
+322 |         snapshot_name = f"snapshot_{vm_instance.libvirt_domain_name}_{int(time.time())}"
+    |
+
+E701 Multiple statements on one line (colon)
+   --> backend/virtual_machine/vm_supervisor.py:326:24
+    |
+325 |         snapshot = domain.snapshotCreateXML(snapshot_xml, 0)
+326 |         if not snapshot: raise RuntimeError("Failed to create VM snapshot.")
+    |                        ^
+327 |
+328 |         snapshot_info = VMSnapshot(snapshot_name=snapshot_name, description=description, vm_state_at_snapshot=vm_instance.vm_state)
+    |
+
+E701 Multiple statements on one line (colon)
+   --> backend/virtual_machine/vm_supervisor.py:337:27
+    |
+335 |         """Reverts a VM to a previously created snapshot."""
+336 |         vm_instance = self.active_vms.get(vm_id)
+337 |         if not vm_instance: raise ValueError("VM not found.")
+    |                           ^
+338 |         domain = self._get_libvirt_domain(vm_instance)
+339 |         if not domain: raise RuntimeError("Libvirt domain not found.")
+    |
+
+E701 Multiple statements on one line (colon)
+   --> backend/virtual_machine/vm_supervisor.py:339:22
+    |
+337 |         if not vm_instance: raise ValueError("VM not found.")
+338 |         domain = self._get_libvirt_domain(vm_instance)
+339 |         if not domain: raise RuntimeError("Libvirt domain not found.")
+    |                      ^
+340 |
+341 |         try:
+    |
+
+E701 Multiple statements on one line (colon)
+   --> backend/virtual_machine/vm_supervisor.py:358:27
+    |
+356 |         """Dynamically applies a resource profile to a running VM."""
+357 |         vm_instance = self.active_vms.get(vm_id)
+358 |         if not vm_instance: raise ValueError("VM not found.")
+    |                           ^
+359 |         profile = self.resource_profiles.get(profile_name)
+360 |         if not profile: raise ValueError(f"Resource profile '{profile_name}' not found.")
+    |
+
+E701 Multiple statements on one line (colon)
+   --> backend/virtual_machine/vm_supervisor.py:360:23
+    |
+358 |         if not vm_instance: raise ValueError("VM not found.")
+359 |         profile = self.resource_profiles.get(profile_name)
+360 |         if not profile: raise ValueError(f"Resource profile '{profile_name}' not found.")
+    |                       ^
+361 |         domain = self._get_libvirt_domain(vm_instance)
+362 |         if not domain or not domain.isActive(): raise RuntimeError("VM is not running.")
+    |
+
+E701 Multiple statements on one line (colon)
+   --> backend/virtual_machine/vm_supervisor.py:362:47
+    |
+360 |         if not profile: raise ValueError(f"Resource profile '{profile_name}' not found.")
+361 |         domain = self._get_libvirt_domain(vm_instance)
+362 |         if not domain or not domain.isActive(): raise RuntimeError("VM is not running.")
+    |                                               ^
+363 |
+364 |         try:
+    |
+
+E701 Multiple statements on one line (colon)
+   --> backend/virtual_machine/vm_supervisor.py:403:27
+    |
+401 |         """Gracefully shuts down a VM."""
+402 |         vm_instance = self.active_vms.get(vm_id)
+403 |         if not vm_instance: return False
+    |                           ^
+404 |         domain = self._get_libvirt_domain(vm_instance)
+405 |         if domain and domain.isActive():
+    |
+
+E701 Multiple statements on one line (colon)
+   --> backend/virtual_machine/vm_supervisor.py:419:27
+    |
+417 |         """Forcibly destroys a VM and cleans up its resources."""
+418 |         vm_instance = self.active_vms.get(vm_id)
+419 |         if not vm_instance: return False
+    |                           ^
+420 |         domain = self._get_libvirt_domain(vm_instance)
+    |
+
+Found 249 errors.
+[*] 136 fixable with the `--fix` option (3 hidden fixes can be enabled with the `--unsafe-fixes` option).

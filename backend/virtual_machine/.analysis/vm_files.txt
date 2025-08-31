@@ -1,0 +1,8 @@
+backend/virtual_machine/advanced_ai_shell.py
+backend/virtual_machine/ai_action_orchestrator.py
+backend/virtual_machine/ai_browser_research_system.py
+backend/virtual_machine/ai_orchestrator.py
+backend/virtual_machine/ai_personal_dev_environment.py
+backend/virtual_machine/__init__.py
+backend/virtual_machine/somnus_agent.py
+backend/virtual_machine/vm_supervisor.py

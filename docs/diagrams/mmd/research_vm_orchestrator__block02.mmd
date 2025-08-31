@@ -1,0 +1,41 @@
+classDiagram
+  class ResearchVMOrchestrator {
+    +initialize()
+    +create_research_vm(user_id, session_id, cfg)
+    +get_vm_status(vm_id)
+    +shutdown()
+    -_setup_research_environment()
+    -_setup_browser_engines()
+    -_load_research_models()
+    -_setup_research_workspace()
+    -_setup_memory_integration()
+    -_setup_file_processing()
+    -_setup_research_prompts()
+    -_verify_capabilities()
+  }
+  class ResearchVMConfiguration {
+    +ResearchVMType vm_type
+    +VMSpecs vm_specs
+    +BrowserEngine[] browser_engines
+    +bool headless_mode
+    +ResearchCapability[] enabled_capabilities
+    +string[] ai_models
+    +bool enable_vpn
+    +dict proxy_settings
+  }
+  class ResearchVMState {
+    +UUID vm_id
+    +VMState vm_state
+    +map browser_sessions
+    +map loaded_models
+    +set active_research_sessions
+    +float cpu_usage
+    +float memory_usage
+    +float disk_usage
+  }
+  ResearchVMOrchestrator o-- ResearchVMState
+  ResearchVMOrchestrator o-- ResearchVMConfiguration
+  ResearchVMOrchestrator ..> MemoryManager
+  ResearchVMOrchestrator ..> ModelLoader
+  ResearchVMOrchestrator ..> IntelligentFileProcessor
+  ResearchVMOrchestrator ..> SystemPromptManager

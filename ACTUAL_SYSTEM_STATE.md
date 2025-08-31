@@ -252,3 +252,53 @@ The system rivals or exceeds the sophistication of major commercial AI platforms
 - [ ] **API & Settings**
   - Test `project_api.py` endpoints
   - Ensure `settings/global/*` projection registry & capability broker respect project isolation
+
+---
+
+## 🔄 Delta Update — 2025-08-31
+
+### Scope
+This update captures the concrete changes merged since the last audit, verifies alignment with the root philosophy in README.md, and highlights follow-ups.
+
+### ✅ Changes Implemented
+- Web Research Stream Manager
+  - Replaced websocket ping heartbeat with lightweight connection-status events to avoid pager issues and reduce overhead
+  - Added JWT-based authentication (secret sourced from environment) with optional per-connection rate limiting retained
+  - Added optional payload compression (zlib + base64) for large event messages
+  - Enhanced Redis usage with pub/sub broadcasting for horizontal scalability and cross-process event fan-out
+- Global Events
+  - Expanded ResearchEvent payload to include queries, sources, statuses, and result references
+  - Added convenience async publishers for research_started and research_completed with standardized metadata
+- Projection Registry
+  - Enabled transform functions on projection rules to generate richer capability projections from user profile data
+  - Added research-specific projections under capabilities, prefs, and context
+- Research VM Orchestrator (new module)
+  - Introduced full research VM lifecycle: environment provisioning, browser engine setup, AI model loading, file watcher, and local API
+  - Added in-VM Flask API endpoint at /api/research/extracted_data on port 8888 to ingest browser extension data into the research DB
+  - Implemented research DB init scripts and analysis helpers; integrated with Redis (db=2) for caching when available
+  - Fixed syntax error and verified module compiles
+- Dependencies
+  - requirements.txt updated: pyjwt, redis, msgpack, aiofiles
+
+### 🔎 Philosophy Alignment Check (README.md)
+- Local-first, privacy-by-default: All new surfaces (JWT, Redis pub/sub, in-VM Flask API) operate purely on localhost with no cloud dependencies
+- Separation of Intelligence (persistent VMs) and Computation (disposable/aux processes): The Research VM Orchestrator strengthens the Intelligence layer with persistent tools and data, while offloading heavy tasks as needed; consistent with dual-layer model
+- Security-first: JWT auth for research streaming, optional compression to reduce DOS vectors, Redis pub/sub with explicit DB selection; consistent with security emphasis and capability control
+- Capability-based projections: Projection Registry transforms ensure AI sees abstract capabilities vs raw user data; matches privacy-preserving projection philosophy
+- Unlimited execution/No artificial limits: Orchestrator services and research flows run without imposed timeouts; aligns with “no limits” artifact/VM ethos
+- Triple-layer research: Enhancements integrate smoothly with browser automation (Layer 1) and deep research engine (Layer 3), preserving the layered research vision
+
+Conclusion: The recent changes remain fully aligned with Somnus’ core philosophy.
+
+### 🧩 Notable Follow-ups
+- Standardize in-VM API ports
+  - README diagrams reference a Flask API on 9901; research VM API currently binds to 8888. Decide whether 8888 is research-specific (and document) or migrate to 9901 for consistency
+- Document configuration for new features
+  - Add env var name for JWT secret and usage notes; document Redis DB index and compression toggle
+- Tests and hardening
+  - Add unit/integration tests for JWT verification paths, compression encoding/decoding, and Redis pub/sub broadcast behavior
+- Observability
+  - Expose metrics for stream compression ratio, pub/sub delivery success, and JWT auth failures
+
+### 🧪 Build/Health Checks
+- Python syntax check for web_research/research_vm_orchestrator.py: PASS (2025-08-31)

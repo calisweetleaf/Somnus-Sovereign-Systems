@@ -1,0 +1,23 @@
+classDiagram
+  class ContainerConfig {
+    +string base_image
+    +bool gpu_enabled
+    +string network_mode
+    +map env
+    +list tools
+    +limits resources
+  }
+  class Artifact {
+    +UUID id
+    +string name
+    +string type
+    +string code
+    +list capabilities
+  }
+  class OverlayManager {
+    +create_overlay(Artifact, ContainerConfig)
+    +execute()
+    +stop()
+  }
+  OverlayManager o-- ContainerConfig
+  OverlayManager o-- Artifact

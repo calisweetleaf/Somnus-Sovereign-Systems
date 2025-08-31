@@ -1,0 +1,21 @@
+flowchart TD
+  A[CONNECTING] --> B{JWT Provided?}
+  B -- No --> E[Close 4401: auth_required]
+  B -- Yes --> C[Verify JWT]
+  C -->|Invalid| E2[Close 4401: auth_failed]
+  C -->|Valid| D[Negotiate compression]
+  D -->|OK| F[Subscribe Redis Channel]
+  F --> G[SUBSCRIBED]
+  G --> H{Client Subscriptions}
+  H --> I[progress]
+  H --> J[contradiction]
+  H --> K[system]
+  G --> L{Rate Limit OK?}
+  L -- No --> M[flow_control: slow_down]
+  M --> G
+  L -- Yes --> N[Deliver events]
+  N --> G
+  G --> O{Errors?}
+  O -- Redis/PubSub fail --> P[Fallback: local queue]
+  P --> G
+  O -- Client closed --> Q[DISCONNECTED]

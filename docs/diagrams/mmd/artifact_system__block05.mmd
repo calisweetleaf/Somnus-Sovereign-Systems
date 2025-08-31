@@ -1,0 +1,7 @@
+flowchart TD
+  A[VM Intelligence Layer] -->|API| B[Overlay Boundary]
+  B --> C[Container Execution Layer]
+  C --> D[Ephemeral FS]
+  C --> E[Network Policies]
+  C --> F[GPU Passthrough]
+  D -->|cleanup| G[Auto Remove]
