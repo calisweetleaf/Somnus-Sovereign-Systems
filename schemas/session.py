@@ -34,12 +34,19 @@ class VMSpecs(BaseModel):
 
 class VMResourceUsage(BaseModel):
     """Real-time resource consumption tracking for a VM"""
-    cpu_percent: float = Field(ge=0, le=100, description="CPU usage percentage")
-    memory_bytes: int = Field(ge=0, description="Memory usage in bytes")
-    disk_bytes: int = Field(ge=0, description="Disk usage in bytes")
-    network_bytes_in: int = Field(default=0, ge=0, description="Network bytes received")
-    network_bytes_out: int = Field(default=0, ge=0, description="Network bytes sent")
-    execution_time: float = Field(default=0.0, ge=0, description="Command execution time in seconds")
+    # Provide defaults so the model can be instantiated without arguments
+    cpu_percent: float = Field(default=0.0, ge=0, le=100,
+                               description="CPU usage percentage")
+    memory_bytes: int = Field(default=0, ge=0,
+                              description="Memory usage in bytes")
+    disk_bytes: int = Field(default=0, ge=0,
+                            description="Disk usage in bytes")
+    network_bytes_in: int = Field(default=0, ge=0,
+                                 description="Network bytes received")
+    network_bytes_out: int = Field(default=0, ge=0,
+                                  description="Network bytes sent")
+    execution_time: float = Field(default=0.0, ge=0,
+                                 description="Command execution time in seconds")
     
     @property
     def memory_mb(self) -> float:
@@ -461,4 +468,5 @@ class AIVMListResponse(BaseModel):
 # Type aliases for convenience
 AIVMID = UUID
 UserID = str
+SessionID = UUID  # Added alias for session identifiers
 

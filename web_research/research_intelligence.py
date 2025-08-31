@@ -263,7 +263,7 @@ class SemanticAnalyzer:
             
             # Analyze coverage in sources
             covered_entities = set()
-            covered_keywords = set()
+            covered_keywords = set();
             
             for text in source_texts:
                 if text:
@@ -510,7 +510,8 @@ class ResearchIntelligenceEngine:
                 if isinstance(result, Exception):
                     logger.error(f"Analysis {i} failed: {result}")
                     continue
-                
+
+                # Only unpack if result is not an exception
                 dimension_metrics, dimension_insights = result
                 
                 # Update metrics
@@ -827,7 +828,14 @@ class ResearchIntelligenceEngine:
         depth_factors = [
             detailed_sources / len(context.sources_processed) if context.sources_processed else 0,
             min(avg_content_length / 2000, 1.0),  # Normalize to 2000 chars
-            context.current_depth / max(context.complexity_level.value, 1) if hasattr(context.complexity_level, 'value') else 0.5
+            # Convert complexity level (string) to numeric weight for division
+            context.current_depth / {
+                ResearchComplexity.SIMPLE: 1,
+                ResearchComplexity.MODERATE: 2,
+                ResearchComplexity.COMPLEX: 3,
+                ResearchComplexity.EXPERT: 4,
+                ResearchComplexity.FRONTIER: 5
+            }[context.complexity_level] if hasattr(context, 'complexity_level') else 0.5
         ]
         
         depth_score = statistics.mean(depth_factors)

@@ -441,9 +441,9 @@ class PluginBase(PluginInterface, StateInterface, ABC):
         await self.memory_manager.store_memory(
             user_id=f"plugin_{self.plugin_id}",
             content=f"Checkpoint {checkpoint_id}",
-            memory_type=MemoryType.SYSTEM,
+            memory_type=MemoryType.USER,          # changed from MemoryType.SYSTEM
             importance=MemoryImportance.HIGH,
-            scope=MemoryScope.PLUGIN,
+            scope=MemoryScope.USER,               # changed from MemoryScope.PLUGIN
             metadata={
                 'checkpoint_id': checkpoint_id,
                 'plugin_id': self.plugin_id,
@@ -459,10 +459,10 @@ class PluginBase(PluginInterface, StateInterface, ABC):
             return await self.set_state(self._checkpoints[checkpoint_id])
         
         # Try to load from memory manager
-        memories = await self.memory_manager.search_memories(
+        memories = await self.memory_manager.search_memories(   # type: ignore[attr-defined]
             user_id=f"plugin_{self.plugin_id}",
             query=f"checkpoint {checkpoint_id}",
-            memory_type=MemoryType.SYSTEM,
+            memory_type=MemoryType.USER,          # changed from MemoryType.SYSTEM
             limit=1
         )
         
@@ -505,7 +505,7 @@ class PluginBase(PluginInterface, StateInterface, ABC):
             self._event_handlers[event] = []
         self._event_handlers[event].append(handler)
     
-    async def _emit_event(self, event: str, data: Dict[str, Any] = None):
+    async def _emit_event(self, event: str, data: Optional[Dict[str, Any]] = None):
         """Emit event to registered handlers"""
         if event in self._event_handlers:
             for handler in self._event_handlers[event]:
