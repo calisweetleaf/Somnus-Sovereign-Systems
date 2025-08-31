@@ -1,0 +1,8 @@
+graph LR
+  VM[Persistent AI VM] --> ORCH[Artifact Orchestrator]
+  ORCH --> RT[Container Runtime]
+  RT --> C1[Artifact Container A]
+  RT --> C2[Artifact Container B]
+  C1 --> WS1[(Real-time WS Stream)]
+  C2 --> WS2[(Real-time WS Stream)]
+  ORCH --> FS[(Persistent Workspace Volumes)]

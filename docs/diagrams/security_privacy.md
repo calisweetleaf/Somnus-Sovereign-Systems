@@ -89,3 +89,18 @@ stateDiagram-v2
   RECOVERY --> NORMAL: verify_stability
 ```
 
+## PNG Fallbacks
+- docs/diagrams/img/security_privacy__block01.png (Sequence: JWT Lifecycle)
+- docs/diagrams/img/security_privacy__block02.png (Boundary: Trust Zones)
+- docs/diagrams/img/security_privacy__block03.png (Requirements: Threat Controls)
+- docs/diagrams/img/security_privacy__block04.png (State: Incident Response)
+
+```mermaid
+stateDiagram-v2
+  [*] --> NORMAL
+  NORMAL --> ELEVATED: anomaly_detected
+  ELEVATED --> CONTAINMENT: policy_violation
+  CONTAINMENT --> RECOVERY: patch_applied
+  RECOVERY --> NORMAL: verify_stability
+```
+

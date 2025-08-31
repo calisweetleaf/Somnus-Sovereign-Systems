@@ -1,0 +1,38 @@
+erDiagram
+  research_sessions {
+    TEXT session_id PK
+    TEXT user_id
+    TEXT query
+    TIMESTAMP created_at
+    TEXT status
+    JSON metadata
+  }
+  research_sources {
+    TEXT source_id PK
+    TEXT session_id
+    TEXT url
+    TEXT title
+    TEXT content
+    TIMESTAMP extracted_at
+    REAL quality_score
+    REAL credibility_score
+    REAL bias_score
+    JSON metadata
+  }
+  research_analysis {
+    TEXT analysis_id PK
+    TEXT source_id
+    TEXT analysis_type
+    JSON result
+    TIMESTAMP created_at
+  }
+  research_cache {
+    TEXT cache_key PK
+    TEXT content
+    BLOB embeddings
+    TIMESTAMP created_at
+    TIMESTAMP expires_at
+    INTEGER access_count
+  }
+  research_sessions ||--o{ research_sources : has
+  research_sources ||--o{ research_analysis : analyzed_by

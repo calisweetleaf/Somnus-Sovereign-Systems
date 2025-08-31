@@ -159,3 +159,20 @@ pie title Research Event Types (Sample)
   "completed" : 15
 ```
 
+## PNG Fallbacks
+- docs/diagrams/img/research_streaming__block01.png (Sequence: Handshake/JWT/Compression)
+- docs/diagrams/img/research_streaming__block02.png (Flowchart: Lifecycle/Errors)
+- docs/diagrams/img/research_streaming__block03.png (State: Connection States)
+- docs/diagrams/img/research_streaming__block04.png (Component Map)
+- docs/diagrams/img/research_streaming__block05.png (Class: Envelopes)
+- docs/diagrams/img/research_streaming__block06.png (Pie: Event Mix)
+
+```mermaid
+pie title Research Event Types (Sample)
+  "progress" : 55
+  "system" : 10
+  "contradiction" : 8
+  "user_feedback" : 12
+  "completed" : 15
+```
+

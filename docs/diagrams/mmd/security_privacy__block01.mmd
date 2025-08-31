@@ -1,0 +1,20 @@
+sequenceDiagram
+  participant UI as UI Backend
+  participant SM as ResearchStreamManager
+  participant KMS as Env Secrets
+  participant JWT as pyjwt
+
+  UI->>KMS: read(SOMNUS_STREAM_JWT_SECRET)
+  KMS-->>UI: secret_handle
+  UI->>UI: issue JWT (sub, iat, exp, scopes)
+  UI-->>Client: token (never logs)
+
+  Client->>SM: WS Upgrade + Authorization: Bearer token
+  SM->>KMS: read secret
+  SM->>JWT: verify(token, secret)
+  JWT-->>SM: claims
+  alt claims valid
+    SM-->>Client: subscription_ack
+  else invalid
+    SM-->>Client: error(auth_failed) + close
+  end

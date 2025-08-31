@@ -16,7 +16,9 @@
 [📖 Documentation](#-comprehensive-system-documentation) •
 [🏗️ Architecture](#-revolutionary-architecture) •
 [💡 Examples](#-real-world-examples) •
-[🤝 Contributing](#-contributing)
+[🤝 Contributing](#-contributing) •
+[🗺️ Diagrams](docs/diagrams/README.md) •
+[📡 Protocols](docs/diagrams/streaming_wire_format.md)
 
 </div>
 
@@ -1040,6 +1042,11 @@ memory_core:
 ## 📘 Documentation Updates — 2025-08-31 (Research Subsystem, Streaming, Projections)
 
 ### Diagram Library
+
+Make-based rendering
+- Generate PNGs: make diagrams
+- Generate SVGs: make diagrams-svg
+- Clean generated assets: make diagrams-clean
 - Full set of complex diagrams is available under docs/diagrams
   - Research Streaming Protocol: docs/diagrams/research_streaming.md
   - Research VM Orchestrator: docs/diagrams/research_vm_orchestrator.md
@@ -1047,6 +1054,7 @@ memory_core:
   - Security & Privacy Flows: docs/diagrams/security_privacy.md
   - Cache & Memory Architecture: docs/diagrams/cache_memory.md
   - Artifact System & Container Overlays: docs/diagrams/artifact_system.md
+  - Streaming Wire Format Deep Dive: docs/diagrams/streaming_wire_format.md
 
 This addendum documents recent enhancements to the research subsystem and supporting infrastructure. It augments (does not replace) the existing documentation.
 
@@ -1161,6 +1169,13 @@ This addendum documents recent enhancements to the research subsystem and suppor
   - Research VM API is local to the VM; host access should remain controlled unless explicitly bridged
 - Capability control
   - Continue to prefer capability-based projections vs raw data sharing across subsystems
+
+---
+
+## 📡 Protocols & Wire Formats
+
+- Research streaming envelope and examples: docs/diagrams/streaming_wire_format.md
+- Event envelope and projection extensions: see docs/diagrams/projections_and_events.md
 
 ---
 

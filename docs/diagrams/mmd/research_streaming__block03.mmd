@@ -1,0 +1,11 @@
+stateDiagram-v2
+  [*] --> CONNECTING
+  CONNECTING --> AUTHENTICATING
+  AUTHENTICATING --> NEGOTIATING
+  NEGOTIATING --> SUBSCRIBED
+  SUBSCRIBED --> RATE_LIMITED: exceeded window
+  RATE_LIMITED --> SUBSCRIBED: reset window
+  SUBSCRIBED --> BACKPRESSURE: server load high
+  BACKPRESSURE --> SUBSCRIBED: load normalized
+  SUBSCRIBED --> DISCONNECTED: user action/error
+  DISCONNECTED --> [*]

@@ -1,0 +1,21 @@
+classDiagram
+  class EventEnvelope {
+    +string type
+    +string session_id
+    +string correlation_id
+    +datetime timestamp
+    +bool compressed
+    +any payload
+  }
+  class ResearchEventPayload {
+    +string query
+    +string[] sources
+    +string status
+    +object results_ref
+    +map metadata
+  }
+  class ClientEvent {
+    +string kind
+    +map data
+  }
+  EventEnvelope o-- ResearchEventPayload : payload

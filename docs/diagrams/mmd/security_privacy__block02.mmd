@@ -1,0 +1,16 @@
+flowchart LR
+  subgraph Host[Host Machine]
+    ST[Somnus Server]
+    R[(Redis Local)]
+  end
+  subgraph VM[Research VM]
+    API[Flask API :8888]
+    DB[(SQLite research.db)]
+  end
+  Client[Browser/App]
+
+  Client -- WS(w/ JWT) --> ST
+  ST <---> R
+  ST <---> VM : control/commands
+  API <---> DB
+  VM -. limited .-> Host : controlled bridge

@@ -97,3 +97,20 @@ pie title Research Events by Type (Day)
   "system": 20
 ```
 
+## PNG Fallbacks
+- docs/diagrams/img/projections_and_events__block01.png (Flow: Capability Projection)
+- docs/diagrams/img/projections_and_events__block02.png (Sequence: Enforcement)
+- docs/diagrams/img/projections_and_events__block03.png (Requirements: Privacy)
+- docs/diagrams/img/projections_and_events__block04.png (Class: ResearchEvent)
+- docs/diagrams/img/projections_and_events__block05.png (Pie: Event Mix)
+
+```mermaid
+pie title Research Events by Type (Day)
+  "research_started": 5
+  "progress": 48
+  "contradiction": 7
+  "user_feedback": 12
+  "research_completed": 8
+  "system": 20
+```
+

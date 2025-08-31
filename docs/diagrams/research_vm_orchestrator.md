@@ -160,3 +160,28 @@ gantt
   Capability Verify    :         des9, 00:16, 00:02
 ```
 
+## PNG Fallbacks
+- docs/diagrams/img/research_vm_orchestrator__block01.png (Flow: Initialization)
+- docs/diagrams/img/research_vm_orchestrator__block02.png (Class Diagram)
+- docs/diagrams/img/research_vm_orchestrator__block03.png (State: VM Lifecycle)
+- docs/diagrams/img/research_vm_orchestrator__block04.png (ER: DB Schema)
+- docs/diagrams/img/research_vm_orchestrator__block05.png (Sequence: Extension Ingestion)
+- docs/diagrams/img/research_vm_orchestrator__block06.png (Gantt: Init Timeline)
+
+```mermaid
+gantt
+  title Research VM Initialization
+  dateFormat  HH:mm
+  axisFormat  %H:%M
+  section System
+  Packages & Tools      :done,    des1, 00:00, 00:02
+  Workspace            :done,    des2, 00:02, 00:01
+  Python/Deps          :active,  des3, 00:03, 00:03
+  Playwright/Selenium  :         des4, 00:06, 00:02
+  Browsers & Profiles  :         des5, 00:08, 00:02
+  Models Load          :         des6, 00:10, 00:04
+  DB Init              :         des7, 00:14, 00:01
+  API Launch           :         des8, 00:15, 00:01
+  Capability Verify    :         des9, 00:16, 00:02
+```
+

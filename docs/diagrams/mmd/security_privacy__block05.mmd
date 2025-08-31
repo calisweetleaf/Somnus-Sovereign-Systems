@@ -1,0 +1,6 @@
+stateDiagram-v2
+  [*] --> NORMAL
+  NORMAL --> ELEVATED: anomaly_detected
+  ELEVATED --> CONTAINMENT: policy_violation
+  CONTAINMENT --> RECOVERY: patch_applied
+  RECOVERY --> NORMAL: verify_stability

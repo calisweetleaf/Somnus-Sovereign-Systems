@@ -1,0 +1,11 @@
+graph LR
+  C[Clients] -->|WS| GW[Gateway]
+  GW --> SM[ResearchStreamManager]
+  SM -->|publish/subscribe| R[(Redis Cluster)]
+  R --> EB[Event Bus Consumers]
+  EB --> UI[UI/Event Aggregators]
+  SM --> METRICS[(Metrics/Logs)]
+  SM --> SEC[Auth/JWT]
+
+  classDef core fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px
+  class SM,R core

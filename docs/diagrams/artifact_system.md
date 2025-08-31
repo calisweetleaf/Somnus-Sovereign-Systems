@@ -75,3 +75,19 @@ flowchart TD
   D -->|cleanup| G[Auto Remove]
 ```
 
+## PNG Fallbacks
+- docs/diagrams/img/artifact_system__block01.png (Component Architecture)
+- docs/diagrams/img/artifact_system__block02.png (Sequence: Artifact Execution)
+- docs/diagrams/img/artifact_system__block03.png (Class: Overlay/Artifact)
+- docs/diagrams/img/artifact_system__block04.png (Flowchart: Security Separation)
+
+```mermaid
+flowchart TD
+  A[VM Intelligence Layer] -->|API| B[Overlay Boundary]
+  B --> C[Container Execution Layer]
+  C --> D[Ephemeral FS]
+  C --> E[Network Policies]
+  C --> F[GPU Passthrough]
+  D -->|cleanup| G[Auto Remove]
+```
+

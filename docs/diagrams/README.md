@@ -38,6 +38,22 @@ flowchart LR
   click D1 "./cache_memory.md" "Cache & Memory"
 ```
 
+## PNG generation (fallback images)
+
+If your environment does not render Mermaid natively, generate PNGs:
+
+```
+npm install -g @mermaid-js/mermaid-cli@10
+python scripts/render_mermaid.py --format png --theme default
+```
+
+Images will be written to docs/diagrams/img as <docbase>__blockNN.png.
+
+Make usage:
+- make diagrams       # PNG
+- make diagrams-svg   # SVG
+- make diagrams-clean # cleanup
+
 ## Legend
 - Solid boxes: Core subsystems
 - Hollow boxes: Subcomponents

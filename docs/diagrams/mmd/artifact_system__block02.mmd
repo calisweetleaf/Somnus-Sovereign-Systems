@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant VM as VM (AI Orchestrator)
+  participant OR as Overlay Manager
+  participant RT as Container Runtime
+  participant WS as WebSocket Stream
+
+  VM->>OR: create_overlay(config)
+  OR->>RT: start_container(config)
+  RT-->>OR: container_id
+  OR-->>VM: overlay_ready
+  VM->>RT: exec(command, env)
+  RT->>WS: stream stdout/stderr
+  WS-->>UI: live updates
+  VM->>RT: stop_container()
+  RT-->>VM: stopped

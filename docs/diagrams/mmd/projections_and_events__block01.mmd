@@ -1,0 +1,9 @@
+flowchart LR
+  UPR[User Registry (encrypted)] --> PR[Projection Registry]
+  PR --> TF[Transform Rules]
+  TF --> CAP[Capability Graph]
+  CAP --> BROK[Capability Broker]
+  BROK --> VM[VM/Research/Artifact Subsystems]
+  BROK --> DENY{Denied?}
+  DENY -- Yes --> AUDIT[Audit Trail + Reason]
+  DENY -- No --> GRANT[Grant Capability]

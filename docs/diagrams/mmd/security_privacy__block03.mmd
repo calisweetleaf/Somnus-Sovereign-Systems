@@ -1,0 +1,25 @@
+requirementDiagram
+  requirement auth_required {
+    id: SEC-001
+    text: All streaming connections must authenticate when enabled
+    risk: medium
+    verifymethod: test
+  }
+  requirement compress_opt_in {
+    id: SEC-002
+    text: Compression only when negotiated to prevent CRIME-like risks
+    risk: low
+    verifymethod: analysis
+  }
+  requirement local_default {
+    id: SEC-003
+    text: All services bind to localhost by default
+    risk: low
+    verifymethod: inspection
+  }
+  requirement capability_based_access {
+    id: SEC-004
+    text: Access is granted via capability projections
+    risk: medium
+    verifymethod: review
+  }
