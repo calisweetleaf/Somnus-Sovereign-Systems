@@ -99,7 +99,8 @@ class SovereignAIOrchestrator:
         user_id: UserID,
         session_title: str,
         personality_config: Dict[str, Any],
-        requested_capabilities: List[str]
+        requested_capabilities: List[str],
+        chat_session_id: Optional[UUID] = None
     ) -> Dict[str, Any]:
         """
         The main workflow for creating a new, fully configured, persistent AI environment.
@@ -118,11 +119,27 @@ class SovereignAIOrchestrator:
         """
         logging.info(f"Provisioning new sovereign environment '{session_title}' for user {user_id}.")
 
-        # 1. Security Validation (Placeholder for your security logic)
-        # In a real scenario, you'd validate the user's request here.
-        # For example: security_result = self.security_enforcer.validate_provisioning_request(...)
-        # if not security_result.allowed:
-        #     raise PermissionError("Provisioning request denied by security policy.")
+        # 1. Security Validation
+        try:
+            security_result = await self.security_enforcer.validate_provisioning_request(
+                user_id=user_id,
+                requested_capabilities=requested_capabilities,
+                session_title=session_title
+            )
+            if not security_result.get("allowed", False):
+                security_reason = security_result.get("reason", "Security policy violation")
+                logging.error(f"Provisioning request denied for user {user_id}: {security_reason}")
+                return {
+                    "status": "error", 
+                    "message": f"Provisioning denied by security policy: {security_reason}"
+                }
+            logging.info(f"Security validation passed for user {user_id}")
+        except Exception as security_error:
+            logging.error(f"Security validation failed: {security_error}")
+            return {
+                "status": "error", 
+                "message": f"Security validation error: {security_error}"
+            }
 
         # 2. Provision the Persistent VM
         try:
@@ -138,7 +155,7 @@ class SovereignAIOrchestrator:
         # The DevSession is the source of truth for this environment.
         dev_session = await self.dev_session_manager.create_session(
             user_id=user_id,
-            chat_session_id=UUID(int=0),  # Placeholder, link to a real chat session ID
+            chat_session_id=chat_session_id or UUID(int=0),  # Use provided session ID or placeholder
             title=session_title
         )
         # Link the VM to the session
@@ -169,12 +186,19 @@ class SovereignAIOrchestrator:
                     
                     pack = CAPABILITY_PACKS[capability_name]
                     for command in pack["commands"]:
-                        # Here, we would use the VMSupervisor to execute commands inside the VM
-                        # This requires an `execute_command_in_vm` method in your supervisor.
-                        # For now, we'll log the action and add to the tool list.
                         logging.info(f"Executing command in VM: '{command}'")
-                        # await self.vm_supervisor.execute_command_in_vm(vm_instance.vm_id, command)
-                        vm_instance.installed_tools.append(command.split(" ")[0]) # Simplified tracking
+                        try:
+                            # Execute the actual command in the VM using the supervisor
+                            result = await self.vm_supervisor.execute_command_in_vm(vm_instance.vm_id, command)
+                            if result.get("success", False):
+                                vm_instance.installed_tools.append(command.split(" ")[0])
+                                logging.info(f"Command succeeded: {command}")
+                            else:
+                                logging.error(f"Command failed: {command}, Error: {result.get('error', 'Unknown error')}")
+                                raise Exception(f"Command execution failed: {command}")
+                        except Exception as cmd_error:
+                            logging.error(f"Failed to execute command '{command}': {cmd_error}")
+                            raise cmd_error
                     
                     dev_session.add_event(
                         event_type="capability_granted",
@@ -188,8 +212,26 @@ class SovereignAIOrchestrator:
             logging.error(f"Failed during capability installation for VM {vm_instance.vm_id}: {e}")
             dev_session.status = "error"
             dev_session.add_event(event_type="system_message", content=f"Installation failed: {e}", actor="Orchestrator")
-            # Consider rolling back to the last good snapshot here.
-            # self.vm_supervisor.rollback_to_last_snapshot(vm_instance.vm_id)
+            # Rollback to the last good snapshot for safety
+            try:
+                if vm_instance.snapshots:
+                    latest_snapshot = vm_instance.snapshots[-1]
+                    logging.info(f"Rolling back VM {vm_instance.vm_id} to snapshot: {latest_snapshot.snapshot_name}")
+                    await self.vm_supervisor.rollback_to_snapshot(vm_instance.vm_id, latest_snapshot.snapshot_name)
+                    dev_session.add_event(
+                        event_type="system_message", 
+                        content=f"Rolled back to snapshot: {latest_snapshot.snapshot_name}", 
+                        actor="Orchestrator"
+                    )
+                else:
+                    logging.warning(f"No snapshots available for rollback on VM {vm_instance.vm_id}")
+            except Exception as rollback_error:
+                logging.error(f"Rollback failed for VM {vm_instance.vm_id}: {rollback_error}")
+                dev_session.add_event(
+                    event_type="system_message", 
+                    content=f"Rollback failed: {rollback_error}", 
+                    actor="Orchestrator"
+                )
 
         # 5. Finalize and Save State
         await self.dev_session_manager._save_session(dev_session)

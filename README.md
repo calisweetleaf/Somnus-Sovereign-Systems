@@ -1037,7 +1037,134 @@ memory_core:
 
 ---
 
-## 🏛️ Advanced Subsystem Architecture
+## 📘 Documentation Updates — 2025-08-31 (Research Subsystem, Streaming, Projections)
+
+### Diagram Library
+- Full set of complex diagrams is available under docs/diagrams
+  - Research Streaming Protocol: docs/diagrams/research_streaming.md
+  - Research VM Orchestrator: docs/diagrams/research_vm_orchestrator.md
+  - Projection Registry & Global Events: docs/diagrams/projections_and_events.md
+  - Security & Privacy Flows: docs/diagrams/security_privacy.md
+  - Cache & Memory Architecture: docs/diagrams/cache_memory.md
+  - Artifact System & Container Overlays: docs/diagrams/artifact_system.md
+
+This addendum documents recent enhancements to the research subsystem and supporting infrastructure. It augments (does not replace) the existing documentation.
+
+### What changed (high level)
+- ResearchStreamManager
+  - Heartbeat now emits lightweight connection-status events instead of ping frames
+  - Optional JWT authentication for clients (local-first); rate limiting retained
+  - Optional payload compression (zlib + base64) for large events
+  - Redis pub/sub broadcasting for horizontal scale and cross-process fan-out
+- Global Events
+  - ResearchEvent expanded to include queries, sources, statuses, and result references
+  - Convenience async publishers for research_started and research_completed
+- Projection Registry
+  - Added transform functions to projection rules for capability mapping
+  - New research-focused projections under capabilities, prefs, and context
+- Research VM Orchestrator (new module)
+  - Dedicated research VM lifecycle: environment provisioning, browser automation, AI model loading
+  - In-VM Flask API for research ingestion and analysis
+  - Research DB initialization scripts and file watcher integration
+- Dependencies
+  - requirements.txt additions: pyjwt, redis, msgpack, aiofiles
+
+### Configuration and environment variables
+- JWT secret (streaming/auth)
+  - Purpose: enable JWT authentication for research streaming connections
+  - Recommendation: set a strong, local-only secret in your environment
+  - Example: export SOMNUS_STREAM_JWT_SECRET="<random-64-byte>"
+- Redis
+  - Default: localhost:6379, DB=2 used for research caching/coordination
+  - If you change Redis connection, update the relevant config or module init
+- Streaming compression
+  - Purpose: reduce bandwidth for large events via zlib + base64
+  - Default: disabled unless explicitly enabled in the stream manager configuration
+- Notes
+  - All of the above operate purely on localhost by default—no cloud dependency
+
+### Services and ports (local-first)
+- Host services
+  - Main Somnus server: 8000 (as documented)
+  - Artifact/other services: see existing sections below
+- In-VM services (Research VM)
+  - Somnus Agent (general): 9901 (per earlier architecture diagrams)
+  - Research VM local API: 8888 (research-specific ingestion/analysis)
+- Port standardization follow-up
+  - Decide whether 8888 remains research-specific or is unified to 9901; document final choice in a later pass
+
+### Research Stream Manager protocol
+- Authentication
+  - Authorization: Bearer <JWT> header when enabled
+  - Local-first; tokens should be short-lived and generated per session
+- Event payloads
+  - Envelope includes type, session identifiers, timestamps, and payload
+  - ResearchEvent now supports: queries, sources, status, result references
+- Compression
+  - When enabled, payloads are compressed via zlib and base64-encoded
+  - Clients must detect/agree on compression via negotiated settings
+- Redis pub/sub
+  - Events are broadcast on a research channel for cross-process subscribers
+- Rate limiting and heartbeat
+  - Lightweight connection-status events provide health updates instead of pings
+
+### Research VM Orchestrator overview
+- Responsibilities
+  - Provision research VMs (tools, browsers, models, storage)
+  - Set up browser engines with a research extension
+  - Initialize research DB (SQLite) and caching (Redis when available)
+  - Launch in-VM Flask API for ingestion/analysis at port 8888
+  - File watcher to monitor research directories for auto-processing
+- In-VM API endpoints (research-specific)
+  - POST /api/research/session
+    - Create research_session records with metadata
+  - POST /api/research/source
+    - Insert sources; performs quality analysis via in-VM analysis script
+  - POST /api/research/analyze
+    - Run content analysis functions (quality, bias, topics, embeddings)
+  - POST /api/research/extracted_data
+    - Accept payloads from the research browser extension and persist to research_sources
+- Browser extension note
+  - Extension content/background scripts extract structured data and post to 8888 within the VM
+
+### Projection Registry: transform-enabled capability mapping
+- Purpose
+  - Transform user profile and context into abstract capabilities for privacy-preserving AI operation
+- Transform functions
+  - Projection rules may include a transform callable to derive capability flags/values
+- Research-specific projections
+  - Capabilities, preferences, and context rules were added to better tune research behavior without exposing raw user data
+
+### Global Events: research_started and research_completed
+- Convenience publishers
+  - Standardize event payloads for research lifecycle
+- Payloads
+  - Include enriched metadata (query, sources, status, results), timestamps, and correlation identifiers
+
+### Operational guidance and testing
+- Setup checklist (addendum)
+  - Ensure Redis is running locally (localhost:6379)
+  - Set SOMNUS_STREAM_JWT_SECRET for streaming auth if enabling JWT
+  - Verify requirements: pip install -r requirements.txt (includes pyjwt, redis, msgpack, aiofiles)
+  - Confirm Research VM API availability within VM at http://localhost:8888
+- Observability (follow-ups)
+  - Add metrics for compression ratio, pub/sub delivery, JWT auth failures
+- Testing (recommended)
+  - Unit/integration tests for JWT verification paths
+  - Round-trip compression decoding/encoding tests for stream events
+  - Pub/sub broadcast/subscribe behavior under concurrent load
+
+### Security notes
+- Secrets
+  - Manage JWT secrets via environment variables; do not print/echo secrets in logs
+- Isolation
+  - Research VM API is local to the VM; host access should remain controlled unless explicitly bridged
+- Capability control
+  - Continue to prefer capability-based projections vs raw data sharing across subsystems
+
+---
+
+## 🏛️ **Advanced Subsystem Architecture**
 
 ### 🧠 **Prompt Management Subsystem**
 
@@ -1195,6 +1322,81 @@ async with cache.session_context(session_id) as session_cache:
         executor=lambda: code_agent.generate_implementation(research_results)
     )
 ```
+
+### 🔌 **Production-Grade Plugin Architecture**
+
+The Somnus Plugin System is an enterprise-grade framework for extending the core capabilities of the AI. It is designed for security, performance, and developer experience, featuring advanced functionalities like hot-reloading, sandboxing, and intelligent orchestration.
+
+#### **Core Components & Lifecycle**
+
+The architecture is modular, ensuring separation of concerns and robust operation:
+
+- **`plugin_manager.py`**: The central orchestrator handling the complete plugin lifecycle, from discovery and loading to activation and hot-reloading.
+- **`plugin_base.py`**: Defines the abstract base classes and interfaces (`PluginBase`, `PluginManifest`) that all plugins must implement, ensuring system compatibility.
+- **`discovery.py`**: Intelligently discovers plugins from various sources (filesystem, marketplace), resolves dependencies, and checks for compatibility.
+- **`security.py`**: A multi-layered security system that validates plugins through static code analysis, permission checking, and cryptographic signature verification.
+- **`hot_reload.py`**: Enables zero-downtime plugin updates by preserving state, managing dependency cascades, and reloading code in-place.
+- **`orchestration.py`**: Manages the execution of plugin methods through prioritized queues, resource monitoring, and complex workflow patterns (sequential, parallel, etc.).
+- **`marketplace.py`**: Provides functionality for a plugin marketplace, including downloading, installing, and updating community or official plugins.
+
+```mermaid
+graph TD
+    A[Discover Plugins] --> B{Validate Security}
+    B -->|Valid| C[Resolve Dependencies]
+    C --> D[Load Plugin]
+    D --> E[Activate Plugin]
+    E --> F{Active & Running}
+    F -->|File Change| G[Hot-Reload]
+    G --> E
+    F -->|User Action| H[Deactivate Plugin]
+    H --> I[Unload Plugin]
+    B -->|Invalid| J[Quarantine]
+```
+
+#### **Advanced Security & Sandboxing**
+
+Security is a core principle, not an afterthought. The system employs a multi-layered defense strategy:
+
+- **Static Code Analysis**: The `CodeAnalyzer` scans plugin source code for dangerous patterns (e.g., `eval()`, `subprocess`) and suspicious import statements using AST analysis.
+- **Permission-Based Control**: Plugins declare required permissions in their `manifest.json`. The system validates that the plugin's code does not attempt actions beyond its declared permissions.
+- **Cryptographic Verification**: The `CryptographicValidator` verifies plugin integrity using digital signatures, ensuring they originate from a trusted author and have not been tampered with.
+- **Dependency Scanning**: The `DependencyAnalyzer` inspects third-party libraries for known vulnerabilities and suspicious patterns.
+- **Sandboxed Execution**: Untrusted or experimental plugins can be run in an isolated `SandboxEnvironment` with strict resource limits and restricted access to the filesystem and network.
+
+#### **Zero-Downtime Hot-Reload & State Management**
+
+To ensure system stability and a seamless development experience, Somnus implements a sophisticated hot-reload mechanism:
+
+- **State Preservation**: Before a reload, the `StateManager` captures the plugin's complete state, including configuration, active sessions, and memory references. This state is intelligently restored after the reload.
+- **Dependency-Aware Reloads**: The `DependencyGraph` tracks inter-plugin dependencies. When a plugin is updated, the system automatically triggers a cascade reload for all dependent plugins in the correct topological order.
+- **Graceful Fallback**: If a hot-reload fails, the system can gracefully roll back to the previous stable version, preventing system-wide failures.
+
+```python
+# Example: Hot-reload triggered by file change
+# (Handled automatically by the PluginFileWatcher and HotReloadEngine)
+
+# 1. Developer saves a change to `plugin.py`.
+# 2. Watchdog detects the file modification.
+# 3. HotReloadEngine captures the current state of the plugin.
+# 4. The existing plugin instance is deactivated.
+# 5. The Python module is re-imported using `importlib.reload`.
+# 6. A new plugin instance is created.
+# 7. The previously captured state is restored to the new instance.
+# 8. The new instance is activated, seamlessly replacing the old one.
+```
+
+#### **Intelligent Orchestration & Workflows**
+
+The `PluginOrchestrator` provides a powerful system for managing how and when plugins execute, optimizing for performance and reliability.
+
+- **Prioritized Execution Queue**: Requests are processed based on priority (e.g., `REALTIME`, `CRITICAL`, `NORMAL`), ensuring that critical tasks are handled first.
+- **Resource Monitoring**: The orchestrator monitors plugin CPU and memory usage, preventing any single plugin from destabilizing the system.
+- **Circuit Breaker**: Automatically disables plugins that fail repeatedly, preventing cascading failures and improving system resilience.
+- **Workflow Engine**: Allows for the creation of complex execution pipelines involving multiple plugins. Supported modes include:
+    - **Sequential**: Steps run one after another.
+    - **Parallel**: Steps run concurrently for maximum speed.
+    - **Pipeline**: The output of one step becomes the input for the next.
+    - **Graph**: Complex dependency-based execution order.
 
 ---
 

@@ -384,6 +384,43 @@ PROJECTION_REGISTRY: Dict[str, ProjectionRule] = {
             redaction=RedactionLevel.COARSE,
             scope=ExposureScope.SESSION
         )
+    ),
+
+    # ========================================================================
+    # RESEARCH SUBSYSTEM PROJECTIONS
+    # ========================================================================
+
+    "prefs.research.search_engine": ProjectionRule(
+        section=ProjectionSection.CAPABILITIES,
+        key="flags",
+        meta=FieldMeta(
+            expose_to_llm=True,
+            redaction=RedactionLevel.COARSE,
+            scope=ExposureScope.ALWAYS
+        ),
+        transform=lambda value: {"capabilities.flags.search_engine": str(value)}
+    ),
+    
+    "prefs.research.depth": ProjectionRule(
+        section=ProjectionSection.PREFS,
+        key="research_mode",
+        meta=FieldMeta(
+            expose_to_llm=True,
+            redaction=RedactionLevel.NONE,
+            scope=ExposureScope.ALWAYS
+        ),
+        transform=lambda value: {"prefs.research_mode": str(value)}
+    ),
+    
+    "prefs.research.sources": ProjectionRule(
+        section=ProjectionSection.CONTEXT,
+        key="research_sources",
+        meta=FieldMeta(
+            expose_to_llm=True,
+            redaction=RedactionLevel.COARSE,
+            scope=ExposureScope.ALWAYS
+        ),
+        transform=lambda value: {"context.research_sources": value if isinstance(value, list) else [value]}
     )
 }
 
@@ -617,6 +654,15 @@ def generate_projection_from_registry(
                 dsl_result = evaluate_dsl_rule(dsl_rule, profile)
                 if dsl_result:
                     apply_projection_mapping(projection, dsl_result)
+        
+        # Apply transform function if present
+        if getattr(rule, 'transform', None):
+            try:
+                mapping = rule.transform(field_value)
+                if isinstance(mapping, dict):
+                    apply_projection_mapping(projection, mapping)
+            except Exception:
+                pass
         
         # Apply direct mapping
         if rule.section and rule.key:

@@ -119,6 +119,11 @@ class ResearchEvent(BaseEvent):
     research_id: Optional[str] = None
     research_mode: str = ""
     configuration_changes: Dict[str, Any] = field(default_factory=dict)
+    # Expanded payload fields
+    queries: List[str] = field(default_factory=list)
+    sources: List[str] = field(default_factory=list)
+    status: str = ""
+    results_ref: Optional[str] = None
 
 @dataclass
 class ArtifactEvent(BaseEvent):
@@ -541,6 +546,49 @@ def subscribe_to_memory_events(handler: EventHandler, **kwargs) -> str:
 def subscribe_to_research_events(handler: EventHandler, **kwargs) -> str:
     """Subscribe to research system events"""
     return get_event_bus().subscribe(ResearchEvent, handler, **kwargs)
+
+async def publish_research_started(
+    research_id: str,
+    user_id: str,
+    session_id: str,
+    queries: List[str],
+    sources: List[str],
+    mode: str,
+    **kwargs
+) -> Dict[str, Any]:
+    """Publish a research started event."""
+    event = ResearchEvent(
+        research_id=research_id,
+        research_mode=mode,
+        payload={
+            "message": "research_started"
+        },
+        meta=EventMetadata(source_subsystem="web_research", user_id=user_id, session_id=session_id, **kwargs),
+        queries=queries,
+        sources=sources,
+        status="started"
+    )
+    return await get_event_bus().publish(event)
+
+async def publish_research_completed(
+    research_id: str,
+    user_id: str,
+    session_id: str,
+    results_ref: Optional[str] = None,
+    **kwargs
+) -> Dict[str, Any]:
+    """Publish a research completed event."""
+    event = ResearchEvent(
+        research_id=research_id,
+        research_mode="",
+        payload={
+            "message": "research_completed"
+        },
+        meta=EventMetadata(source_subsystem="web_research", user_id=user_id, session_id=session_id, **kwargs),
+        results_ref=results_ref,
+        status="completed"
+    )
+    return await get_event_bus().publish(event)
 
 def subscribe_to_artifact_events(handler: EventHandler, **kwargs) -> str:
     """Subscribe to artifact system events"""

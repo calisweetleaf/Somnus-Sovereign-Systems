@@ -1,0 +1,6 @@
+backend/artifacts/artifact_config.py
+backend/artifacts/artifact_container_runtime.py
+backend/artifacts/artifact_system_extension.py
+backend/artifacts/artifact_system_fastapi.py
+backend/artifacts/base_layer.py
+backend/artifacts/collaborative_artifact_core.py

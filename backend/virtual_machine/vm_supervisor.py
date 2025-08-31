@@ -396,6 +396,76 @@ class VMSupervisor:
             vm_instance.soft_reboot_pending = False
             self._save_vm_config(vm_instance)
             return False
+    
+    async def execute_command_in_vm(self, vm_id: UUID, command: str, timeout: int = 300, working_dir: Optional[str] = None, env_vars: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        """
+        Execute a command inside the VM via the in-VM agent.
+        This method is used by ai_orchestrator.py for capability pack installation.
+        """
+        vm_instance = self.active_vms.get(vm_id)
+        if not vm_instance or not vm_instance.internal_ip:
+            return {
+                "success": False,
+                "error": "VM not found or has no IP address",
+                "exit_code": -1
+            }
+        
+        if vm_instance.vm_state != VMState.RUNNING:
+            return {
+                "success": False,
+                "error": f"VM is not running (current state: {vm_instance.vm_state})",
+                "exit_code": -1
+            }
+        
+        try:
+            # Create agent client and execute command
+            agent_client = SomnusVMAgentClient(vm_instance.internal_ip, vm_instance.agent_port)
+            
+            # Prepare command payload
+            command_payload = {
+                "command": command,
+                "timeout": timeout
+            }
+            
+            if working_dir:
+                command_payload["working_dir"] = working_dir
+            
+            if env_vars:
+                command_payload["env_vars"] = env_vars
+            
+            # Execute command via agent
+            response = agent_client._request("POST", "/execute_command", json=command_payload)
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Log successful execution
+                logging.info(f"Command executed in VM {vm_id}: {command[:50]}... (exit_code: {result.get('exit_code', 'unknown')})")
+                
+                return {
+                    "success": result.get("success", False),
+                    "exit_code": result.get("exit_code", -1),
+                    "stdout": result.get("stdout", ""),
+                    "stderr": result.get("stderr", ""),
+                    "command": command
+                }
+            else:
+                error_msg = f"Agent request failed with status {response.status_code}"
+                logging.error(f"Command execution failed for VM {vm_id}: {error_msg}")
+                return {
+                    "success": False,
+                    "error": error_msg,
+                    "exit_code": -1
+                }
+                
+        except Exception as e:
+            error_msg = f"Command execution error: {str(e)}"
+            logging.error(f"Failed to execute command in VM {vm_id}: {error_msg}")
+            return {
+                "success": False,
+                "error": error_msg,
+                "exit_code": -1
+            }
             
     def shutdown_vm(self, vm_id: UUID) -> bool:
         """Gracefully shuts down a VM."""
