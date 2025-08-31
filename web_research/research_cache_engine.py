@@ -41,9 +41,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # Somnus system imports
 from core.memory_core import MemoryManager, MemoryType, MemoryImportance, MemoryScope
-from core.memory_integration import SessionMemoryContext
-from core.model_loader import ModelLoader
-from schemas.session import SessionID, UserID
+from backend.memory_integration import SessionMemoryContext
 from research_stream_manager import ResearchStreamManager, StreamEvent, StreamEventType, StreamPriority
 
 logger = logging.getLogger(__name__)

@@ -46,6 +46,11 @@ from pydantic import BaseModel, Field, validator
 from starlette.websockets import WebSocketState
 import uvicorn
 
+from core.git_integration_module import GitHubIntegrationManager
+from core.accelerated_file_processing import IntelligentFileProcessor
+from core.file_upload_system import FileUploadManager
+from core.memory_core import MemoryManager
+
 # Optional dependencies for enhanced features
 try:
     import docker
@@ -1243,7 +1248,8 @@ class UnlimitedArtifactManager:
         storage_dir: str = "data/unlimited_artifacts",
         enable_persistence: bool = True,
         enable_collaboration: bool = True,
-        max_artifacts_per_session: Optional[int] = None  # UNLIMITED
+        max_artifacts_per_session: Optional[int] = None,  # UNLIMITED
+        memory_manager: Optional[MemoryManager] = None
     ):
         self.storage_dir = Path(storage_dir)
         self.storage_dir.mkdir(parents=True, exist_ok=True)
@@ -1251,6 +1257,7 @@ class UnlimitedArtifactManager:
         self.enable_persistence = enable_persistence
         self.enable_collaboration = enable_collaboration
         self.max_artifacts_per_session = max_artifacts_per_session  # None = unlimited
+        self.memory_manager = memory_manager
         
         # Unlimited in-memory artifact storage
         self.artifacts: Dict[UUID, UnlimitedArtifact] = {}
@@ -1551,6 +1558,91 @@ class UnlimitedArtifactManager:
         
         logger.info("Unlimited Artifact Manager shutdown complete")
 
+    async def create_artifact_from_git_repo(
+        self, 
+        repo_url: str,
+        user_id: str,
+        session_id: str,
+        branch: Optional[str] = None
+    ) -> UnlimitedArtifact:
+        """
+        Clones a Git repository, processes its files, and creates a new artifact.
+        """
+        logger.info(f"Attempting to create artifact from Git repo: {repo_url}")
+
+        # 1. Instantiate all necessary managers
+        upload_dir = self.storage_dir / "uploads"
+        clone_dir = self.storage_dir / "git_clones"
+        
+        file_manager = FileUploadManager(upload_dir=str(upload_dir))
+        
+        if not self.memory_manager:
+            logger.warning("MemoryManager not provided to UnlimitedArtifactManager, initializing a default one.")
+            self.memory_manager = MemoryManager()
+            await self.memory_manager.initialize()
+
+        intelligent_processor = IntelligentFileProcessor(
+            base_file_manager=file_manager
+        )
+        await intelligent_processor.start()
+
+        github_manager = GitHubIntegrationManager(
+            intelligent_processor=intelligent_processor,
+            memory_manager=self.memory_manager,
+            clone_dir=str(clone_dir)
+        )
+
+        # 2. Clone and process the repository
+        repo_metadata = await github_manager.clone_repository(
+            repo_url=repo_url,
+            user_id=user_id,
+            session_id=session_id,
+            branch=branch
+        )
+
+        if repo_metadata.status == 'FAILED':
+            raise HTTPException(status_code=500, detail=f"Failed to clone repository: {repo_metadata.errors}")
+
+        # 3. Create a new artifact from the repository content
+        artifact = await self.create_artifact(
+            name=f"Repo: {repo_metadata.name}",
+            artifact_type=ArtifactType.CUSTOM, # Or maybe a new GIT_REPOSITORY type
+            created_by=user_id,
+            session_id=session_id,
+            description=f"Artifact created from Git repository: {repo_url}.\n{repo_metadata.description or ''}",
+            execution_environment=ExecutionEnvironment.CONTAINER
+        )
+
+        # 4. Populate the artifact with files from the cloned repo
+        repo_path = Path(repo_metadata.local_path)
+        for root, _, files in os.walk(repo_path):
+            if '.git' in root.split(os.sep):
+                continue
+            for file in files:
+                file_path = Path(root) / file
+                relative_path = file_path.relative_to(repo_path)
+                
+                try:
+                    with open(file_path, 'rb') as f:
+                        binary_content = f.read()
+                    
+                    try:
+                        text_content = binary_content.decode('utf-8')
+                        artifact.add_file(name=str(relative_path), content=text_content)
+                    except UnicodeDecodeError:
+                        artifact.add_file(name=str(relative_path), binary_data=binary_content)
+
+                except Exception as e:
+                    logger.warning(f"Could not read file {file_path} from repo: {e}")
+
+        # Clean up the cloned repo directory
+        shutil.rmtree(repo_path, ignore_errors=True)
+        
+        await intelligent_processor.stop()
+
+        logger.info(f"Successfully created artifact {artifact.metadata.artifact_id} from repo {repo_url}")
+        return artifact
+
 
 # ============================================================================
 # UNLIMITED FASTAPI INTEGRATION
@@ -1585,6 +1677,12 @@ def create_unlimited_artifact_router(artifact_manager: UnlimitedArtifactManager)
         enable_gpu: bool = True
         enable_internet: bool = True
         auto_install_dependencies: bool = True
+
+    class CreateArtifactFromGitRequest(BaseModel):
+        repo_url: str
+        user_id: str
+        session_id: str
+        branch: Optional[str] = None
     
     @router.post("/create", response_model=Dict[str, Any])
     async def create_unlimited_artifact(request: CreateUnlimitedArtifactRequest):
@@ -1615,6 +1713,25 @@ def create_unlimited_artifact_router(artifact_manager: UnlimitedArtifactManager)
             
         except Exception as e:
             logger.error(f"Failed to create unlimited artifact: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.post("/create-from-git", response_model=Dict[str, Any])
+    async def create_artifact_from_git(request: CreateArtifactFromGitRequest):
+        """Create a new artifact by cloning a Git repository."""
+        try:
+            artifact = await artifact_manager.create_artifact_from_git_repo(
+                repo_url=request.repo_url,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                branch=request.branch
+            )
+            return {
+                "artifact_id": str(artifact.metadata.artifact_id),
+                "name": artifact.metadata.name,
+                "message": "Artifact created successfully from Git repository."
+            }
+        except Exception as e:
+            logger.error(f"Failed to create artifact from git: {e}")
             raise HTTPException(status_code=500, detail=str(e))
     
     @router.post("/{artifact_id}/execute", response_model=Dict[str, Any])

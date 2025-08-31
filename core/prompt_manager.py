@@ -25,7 +25,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape, Template
 from pydantic import BaseModel, Field
 
 from schemas.session import SessionID, UserID
-from core.memory_manager import MemoryManager, MemoryType, MemoryImportance
+from core.memory_core import MemoryManager, MemoryType, MemoryImportance
 
 logger = logging.getLogger(__name__)
 

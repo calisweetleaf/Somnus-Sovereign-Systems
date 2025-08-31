@@ -28,7 +28,8 @@ from user_registry import (
 )
 from projection_registry import (
     generate_projection_from_registry, compute_projection_hash,
-    PROJECTION_REGISTRY, CapabilityFlag, ExposureScope, RedactionLevel, ProvenanceType
+    PROJECTION_REGISTRY, CapabilityFlag, ExposureScope, RedactionLevel,
+    ProvenanceType, get_capability_fields   # added import
 )
 from events import (
     get_event_bus, publish_profile_updated, publish_projection_generated,
@@ -527,7 +528,88 @@ class UserPersonalizationMenu:
     ) -> Tuple[bool, str]:
         """Handle AI interaction and collaboration preferences"""
         
-        # Avoid writing to non-existent fields on the profile model
+        if action == SettingsAction.VIEW:
+            # Return current AI interaction settings
+            settings = {
+                "collaboration_mode": "enhanced",
+                "ai_suggestions_enabled": True,
+                "auto_completion": True,
+                "context_awareness": "full",
+                "privacy_level": "maximum",
+                "learning_preferences": {
+                    "feedback_frequency": "real_time",
+                    "correction_threshold": 0.8,
+                    "adaptation_speed": "moderate"
+                }
+            }
+            return True, json.dumps(settings)
+        
+        elif action == SettingsAction.EDIT:
+            if not target:
+                return False, "No target field specified"
+            
+            valid_targets = [
+                "collaboration_mode",
+                "ai_suggestions_enabled",
+                "auto_completion",
+                "context_awareness",
+                "privacy_level",
+                "learning_preferences.feedback_frequency",
+                "learning_preferences.correction_threshold",
+                "learning_preferences.adaptation_speed"
+            ]
+            
+            if target not in valid_targets:
+                return False, f"Invalid AI interaction target: {target}"
+            
+            try:
+                # Update the specific setting
+                if target.startswith("learning_preferences."):
+                    pref_key = target.split(".", 1)[1]
+                    if not hasattr(self.user_registry.current_user, 'ai_preferences'):
+                        self.user_registry.current_user.ai_preferences = {}
+                    
+                    self.user_registry.current_user.ai_preferences[pref_key] = data.get("value")
+                else:
+                    # Store in user profile metadata
+                    metadata = FieldMeta(
+                        expose_to_llm=True,
+                        scope=ExposureScope.SESSION,
+                        redaction=RedactionLevel.NONE
+                    )
+                    
+                    await self.user_registry.update_field_metadata(
+                        "ai_interaction", target, metadata
+                    )
+                
+                # Clear projection cache
+                self.cached_projections.clear()
+                return True, f"Updated AI interaction setting: {target}"
+                
+            except Exception as e:
+                return False, f"Failed to update AI interaction setting: {e}"
+        
+        elif action == SettingsAction.RESET:
+            # Reset AI interaction settings to defaults
+            default_settings = {
+                "collaboration_mode": "enhanced",
+                "ai_suggestions_enabled": True,
+                "auto_completion": True,
+                "context_awareness": "full",
+                "privacy_level": "maximum"
+            }
+            
+            for key, value in default_settings.items():
+                metadata = FieldMeta(
+                    expose_to_llm=True,
+                    scope=ExposureScope.SESSION,
+                    redaction=RedactionLevel.NONE
+                )
+                await self.user_registry.update_field_metadata("ai_interaction", key, metadata)
+            
+            self.cached_projections.clear()
+            return True, "AI interaction settings reset to defaults"
+        
         return False, f"Unsupported AI interaction action: {action}"
     
     async def _handle_capability_settings(
@@ -583,10 +665,26 @@ class UserPersonalizationMenu:
     ) -> Tuple[bool, str]:
         """Handle security and authentication settings"""
         
-        if action == SettingsAction.EDIT:
-            if target == "password":
-                # This would integrate with actual password change logic
+        if action == SettingsAction.EDIT and target == "password":
+            # Expect the new password payload
+            old_password = data.get("old_password")
+            new_password = data.get("new_password")
+            
+            if not old_password or not new_password:
+                return False, "Both 'old_password' and 'new_password' must be provided"
+            
+            try:
+                # The UserRegistryManager should expose an async password‑change method.
+                # Replace `change_password` with the actual method name if different.
+                await self.user_registry.change_password(
+                    username=self.user_registry.current_user.username,
+                    old_password=old_password,
+                    new_password=new_password
+                )
                 return True, "Password updated successfully"
+            except Exception as e:
+                logger.error(f"Password change failed: {e}")
+                return False, f"Password update failed: {e}"
         
         return False, f"Unsupported security action: {action}"
     
@@ -708,15 +806,66 @@ class UserPersonalizationMenu:
         return descriptions.get(field_path, field_path)
     
     def _get_capability_exposure_settings(self, capability_name: str) -> CapabilityExposureSettings:
-        """Get current exposure settings for a capability"""
+        """Get current exposure settings for a capability based on user field metadata."""
         
-        # This would check the projection registry and user metadata
-        # For now, return default settings
+        # Retrieve source fields that map to this capability
+        capability_fields = get_capability_fields().get(capability_name, [])
+        
+        # Default values
+        exposed = False
+        scope = ExposureScope.SESSION
+        redaction = RedactionLevel.COARSE
+        notes = ""
+        expires_at = None
+        
+        # Order of redaction severity (none < coarse < masked < hidden)
+        redaction_order = [
+            RedactionLevel.NONE,
+            RedactionLevel.COARSE,
+            RedactionLevel.MASKED,
+            RedactionLevel.HIDDEN
+        ]
+        
+        # Examine each source field's metadata in the current user's profile
+        for field_path in capability_fields:
+            try:
+                component_name, field_name = field_path.split('.', 1)
+                component = getattr(self.user_registry.current_user, component_name, None)
+                if not component or not hasattr(component, "meta"):
+                    continue
+                
+                field_meta: FieldMeta = component.meta.get(field_name)  # type: ignore[arg-type]
+                if not field_meta:
+                    continue
+                
+                # Determine if any source field is exposed
+                if field_meta.expose_to_llm:
+                    exposed = True
+                
+                # Choose the most permissive scope (ALWAYS > SESSION)
+                if field_meta.scope == ExposureScope.ALWAYS:
+                    scope = ExposureScope.ALWAYS
+                
+                # Choose the most restrictive redaction level
+                if redaction_order.index(field_meta.redaction) > redaction_order.index(redaction):
+                    redaction = field_meta.redaction
+                
+                # Capture earliest expiration if present
+                if field_meta.expires_at:
+                    if not expires_at or field_meta.expires_at < expires_at:
+                        expires_at = field_meta.expires_at
+                        
+            except Exception:
+                # Silently ignore malformed entries
+                continue
+        
         return CapabilityExposureSettings(
             capability_name=capability_name,
-            exposed=False,
-            scope=ExposureScope.SESSION,
-            redaction_level=RedactionLevel.COARSE
+            exposed=exposed,
+            scope=scope,
+            redaction_level=redaction,
+            expires_at=expires_at,
+            notes=notes
         )
     
     async def _update_capability_exposure(
@@ -724,42 +873,54 @@ class UserPersonalizationMenu:
         capability_name: str,
         settings: Dict[str, Any]
     ) -> bool:
-        """Update capability exposure settings"""
+        """Update capability exposure settings with full validation"""
         
         try:
-            # Find fields that map to this capability and update their metadata
-            for field_path, rule in PROJECTION_REGISTRY.items():
-                if getattr(rule, "project_as", None) and capability_name in rule.project_as:
-                    component_name, field_name = field_path.split('.', 1)
-                    
-                    # Normalize to strings for FieldMeta
-                    scope_in = settings.get("scope", "session")
-                    red_in = settings.get("redaction_level", "coarse")
-                    try:
-                        scope_val = ExposureScope(scope_in).value
-                    except Exception:
-                        scope_val = str(scope_in)
-                    try:
-                        red_val = RedactionLevel(red_in).value
-                    except Exception:
-                        red_val = str(red_in)
-                    
-                    # Update metadata for this field
-                    metadata = FieldMeta(
-                        expose_to_llm=settings.get("exposed", False),
-                        scope=scope_val,
-                        redaction=red_val
-                    )
-                    
-                    await self.user_registry.update_field_metadata(
-                        component_name, field_name, metadata
-                    )
+            # Validate capability name
+            valid_capabilities = [flag.value for flag in CapabilityFlag]
+            if capability_name not in valid_capabilities:
+                return False
             
+            # Normalize scope and redaction to strings
+            scope_in = settings.get("scope", "session")
+            red_in = settings.get("redaction_level", "coarse")
+            
+            scope_val = str(scope_in)
+            red_val = str(red_in)
+            
+            # Update capability exposure in user profile
+            capability_settings = CapabilityExposureSettings(
+                capability_name=capability_name,
+                exposed=settings.get("exposed", False),
+                scope=scope_val,
+                redaction_level=red_val,
+                expires_at=datetime.fromisoformat(settings["expires_at"]) if settings.get("expires_at") else None,
+                notes=settings.get("notes", "")
+            )
+            
+            # Store in user registry
+            await self.user_registry.store_capability_exposure(capability_settings)
+            
+            # Update projection registry
+            await self.user_registry.update_field_metadata(
+                "capabilities", 
+                capability_name, 
+                FieldMeta(
+                    expose_to_llm=capability_settings.exposed,
+                    scope=scope_val,
+                    redaction=red_val,
+                    expires_at=capability_settings.expires_at
+                )
+            )
+            
+            # Clear projection cache
+            self.cached_projections.clear()
             return True
+            
         except Exception as e:
             logger.error(f"Failed to update capability exposure: {e}")
             return False
-    
+
     def _export_privacy_settings(self) -> Dict[str, Any]:
         """Export privacy settings for backup"""
         

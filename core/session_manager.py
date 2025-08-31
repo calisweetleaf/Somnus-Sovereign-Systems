@@ -293,7 +293,10 @@ class DevSessionManager:
                         importance=MemoryImportance.HIGH,
                         scope=MemoryScope.PRIVATE,
                         tags=tags,
-                        memory_id_override=str(session.dev_session_id),
+                        metadata={
+                            'dev_session_id': str(session.dev_session_id),
+                            'session_override_id': str(session.dev_session_id)
+                        }
                     ),
                     timeout=_IO_TIMEOUT_SECONDS,
                 )
@@ -339,10 +342,23 @@ class DevSessionManager:
         last_exc: Optional[BaseException] = None
         for attempt in range(1, _LOAD_RETRIES + 1):
             try:
-                memory_entry = await asyncio.wait_for(
-                    self.memory_manager.get_memory_by_id(str(dev_session_id), user_id="*"),
+                # Search for dev session by metadata since we don't have get_memory_by_id with custom IDs
+                memory_entries = await asyncio.wait_for(
+                    self.memory_manager.retrieve_memories(
+                        user_id="*",
+                        memory_types=[self._resolve_dev_session_memory_type()],
+                        limit=100
+                    ),
                     timeout=_IO_TIMEOUT_SECONDS,
                 )
+                
+                # Find the specific dev session
+                memory_entry = None
+                for entry in memory_entries:
+                    if (entry.get('metadata', {}).get('dev_session_id') == str(dev_session_id) or
+                        entry.get('metadata', {}).get('session_override_id') == str(dev_session_id)):
+                        memory_entry = entry
+                        break
                 if memory_entry and memory_entry.get('content'):
                     try:
                         session_data = json.loads(memory_entry['content'])
@@ -388,7 +404,7 @@ class DevSessionManager:
     def _resolve_dev_session_memory_type(self) -> Union[MemoryType, str]:
         # Prefer a proper enum if available, fallback to string for compatibility
         try:
-            return getattr(MemoryType, "DEV_SESSION")
+            return MemoryType.DEV_SESSION
         except Exception:
             return "dev_session"
 

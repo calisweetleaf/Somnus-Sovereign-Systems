@@ -20,11 +20,11 @@ from uuid import UUID
 
 # Import all the necessary manager and schema components from your codebase
 # Note: Adjust the import paths based on your final project structure.
-from vm_supervisor import VMSupervisor, AIVMInstance
-from dev_session_schemas import DevSession, DevSessionStatus
-from dev_session_manager import DevSessionManager
-from memory_core import MemoryManager, MemoryType, MemoryImportance
-from security_layer import SecurityEnforcer
+from backend.virtual_machine.vm_supervisor import VMSupervisor, AIVMInstance
+from ..schemas.dev_session_schemas import DevSession, DevSessionStatus
+from ..core.session_manager import DevSessionManager
+from ..core.memory_core import MemoryManager, MemoryType, MemoryImportance
+from ..security.security_layer import SecurityEnforcer
 
 # --- Type Aliases for Clarity ---
 UserID = str

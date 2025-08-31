@@ -701,7 +701,7 @@ def create_project_api_routes(
             if not artifact_manager:
                 raise HTTPException(status_code=404, detail="Project artifacts not available")
             
-            from ..morpheus_artifact_v2 import ArtifactType, CollaborationMode
+            from ..backend.artifacts import ArtifactType, CollaborationMode
             
             artifact = await artifact_manager.create_project_artifact(
                 title=request.title,

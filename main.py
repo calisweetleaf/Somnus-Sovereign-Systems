@@ -21,7 +21,7 @@ from pydantic import BaseModel
 # Core imports
 from core.session_manager import SessionManager
 from core.model_loader import ModelLoader
-from core.security_layer import SecurityEnforcer
+from security.security_layer import SecurityEnforcer
 
 # New advanced feature imports
 from core.memory_manager import MemoryManager, MemoryConfiguration, MemoryType, MemoryImportance

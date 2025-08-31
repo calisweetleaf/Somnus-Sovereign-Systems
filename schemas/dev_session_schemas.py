@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Dict, List, Optional, Any
 from uuid import UUID, uuid4
+from collections import defaultdict
 
 from pydantic import BaseModel, Field, validator
 
@@ -28,6 +29,7 @@ class DevSessionStatus(str, Enum):
 class DevSessionEventType(str, Enum):
     """Types of events that can occur within a development session."""
     SESSION_START = "session_start"
+    SESSION_UPDATED = "session_updated" 
     USER_PROMPT = "user_prompt"
     AI_RESPONSE = "ai_response"
     CODE_BLOCK_CREATED = "code_block_created"
@@ -36,6 +38,8 @@ class DevSessionEventType(str, Enum):
     SESSION_PAUSED = "session_paused"
     SESSION_RESUMED = "session_resumed"
     SESSION_COMPLETED = "session_completed"
+    SESSION_ARCHIVED = "session_archived"
+    SESSION_PROMOTED = "session_promoted"
     TITLE_CHANGED = "title_changed"
     SNAPSHOT_CREATED = "snapshot_created"
 

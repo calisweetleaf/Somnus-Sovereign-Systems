@@ -58,7 +58,7 @@ from complete_artifact_system import (
 try:
     from schemas.session import SessionID, UserID
     from core.memory_core import MemoryManager, MemoryType, MemoryImportance
-    from core.vm_manager import VMInstanceManager
+    from backend.virtual_machine.vm_supervisor import VMInstanceManager
     SOMNUS_INTEGRATION = True
 except ImportError:
     # Standalone mode

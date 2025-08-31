@@ -16,6 +16,7 @@ Integration Strategy:
 """
 
 import asyncio
+import concurrent.futures
 import hashlib
 import json
 import logging
@@ -34,9 +35,70 @@ from uuid import UUID, uuid4
 from enum import Enum
 from contextlib import asynccontextmanager
 import shelve
-import psutil
+
+from .memory_core import MemoryManager, MemoryType, MemoryImportance
 
 logger = logging.getLogger(__name__)
+
+
+class _AsyncIOLoopManager:
+    """Manages a dedicated asyncio event loop in a separate thread to safely run async code from sync contexts."""
+    _instance: Optional["_AsyncIOLoopManager"] = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        if not hasattr(self, 'loop'):
+            self.loop = asyncio.new_event_loop()
+            self.thread = threading.Thread(target=self.loop.run_forever, daemon=True, name="SomnusCache-AsyncIO")
+            self.thread.start()
+            logger.info("Started dedicated asyncio event loop for SomnusCache.")
+
+    def run_coroutine(self, coro, timeout=10):
+        """Runs a coroutine in the managed event loop and waits for the result with a timeout."""
+        if not self.thread.is_alive() or not self.loop.is_running():
+            raise RuntimeError("AsyncIO event loop is not running.")
+        future = asyncio.run_coroutine_threadsafe(coro, self.loop)
+        try:
+            return future.result(timeout=timeout)
+        except concurrent.futures.TimeoutError:
+            logger.error(f"Coroutine execution timed out after {timeout} seconds.")
+            future.cancel()
+            return None
+        except Exception as e:
+            logger.error(f"Exception in coroutine execution: {e}", exc_info=True)
+            return None
+
+    def submit_coroutine(self, coro):
+        """Submits a coroutine to the event loop without waiting for the result."""
+        if not self.thread.is_alive() or not self.loop.is_running():
+            logger.error("AsyncIO event loop is not running. Cannot submit coroutine.")
+            return
+        future = asyncio.run_coroutine_threadsafe(coro, self.loop)
+        future.add_done_callback(self._log_future_exception)
+
+    def _log_future_exception(self, future):
+        try:
+            if future.cancelled():
+                return
+            if future.exception():
+                logger.error(f"Async task failed in background: {future.exception()}", exc_info=future.exception())
+        except (asyncio.CancelledError, concurrent.futures.CancelledError):
+            pass
+
+    def shutdown(self):
+        if self.loop.is_running():
+            self.loop.call_soon_threadsafe(self.loop.stop)
+            self.thread.join(timeout=5)
+            if self.thread.is_alive():
+                logger.warning("AsyncIO thread did not shut down gracefully.")
+        logger.info("Shut down dedicated asyncio event loop.")
 
 
 class CacheNamespace(str, Enum):
@@ -427,12 +489,16 @@ class PersistenceManager:
 
 
 class SomnusCache:
+    """Production‑ready unified cache engine for SOMNUS.
+
+    This cache can optionally synchronize its entries with the persistent memory system
+    defined in ``vm_memory_system.memory_core``.  When a ``MemoryManager`` instance is
+    supplied via the ``memory_manager`` argument, each cache entry is also stored as a
+    memory of type ``MemoryType.SYSTEM_EVENT`` (or a custom type) so that the cache
+    state survives process restarts and can be queried through the normal memory APIs.
     """
-    Production-ready unified cache engine for SOMNUS.
-    Provides session-aware, persistent, LRU-evicting cache with background cleanup.
-    """
-    
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+
+    def __init__(self, config: Optional[Dict[str, Any]] = None, memory_manager: Optional["MemoryManager"] = None):
         # Configuration with sensible defaults
         self.config = config or {}
         self.max_entries = self.config.get('max_entries', 10000)
@@ -442,32 +508,41 @@ class SomnusCache:
         self.persistence_enabled = self.config.get('persistence_enabled', True)
         self.cleanup_interval = self.config.get('cleanup_interval_seconds', 300)  # 5 minutes
         self.compression_threshold = self.config.get('compression_threshold_bytes', 4096)
-        
+
         # Core storage
         self.entries: OrderedDict[str, CacheEntry] = OrderedDict()
         self.current_memory_usage = 0
         self.lock = threading.RLock()
-        
+
         # Namespace tracking
         self.namespace_keys: Dict[CacheNamespace, Set[str]] = defaultdict(set)
         self.session_keys: Dict[str, Set[str]] = defaultdict(set)  # session_id -> keys
-        
+
         # Persistence and metrics
         self.persistence = PersistenceManager(self.cache_dir) if self.persistence_enabled else None
         self.metrics = CacheMetrics()
-        
+
+        # Optional integration with the global memory system
+        self.memory_manager = memory_manager
+        self.async_loop_manager: Optional[_AsyncIOLoopManager] = None
+
         # Background tasks
         self.cleanup_task: Optional[threading.Thread] = None
         self.running = False
         self._shutdown_event = threading.Event()
-        
+
         # Weak references for callback cleanup
         self._expire_callbacks: Dict[str, weakref.ref] = {}
-        
-        # Load persisted entries
+
+        # Load persisted entries (from local persistence) and, if a memory manager is provided,
+        # also attempt to hydrate from the memory system.
         if self.persistence_enabled:
             self._load_from_persistence()
-        
+        if self.memory_manager:
+            self.async_loop_manager = _AsyncIOLoopManager()
+            logger.info("Hydrating cache from MemoryManager...")
+            self.async_loop_manager.run_coroutine(self._load_from_memory_manager())
+
         logger.info(f"SOMNUS Cache initialized: {len(self.entries)} entries, {self.current_memory_usage / 1024 / 1024:.1f}MB")
     
     def start_background_cleanup(self):
@@ -503,45 +578,106 @@ class SomnusCache:
             except Exception as e:
                 logger.error(f"Cache cleanup error: {e}")
     
-    def set(self, 
-            key: str, 
-            value: Any, 
-            namespace: CacheNamespace = CacheNamespace.GLOBAL,
-            priority: CachePriority = CachePriority.MEDIUM,
-            ttl_seconds: Optional[int] = None,
-            tags: Optional[Set[str]] = None,
-            session_id: Optional[str] = None,
-            on_expire: Optional[Callable] = None,
-            metadata: Optional[Dict[str, Any]] = None) -> bool:
+    async def _load_from_memory_manager(self) -> None:
+        """Populate the cache with entries that were previously stored via the
+        ``MemoryManager``.  Only entries that belong to the ``SYSTEM_EVENT``
+        memory type and contain a ``cache_key`` field in their metadata are
+        considered cache entries.
         """
-        Set cache entry with comprehensive options.
-        
-        Args:
-            key: Cache key
-            value: Value to cache
-            namespace: Cache namespace for organization
-            priority: Eviction priority
-            ttl_seconds: Time to live in seconds
-            tags: Optional tags for categorization
-            session_id: Optional session ID for session-scoped caching
-            on_expire: Optional callback when entry expires
-            metadata: Optional metadata dictionary
+        try:
+            memories = await self.memory_manager.retrieve_memories(
+                user_id="system", # System cache entries are stored under a global user
+                memory_types=[MemoryType.SYSTEM_EVENT],
+                limit=10000, # Load a reasonable number of recent cache entries
+                include_content=True,
+            )
+            for mem in memories:
+                meta = mem.get('metadata', {})
+                cache_key = meta.get('cache_key')
+                if not cache_key or cache_key in self.entries:
+                    continue
+                
+                try:
+                    value = pickle.loads(mem['content'].encode('latin1')) if isinstance(mem['content'], str) else pickle.loads(mem['content'])
+                except (pickle.UnpicklingError, TypeError, AttributeError) as e:
+                    logger.warning(f"Could not deserialize cache value for key {cache_key} from memory: {e}")
+                    continue
+
+                namespace = CacheNamespace(meta.get('namespace', CacheNamespace.GLOBAL.value))
+                priority = CachePriority(meta.get('priority', CachePriority.MEDIUM.value))
+                ttl = meta.get('ttl_seconds')
+                tags = set(meta.get('tags', []))
+                
+                entry = CacheEntry(
+                    key=cache_key,
+                    value=value,
+                    namespace=namespace,
+                    priority=priority,
+                    created_at=datetime.fromisoformat(mem.get('created_at')),
+                    last_accessed=datetime.fromisoformat(mem.get('last_accessed')),
+                    ttl_seconds=ttl,
+                    tags=tags,
+                )
+                self.entries[cache_key] = entry
+                self.current_memory_usage += entry.size_bytes
+                self.namespace_keys[namespace].add(cache_key)
+        except Exception as e:
+            logger.error(f"Failed to hydrate cache from MemoryManager: {e}", exc_info=True)
+
+    async def _store_in_memory_manager(self, entry: CacheEntry) -> None:
+        """Store a cache entry in the global memory system.  The entry is saved as a
+        ``SYSTEM_EVENT`` memory with additional metadata that allows it to be
+        re‑hydrated later.
+        """
+        if not self.memory_manager:
+            return
+        try:
+            # Serialize value to bytes for storage
+            serialized_value = pickle.dumps(entry.value)
+
+            await self.memory_manager.store_memory(
+                user_id="system",
+                content=serialized_value.decode('latin1'), # Store as a string
+                memory_type=MemoryType.SYSTEM_EVENT,
+                importance=MemoryImportance.MEDIUM,
+                tags=list(entry.tags),
+                metadata={
+                    "cache_key": entry.key,
+                    "namespace": entry.namespace.value,
+                    "priority": entry.priority.value,
+                    "ttl_seconds": entry.ttl_seconds,
+                    "source": "SomnusCache"
+                },
+            )
+        except Exception as e:
+            logger.error(f"Failed to store cache entry {entry.key} in MemoryManager: {e}", exc_info=True)
+
+    def set(
+        self,
+        key: str,
+        value: Any,
+        namespace: CacheNamespace = CacheNamespace.GLOBAL,
+        priority: CachePriority = CachePriority.MEDIUM,
+        ttl_seconds: Optional[int] = None,
+        tags: Optional[Set[str]] = None,
+        session_id: Optional[str] = None,
+        on_expire: Optional[Callable] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> bool:
+        """Set cache entry with comprehensive options.
+
+        If a ``MemoryManager`` is attached, the entry is also persisted to the
+        global memory system.
         """
         start_time = time.time()
-        
         try:
             with self.lock:
-                # Create full key with namespace/session
                 full_key = self._create_full_key(key, namespace, session_id)
-                
-                # Calculate size
                 try:
                     serialized = pickle.dumps(value)
                     size_bytes = len(serialized)
                 except Exception:
                     size_bytes = len(str(value).encode('utf-8'))
-                
-                # Create entry
                 now = datetime.now(timezone.utc)
                 entry = CacheEntry(
                     key=full_key,
@@ -554,51 +690,37 @@ class SomnusCache:
                     ttl_seconds=ttl_seconds,
                     tags=tags or set(),
                     metadata=metadata or {},
-                    on_expire_callback=on_expire
+                    on_expire_callback=on_expire,
                 )
-                
-                # Check if we need to make space
                 if not self._make_space_if_needed(entry.size_bytes):
                     logger.warning(f"Failed to make space for cache entry {full_key}")
                     return False
-                
-                # Remove existing entry if present
                 if full_key in self.entries:
                     old_entry = self.entries.pop(full_key)
                     self.current_memory_usage -= old_entry.size_bytes
                     self._remove_from_namespaces(old_entry)
-                
-                # Add new entry
                 self.entries[full_key] = entry
                 self.current_memory_usage += entry.size_bytes
-                
-                # Update namespace tracking
                 self.namespace_keys[namespace].add(full_key)
                 if session_id:
                     self.session_keys[session_id].add(full_key)
-                
-                # Store expire callback
                 if on_expire:
                     self._expire_callbacks[full_key] = weakref.ref(on_expire)
-                
-                # Persist if enabled
                 if self.persistence:
                     self.persistence.save_entry(entry)
                 
-                # Update metrics
+                if self.memory_manager and self.async_loop_manager:
+                    self.async_loop_manager.submit_coroutine(self._store_in_memory_manager(entry))
+
                 self.metrics.record_set(namespace)
                 self.metrics.memory_usage_bytes = self.current_memory_usage
-                
-                # Update access time tracking
                 access_time_ms = (time.time() - start_time) * 1000
                 self.metrics.avg_access_time_ms = (
                     self.metrics.avg_access_time_ms * 0.9 + access_time_ms * 0.1
                 )
-                
                 return True
-                
         except Exception as e:
-            logger.error(f"Failed to set cache entry {key}: {e}")
+            logger.error(f"Failed to set cache entry {key}: {e}", exc_info=True)
             return False
     
     def get(self, 
@@ -649,7 +771,7 @@ class SomnusCache:
                 return entry.value
                 
         except Exception as e:
-            logger.error(f"Failed to get cache entry {key}: {e}")
+            logger.error(f"Failed to get cache entry {key}: {e}", exc_info=True)
             self.metrics.record_miss(namespace)
             return default
     
@@ -686,7 +808,7 @@ class SomnusCache:
                 return True
                 
         except Exception as e:
-            logger.error(f"Failed to delete cache entry {key}: {e}")
+            logger.error(f"Failed to delete cache entry {key}: {e}", exc_info=True)
             return False
     
     def clear_namespace(self, namespace: CacheNamespace) -> int:
@@ -722,7 +844,7 @@ class SomnusCache:
                 return removed_count
                 
         except Exception as e:
-            logger.error(f"Failed to clear namespace {namespace}: {e}")
+            logger.error(f"Failed to clear namespace {namespace}: {e}", exc_info=True)
             return 0
     
     def clear_session(self, session_id: str) -> int:
@@ -758,7 +880,7 @@ class SomnusCache:
                 return removed_count
                 
         except Exception as e:
-            logger.error(f"Failed to clear session {session_id}: {e}")
+            logger.error(f"Failed to clear session {session_id}: {e}", exc_info=True)
             return 0
     
     def cleanup_expired(self) -> int:
@@ -792,7 +914,7 @@ class SomnusCache:
                 return len(expired_keys)
                 
         except Exception as e:
-            logger.error(f"Cache cleanup failed: {e}")
+            logger.error(f"Cache cleanup failed: {e}", exc_info=True)
             return 0
     
     def _create_full_key(self, key: str, namespace: CacheNamespace, session_id: Optional[str]) -> str:
@@ -989,9 +1111,9 @@ class SomnusCache:
                 'total_entries': len(self.entries),
                 'memory_usage_mb': self.current_memory_usage / (1024 * 1024),
                 'memory_limit_mb': self.max_memory_mb,
-                'memory_utilization': self.current_memory_usage / self.max_memory_bytes,
+                'memory_utilization': self.current_memory_usage / self.max_memory_bytes if self.max_memory_bytes > 0 else 0,
                 'entry_limit': self.max_entries,
-                'entry_utilization': len(self.entries) / self.max_entries,
+                'entry_utilization': len(self.entries) / self.max_entries if self.max_entries > 0 else 0,
                 'active_sessions': len(self.session_keys),
                 'namespace_stats': namespace_stats,
                 'metrics': self.metrics.get_summary()
@@ -1024,6 +1146,10 @@ class SomnusCache:
         # Stop background cleanup
         self.stop_background_cleanup()
         
+        # Shutdown async manager if it exists
+        if self.async_loop_manager:
+            self.async_loop_manager.shutdown()
+
         # Save to disk if persistence enabled
         if self.persistence_enabled:
             self.save_to_disk()
@@ -1086,12 +1212,13 @@ def cache_result(cache: SomnusCache,
 
 
 # Factory function for easy setup
-def create_somnus_cache(config: Optional[Dict[str, Any]] = None) -> SomnusCache:
+def create_somnus_cache(config: Optional[Dict[str, Any]] = None, memory_manager: Optional[MemoryManager] = None) -> SomnusCache:
     """
     Create SOMNUS cache with production defaults.
     
     Args:
         config: Optional configuration dictionary
+        memory_manager: Optional MemoryManager instance for integration
     
     Returns:
         Configured SomnusCache instance
@@ -1108,7 +1235,7 @@ def create_somnus_cache(config: Optional[Dict[str, Any]] = None) -> SomnusCache:
     if config:
         default_config.update(config)
     
-    cache = SomnusCache(default_config)
+    cache = SomnusCache(default_config, memory_manager=memory_manager)
     cache.start_background_cleanup()
     
     return cache
@@ -1195,3 +1322,6 @@ if __name__ == "__main__":
         
     finally:
         cache.shutdown()
+        # Clean up the singleton async manager if it was created
+        if _AsyncIOLoopManager._instance:
+            _AsyncIOLoopManager._instance.shutdown()

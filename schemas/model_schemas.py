@@ -28,20 +28,26 @@ class ModelFormat(str, Enum):
     PYTORCH = "pytorch"
     ONNX = "onnx"
     TENSORRT = "tensorrt"
+    GGUF = "gguf"
     GGML = "ggml"
     SAFETENSORS = "safetensors"
     OPENVINO = "openvino"
 
 
 class QuantizationMethod(str, Enum):
-    """Quantization algorithms with precision-performance tradeoffs"""
+    """
+    Quantization algorithms with precision-performance tradeoffs, aligned with ModelLoader.
+    """
     BITSANDBYTES = "bitsandbytes"
     GPTQ = "gptq"
     AWQ = "awq"
-    GGML_Q4 = "ggml_q4"
-    GGML_Q8 = "ggml_q8"
-    DYNAMIC_INT8 = "dynamic_int8"
-    STATIC_INT8 = "static_int8"
+    GGUF = "gguf"
+    GGML = "ggml"
+    EXLLAMAV2 = "exllamav2"
+    PYTORCH_DYNAMIC = "pytorch_dynamic"
+    PYTORCH_STATIC = "pytorch_static"
+    TORCH_AO = "torch_ao"
+    ONNX = "onnx_quantization"
     FP16 = "fp16"
     CUSTOM = "custom"
 
@@ -290,6 +296,8 @@ class ModelConfiguration(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     tags: List[str] = Field(default_factory=list, description="Model tags for categorization")
+    system_model_id: Optional[str] = Field(None, description="Unique system-generated ID for the model, used for de-fingerprinting")
+    ghost_security_config: Optional[GhostSecurityConfig] = Field(None, description="Configuration for Ghost Security Manager")
     
     @root_validator
     def validate_model_configuration(cls, values):
@@ -425,6 +433,33 @@ class ModelLoadRequest(BaseModel):
     reserved_memory: Optional[str] = Field(None, description="Reserved memory for other processes")
 
 
+
+@dataclass
+class AntiFingerprintingConfig(BaseModel):
+    mode: str = Field(default="stealth")
+    target_vectors: List[str] = Field(default_factory=list)
+    obfuscation_strength: float = Field(default=0.5)
+    mimicry_target: Optional[str] = None
+    temporal_variance: bool = True
+    signature_masking: bool = True
+    false_positives: bool = False
+    response_delay_variance: Tuple[float, float] = Field(default=(0.1, 0.5))
+    pattern_corruption_rate: float = Field(default=0.15)
+    decoy_responses_enabled: bool = False
+    behavioral_drift_rate: float = Field(default=0.05)
+
+@dataclass
+class ModelSteganographyConfig(BaseModel):
+    watermark_enabled: bool = False
+    covert_channels: List[str] = Field(default_factory=list)
+    hidden_payloads: Dict[str, str] = Field(default_factory=dict)
+    extraction_keys: Dict[str, str] = Field(default_factory=dict)
+
+class GhostSecurityConfig(BaseModel):
+    enabled: bool = Field(default=False, description="Enable Ghost Security Manager for this model")
+    anti_fingerprinting: AntiFingerprintingConfig = Field(default_factory=AntiFingerprintingConfig)
+    steganography: ModelSteganographyConfig = Field(default_factory=ModelSteganographyConfig)
+    
 class ModelLoadResponse(BaseModel):
     """Response from model loading operation"""
     model_id: str = Field(description="Loaded model identifier")
@@ -449,3 +484,35 @@ class ModelLoadResponse(BaseModel):
 ModelID = str
 CapabilitySet = List[ModelCapability]
 ResourceConstraints = Dict[str, Any]
+
+
+class ModelUnloadRequest(BaseModel):
+    """Request to unload a specific model"""
+    model_id: str = Field(description="Model identifier to unload")
+
+class ModelUnloadResponse(BaseModel):
+    """Response from model unloading operation"""
+    model_id: str = Field(description="Unloaded model identifier")
+    success: bool = Field(description="Unload operation success status")
+    message: str = Field(description="Status message")
+
+class ModelGenerationRequest(BaseModel):
+    """Request for model generation"""
+    model_id: str = Field(description="Model identifier to use for generation")
+    prompt: str = Field(description="The input prompt for the model")
+    generation_config: Optional[Dict[str, Any]] = Field(None, description="Override generation parameters")
+
+class ModelGenerationResponse(BaseModel):
+    """Response from a model generation"""
+    model_id: str = Field(description="Model identifier used for generation")
+    generated_text: str = Field(description="The generated text")
+    success: bool = Field(description="Generation success status")
+    error_message: Optional[str] = Field(None, description="Error message if generation failed")
+
+class ModelStatus(BaseModel):
+    """Represents the status of a loaded model"""
+    model_id: str = Field(description="Model identifier")
+    status: Literal["loading", "loaded", "unloaded", "error"] = Field(description="Current status of the model")
+    memory_usage_gb: float = Field(description="Memory usage in GB")
+    device: str = Field(description="Device the model is loaded on")
+    error_message: Optional[str] = Field(None, description="Error message if status is 'error'")

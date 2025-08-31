@@ -1,5 +1,5 @@
 """
-MORPHEUS CHAT - Live Web Search & Deep Research Engine
+MORPHEUS CHAT - Live Web Search & Deep Research Engine - System Wide
 Sovereign web search with privacy protection and comprehensive research capabilities.
 
 Architecture Features:
@@ -9,33 +9,124 @@ Architecture Features:
 - Deep research with recursive query expansion
 - Content extraction and summarization
 - Citation tracking and evidence weighting
+- Separated from the integrated browser ai_browser_research_system enabling a 2 part browser/web access. One in which the ai will choose to use or can choose, when it deems a search to be necessary.
+- This file is togglable by the user and connects the AI, to the local host OS devices browser (users device installed browser) for when explicit web queries or researches are deemed necessary. This system is only enabled when toggle by user.
+
 """
 
 import asyncio
 import logging
-import re
 import time
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Set
-from urllib.parse import urljoin, urlparse
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Any, Tuple
+from urllib.parse import urlparse
 from uuid import UUID, uuid4
 from dataclasses import dataclass, field
+from enum import Enum
+# Added imports
+from pathlib import Path
+from io import BytesIO
+import contextlib
+import re
 
 import aiohttp
-import asyncio
+from aiohttp import web
 from bs4 import BeautifulSoup
-import feedparser
 from newspaper import Article
-import requests_html
-from readability import Document
-import nltk
 from textstat import flesch_reading_ease
 
 from pydantic import BaseModel, Field, validator
-from schemas.session import SessionID, UserID
+try:
+    from schemas.session import SessionID, UserID
+except Exception:
+    from typing import TypeAlias
+    SessionID: TypeAlias = str
+    UserID: TypeAlias = str
+
+# Optional dependency probes
+try:
+    import pyautogui  # type: ignore
+    _HAS_PYAUTOGUI = True
+except Exception:
+    pyautogui = None  # type: ignore
+    _HAS_PYAUTOGUI = False
+
+try:
+    from mss import mss as mss_factory  # type: ignore
+    _HAS_MSS = True
+except Exception:
+    mss_factory = None  # type: ignore
+    _HAS_MSS = False
+
+try:
+    import pytesseract  # type: ignore
+    from PIL import Image  # type: ignore
+    _HAS_TESS = True
+except Exception:
+    pytesseract = None  # type: ignore
+    Image = None  # type: ignore
+    _HAS_TESS = False
 
 logger = logging.getLogger(__name__)
 
+# --- System-wide web access toggle (UI-controlled) ---
+class SystemWebAccess:
+    """Feature flag for system-wide web access, controlled by the UI."""
+    _enabled: bool = False
+    _reason: str = "disabled by default"
+    _last_changed: float = time.time()
+
+    @classmethod
+    def enable(cls, reason: str = "user_enabled"):
+        cls._enabled = True
+        cls._reason = reason
+        cls._last_changed = time.time()
+        logger.info("System web access enabled", extra={"event": "web_access_toggle", "reason": reason})
+
+    @classmethod
+    def disable(cls, reason: str = "user_disabled"):
+        cls._enabled = False
+        cls._reason = reason
+        cls._last_changed = time.time()
+        logger.info("System web access disabled", extra={"event": "web_access_toggle", "reason": reason})
+
+    @classmethod
+    def is_enabled(cls) -> bool:
+        return cls._enabled
+
+    @classmethod
+    def status(cls) -> Dict[str, Any]:
+        return {"enabled": cls._enabled, "reason": cls._reason, "last_changed": cls._last_changed}
+
+# --- Resilience helpers: retry + circuit breaker ---
+class AsyncCircuitBreaker:
+    """Simple per-host circuit breaker for outbound HTTP calls."""
+    def __init__(self, failure_threshold: int = 3, recovery_time: float = 30.0):
+        self.failure_threshold = failure_threshold
+        self.recovery_time = recovery_time
+        self.failures = 0
+        self.last_failure: float = 0.0
+        self.opened_at: float = 0.0
+
+    def allow(self) -> bool:
+        if self.failures < self.failure_threshold:
+            return True
+        # breaker open; check cooldown
+        if time.time() - self.opened_at >= self.recovery_time:
+            # half-open
+            return True
+        return False
+
+    def record_success(self):
+        self.failures = 0
+        self.last_failure = 0.0
+        self.opened_at = 0.0
+
+    def record_failure(self):
+        self.failures += 1
+        self.last_failure = time.time()
+        if self.failures >= self.failure_threshold and self.opened_at == 0.0:
+            self.opened_at = self.last_failure
 
 class SearchProvider(str, Enum):
     """Available search providers with privacy focus"""
@@ -104,15 +195,15 @@ class SearchResult:
     bias_indicators: List[str] = field(default_factory=list)
     
     @property
-    def is_recent(self, days_threshold: int = 30) -> bool:
-        """Check if content is recent"""
+    def is_recent(self) -> bool:  # FIX: property must not accept args
+        """Check if content is recent within a default 30-day window"""
         if not self.publish_date:
             return False
         age = datetime.now(timezone.utc) - self.publish_date
-        return age.days <= days_threshold
-    
+        return age.days <= 30
+
     @property
-    def credibility_level(self) -> CredibilityScore:
+    def credibility_level(self) -> 'CredibilityScore':
         """Get credibility level based on score"""
         if self.credibility_score >= 0.9:
             return CredibilityScore.VERY_HIGH
@@ -159,6 +250,27 @@ class ResearchQuery(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = None
 
+    @validator('original_query')
+    def _validate_original_query(cls, v: str) -> str:
+        q = (v or "").strip()
+        if not q:
+            raise ValueError("original_query must be non-empty")
+        if len(q) > 500:
+            raise ValueError("original_query too long")
+        return q
+
+    @validator('min_credibility')
+    def _validate_credibility(cls, v: float) -> float:
+        if v < 0 or v > 1:
+            raise ValueError("min_credibility must be between 0 and 1")
+        return v
+
+    @validator('languages', each_item=True)
+    def _validate_languages(cls, v: str) -> str:
+        if not v or len(v) > 8:
+            raise ValueError("invalid language code")
+        return v
+
 
 class ResearchReport(BaseModel):
     """Comprehensive research report with analysis and citations"""
@@ -181,8 +293,8 @@ class ResearchReport(BaseModel):
     knowledge_gaps: List[str] = Field(default_factory=list, description="Areas needing more research")
     
     # Quality metrics
-    source_diversity: float = Field(ge=0, le=1, description="Diversity of source types")
-    temporal_coverage: float = Field(ge=0, le=1, description="Time range coverage")
+    source_diversity: float = Field(default=0.0, ge=0, le=1, description="Diversity of source types")  # FIX: default
+    temporal_coverage: float = Field(default=0.0, ge=0, le=1, description="Time range coverage")       # FIX: default
     geographic_coverage: List[str] = Field(default_factory=list, description="Geographic regions covered")
     
     # Bias and fact-checking
@@ -198,15 +310,260 @@ class ResearchReport(BaseModel):
     generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class LocalBrowserController:
+    """
+    Sovereign local OS browser controller.
+    - Launches/focuses system browser safely via default handler.
+    - Simulates keyboard/mouse via pyautogui (if available).
+    - Captures screen via mss/pyautogui; OCR via Tesseract (if available).
+    - No third-party online APIs. Localhost-only streaming for UI.
+    """
+    def __init__(self, screenshot_dir: Optional[str] = None):
+        self.screenshot_dir = Path(screenshot_dir or (Path.home() / "somnus_local_web_stream"))
+        self.screenshot_dir.mkdir(parents=True, exist_ok=True)
+        self._latest_png: Optional[bytes] = None
+        self._last_capture_ts: float = 0.0
+        self._running: bool = False
+        self._screen = mss_factory() if _HAS_MSS else None
+        logger.info(
+            "LocalBrowserController initialized",
+            extra={
+                "event": "local_controller_init",
+                "has_pyautogui": _HAS_PYAUTOGUI,
+                "has_mss": _HAS_MSS,
+                "has_tess": _HAS_TESS
+            }
+        )
+
+    async def start(self) -> bool:
+        """Prepare controller for use."""
+        if not SystemWebAccess.is_enabled():
+            logger.info("Local controller start blocked; system web access disabled")
+            return False
+        self._running = True
+        return True
+
+    async def stop(self):
+        """Stop controller and cleanup resources."""
+        self._running = False
+        try:
+            if self._screen and hasattr(self._screen, 'close'):
+                self._screen.close()  # type: ignore
+        except Exception:
+            pass
+
+    async def open_url(self, url: str) -> bool:
+        """Open URL in system default browser."""
+        if not self._running or not SystemWebAccess.is_enabled():
+            return False
+        parsed = urlparse(url or "")
+        if parsed.scheme not in ("http", "https"):
+            return False
+        import webbrowser
+        try:
+            ok = webbrowser.open(url, new=2)
+            await asyncio.sleep(2.0)  # allow render
+            return bool(ok)
+        except Exception as e:
+            logger.error("Local open_url failed", extra={"event": "local_open_failed", "error": str(e)})
+            return False
+
+    async def type_text(self, text: str, interval: float = 0.02) -> bool:
+        """Type text into the focused browser."""
+        if not self._running or not _HAS_PYAUTOGUI:
+            return False
+        try:
+            await asyncio.to_thread(pyautogui.typewrite, text, interval=interval)  # type: ignore
+            return True
+        except Exception as e:
+            logger.warning("type_text failed", extra={"event": "type_failed", "error": str(e)})
+            return False
+
+    async def press_keys(self, *keys: str) -> bool:
+        """Press hotkeys in the focused window."""
+        if not self._running or not _HAS_PYAUTOGUI:
+            return False
+        try:
+            await asyncio.to_thread(pyautogui.hotkey, *keys)  # type: ignore
+            return True
+        except Exception as e:
+            logger.warning("press_keys failed", extra={"event": "hotkey_failed", "error": str(e)})
+            return False
+
+    async def screenshot_png(self) -> Optional[bytes]:
+        """Capture a full-screen PNG."""
+        if not self._running:
+            return None
+        try:
+            if _HAS_MSS and self._screen and Image is not None:
+                shot = self._screen.grab(self._screen.monitors[0])  # type: ignore
+                img = Image.frombytes("RGB", (shot.width, shot.height), shot.rgb)  # type: ignore
+                buf = BytesIO()
+                img.save(buf, format="PNG")
+                data = buf.getvalue()
+            elif _HAS_PYAUTOGUI:
+                # pyautogui.screenshot returns a PIL.Image; guard if PIL missing
+                img = await asyncio.to_thread(pyautogui.screenshot)  # type: ignore
+                buf = BytesIO()
+                img.save(buf, format="PNG")
+                data = buf.getvalue()
+            else:
+                return None
+            self._latest_png = data
+            self._last_capture_ts = time.time()
+            try:
+                out = self.screenshot_dir / "latest.png"
+                with open(out, "wb") as f:
+                    f.write(data)
+            except Exception:
+                pass
+            return data
+        except Exception as e:
+            logger.warning("screenshot failed", extra={"event": "screenshot_failed", "error": str(e)})
+            return None
+
+    def get_latest_png(self) -> Optional[bytes]:
+        """Return last captured PNG frame, if any."""
+        return self._latest_png
+
+    async def ocr_text(self, png_bytes: bytes) -> str:
+        """Extract text via Tesseract OCR; returns empty string if unavailable."""
+        if not _HAS_TESS or not png_bytes:
+            return ""
+        try:
+            img = Image.open(BytesIO(png_bytes))  # type: ignore
+            text = await asyncio.to_thread(pytesseract.image_to_string, img)  # type: ignore
+            return text or ""
+        except Exception as e:
+            logger.warning("OCR failed", extra={"event": "ocr_failed", "error": str(e)})
+            return ""
+
+    @staticmethod
+    def parse_links_from_text(text: str) -> List[Tuple[str, str, str]]:
+        """
+        Parse OCR text into rough (title, url, snippet) tuples.
+        Heuristic: URL lines + surrounding lines as title/snippet.
+        """
+        lines = [l.strip() for l in (text or "").splitlines() if l.strip()]
+        results: List[Tuple[str, str, str]] = []
+        url_re = re.compile(r'(https?://[^\s]+)', re.IGNORECASE)
+        for i, line in enumerate(lines):
+            m = url_re.search(line)
+            if not m:
+                continue
+            url = m.group(1).strip().rstrip(').,;\'"')
+            title = ""
+            snippet = ""
+            if i > 0:
+                title = lines[i - 1][:200]
+            if i + 1 < len(lines):
+                snippet = lines[i + 1][:300]
+            results.append((title or "Result", url, snippet))
+        return results
+
+
+class LiveRenderServer:
+    """
+    Localhost-only live render server to stream MJPEG frames and status.
+    No external exposure; binds 127.0.0.1 by default.
+    """
+    def __init__(self, controller: LocalBrowserController, host: str = "127.0.0.1", port: int = 8765):
+        self.controller = controller
+        self.host = host
+        self.port = port
+        self._runner: Optional[web.AppRunner] = None
+        self._site: Optional[web.TCPSite] = None
+        self._app: Optional[web.Application] = None
+
+    async def start(self) -> bool:
+        if self._runner:
+            return True
+        self._app = web.Application()
+        self._app.add_routes([
+            web.get("/live/status", self._status),
+            web.get("/live/screenshot", self._screenshot),
+            web.get("/live/stream.mjpeg", self._mjpeg_stream),
+        ])
+        self._runner = web.AppRunner(self._app, access_log=None)
+        await self._runner.setup()
+        self._site = web.TCPSite(self._runner, self.host, self.port)
+        await self._site.start()
+        logger.info("LiveRenderServer started", extra={"event": "live_render_started", "addr": f"http://{self.host}:{self.port}"})
+        return True
+
+    async def stop(self):
+        try:
+            if self._site:
+                await self._site.stop()
+            if self._runner:
+                await self._runner.cleanup()
+        finally:
+            self._site = None
+            self._runner = None
+            self._app = None
+
+    async def _status(self, request: web.Request) -> web.Response:
+        return web.json_response({
+            "system_web_access": SystemWebAccess.status(),
+            "has_pyautogui": _HAS_PYAUTOGUI,
+            "has_mss": _HAS_MSS,
+            "has_tesseract": _HAS_TESS
+        })
+
+    async def _screenshot(self, request: web.Request) -> web.Response:
+        if not SystemWebAccess.is_enabled():
+            return web.Response(status=403, text="disabled")
+        img = self.controller.get_latest_png() or await self.controller.screenshot_png()
+        if not img:
+            return web.Response(status=503, text="no_frame")
+        return web.Response(body=img, content_type="image/png")
+
+    async def _mjpeg_stream(self, request: web.Request) -> web.StreamResponse:
+        if not SystemWebAccess.is_enabled():
+            return web.Response(status=403, text="disabled")
+        boundary = "frame"
+        resp = web.StreamResponse(
+            status=200,
+            reason='OK',
+            headers={
+                'Content-Type': f'multipart/x-mixed-replace; boundary=--{boundary}',
+                'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+            }
+        )
+        await resp.prepare(request)
+        try:
+            while True:
+                # Detect client disconnect
+                if request.transport is None or request.transport.is_closing():
+                    break
+                img = await self.controller.screenshot_png()
+                if img:
+                    await resp.write(f"--{boundary}\r\n".encode())
+                    await resp.write(b"Content-Type: image/png\r\n")
+                    await resp.write(f"Content-Length: {len(img)}\r\n\r\n".encode())
+                    await resp.write(img)
+                    await resp.write(b"\r\n")
+                await asyncio.sleep(0.5)
+        except (asyncio.CancelledError, ConnectionResetError, BrokenPipeError):
+            pass
+        except Exception as e:
+            logger.warning("MJPEG stream error", extra={"event": "mjpeg_stream_error", "error": str(e)})
+        finally:
+            with contextlib.suppress(Exception):
+                await resp.write_eof()
+        return resp
+
+# ...existing code...
+
 class WebSearchEngine:
     """
     Privacy-first web search engine with multiple provider support.
     
     Implements sovereign search capabilities without tracking or API dependencies.
     """
-    
     def __init__(
-        self, 
+        self,
         primary_provider: SearchProvider = SearchProvider.DUCKDUCKGO,
         timeout: int = 30,
         max_concurrent: int = 5
@@ -214,11 +571,12 @@ class WebSearchEngine:
         self.primary_provider = primary_provider
         self.timeout = aiohttp.ClientTimeout(total=timeout)
         self.max_concurrent = max_concurrent
-        
-        # Session with privacy headers
-        self.session = None
+        self.session: Optional[aiohttp.ClientSession] = None
         self.semaphore = asyncio.Semaphore(max_concurrent)
-        
+        self._cb_per_host: Dict[str, AsyncCircuitBreaker] = {}
+        # Local controller / live server hooks
+        self._local_controller: Optional[LocalBrowserController] = None
+        self._live_server: Optional[LiveRenderServer] = None
         # Provider configurations
         self.providers = {
             SearchProvider.DUCKDUCKGO: {
@@ -235,9 +593,8 @@ class WebSearchEngine:
                 "json_results": True
             }
         }
-        
         logger.info(f"Web search engine initialized with provider: {primary_provider}")
-    
+
     async def __aenter__(self):
         """Async context manager entry"""
         connector = aiohttp.TCPConnector(
@@ -246,7 +603,6 @@ class WebSearchEngine:
             ttl_dns_cache=300,
             use_dns_cache=True
         )
-        
         self.session = aiohttp.ClientSession(
             connector=connector,
             timeout=self.timeout,
@@ -255,194 +611,296 @@ class WebSearchEngine:
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.5',
                 'Accept-Encoding': 'gzip, deflate',
-                'DNT': '1',  # Do Not Track
+                'DNT': '1',
                 'Connection': 'keep-alive',
                 'Upgrade-Insecure-Requests': '1'
             }
         )
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit"""
         if self.session:
             await self.session.close()
-    
+            self.session = None
+
+    async def close(self):
+        """Explicit cleanup to satisfy resource lifecycle requirements."""
+        await self.__aexit__(None, None, None)
+
+    def _get_cb(self, host: str) -> AsyncCircuitBreaker:
+        if host not in self._cb_per_host:
+            self._cb_per_host[host] = AsyncCircuitBreaker()
+        return self._cb_per_host[host]
+
+    async def _ensure_session(self):
+        if not self.session:
+            await self.__aenter__()
+
+    async def _http_get(self, url: str, *, params: Optional[Dict[str, Any]] = None, correlation_id: str = "") -> Optional[aiohttp.ClientResponse]:
+        """HTTP GET with retries, jittered backoff, and circuit breaker."""
+        await self._ensure_session()
+        assert self.session is not None
+        host = urlparse(url).netloc
+        cb = self._get_cb(host)
+
+        if not cb.allow():
+            logger.warning("Circuit open; request blocked", extra={"event": "circuit_open", "host": host, "correlation_id": correlation_id})
+            return None
+
+        attempts = 0
+        max_attempts = 3
+        backoff = 0.5
+
+        while attempts < max_attempts:
+            try:
+                resp = await self.session.get(url, params=params)
+                if resp.status >= 500:
+                    # server error counts as failure; consume text to free connection
+                    _ = await resp.text()
+                    raise aiohttp.ClientResponseError(request_info=resp.request_info, history=resp.history, status=resp.status, message="server_error")
+                cb.record_success()
+                return resp
+            except Exception as e:
+                attempts += 1
+                cb.record_failure()
+                logger.warning(
+                    "HTTP GET failed",
+                    extra={"event": "http_get_failed", "url": url, "attempt": attempts, "error": str(e), "correlation_id": correlation_id}
+                )
+                if attempts >= max_attempts:
+                    break
+                # jittered backoff
+                await asyncio.sleep(backoff + (0.1 * attempts))
+                backoff *= 2
+
+        logger.error("HTTP GET exhausted retries", extra={"event": "http_get_exhausted", "url": url, "correlation_id": correlation_id})
+        return None
+
+    def attach_local_controller(self, controller: LocalBrowserController, *, start_stream: bool = False, host: str = "127.0.0.1", port: int = 8765) -> None:
+        """
+        Attach a LocalBrowserController and optionally start a localhost live stream server.
+        Parameters:
+            controller: LocalBrowserController instance to attach.
+            start_stream: If True, starts a LiveRenderServer bound to host:port (requires SystemWebAccess enabled).
+            host: Host for live stream server.
+            port: Port for live stream server.
+        """
+        self._local_controller = controller
+        if start_stream and SystemWebAccess.is_enabled():
+            # Fire-and-forget start; caller can await start_local_stream for deterministic startup
+            asyncio.create_task(self.start_local_stream(host=host, port=port))
+
+    async def start_local_stream(self, host: str = "127.0.0.1", port: int = 8765) -> bool:
+        """
+        Start the LocalBrowserController and LiveRenderServer for streaming screenshots.
+        Returns True on success.
+        """
+        if not SystemWebAccess.is_enabled():
+            logger.info("Start stream blocked; system web access disabled", extra={"event": "web_access_blocked"})
+            return False
+        if not self._local_controller:
+            logger.warning("No local controller attached", extra={"event": "no_local_controller"})
+            return False
+        started = await self._local_controller.start()
+        if not started:
+            return False
+        self._live_server = LiveRenderServer(self._local_controller, host=host, port=port)
+        return await self._live_server.start()
+
+    async def stop_local_stream(self) -> None:
+        """Stop the live stream server and controller if running."""
+        if self._live_server:
+            with contextlib.suppress(Exception):
+                await self._live_server.stop()
+            self._live_server = None
+        if self._local_controller:
+            with contextlib.suppress(Exception):
+                await self._local_controller.stop()
+
     async def search(
-        self, 
-        query: str, 
+        self,
+        query: str,
         max_results: int = 10,
-        provider: Optional[SearchProvider] = None
+        provider: Optional[SearchProvider] = None,
+        correlation_id: Optional[str] = None
     ) -> List[SearchResult]:
         """
         Perform web search with specified provider.
-        
         Returns list of SearchResult objects with metadata.
         """
+        if not SystemWebAccess.is_enabled():
+            logger.info("Search blocked; system web access disabled", extra={"event": "web_access_blocked", "correlation_id": correlation_id})
+            return []
+
+        q = (query or "").strip()
+        if not q:
+            logger.warning("Empty query provided", extra={"event": "invalid_query", "correlation_id": correlation_id})
+            return []
+
+        max_results = max(1, min(int(max_results), 50))
         provider = provider or self.primary_provider
-        
+        corr = correlation_id or str(uuid4())
+
         try:
             async with self.semaphore:
                 if provider == SearchProvider.DUCKDUCKGO:
-                    return await self._search_duckduckgo(query, max_results)
+                    return await self._search_duckduckgo(q, max_results, corr)
                 elif provider == SearchProvider.SEARXNG:
-                    return await self._search_searxng(query, max_results)
+                    return await self._search_searxng(q, max_results, corr)
                 else:
-                    logger.warning(f"Provider {provider} not implemented, falling back to DuckDuckGo")
-                    return await self._search_duckduckgo(query, max_results)
-        
+                    logger.warning("Provider not implemented; falling back to DuckDuckGo", extra={"event": "provider_fallback", "provider": str(provider), "correlation_id": corr})
+                    return await self._search_duckduckgo(q, max_results, corr)
         except Exception as e:
-            logger.error(f"Search failed for query '{query}': {e}")
+            logger.error("Search failed", extra={"event": "search_failed", "query": q[:120], "error": str(e), "correlation_id": corr})
             return []
-    
-    async def _search_duckduckgo(self, query: str, max_results: int) -> List[SearchResult]:
+
+    async def _search_duckduckgo(self, query: str, max_results: int, correlation_id: str) -> List[SearchResult]:
         """Search using DuckDuckGo HTML interface"""
         config = self.providers[SearchProvider.DUCKDUCKGO]
-        
-        # Build search URL
-        params = {k: v.format(query=query) if isinstance(v, str) else v 
-                 for k, v in config["params"].items()}
-        
-        try:
-            async with self.session.get(config["search_url"], params=params) as response:
-                if response.status != 200:
-                    logger.error(f"DuckDuckGo search failed: HTTP {response.status}")
-                    return []
-                
-                html = await response.text()
-                soup = BeautifulSoup(html, 'html.parser')
-                
-                results = []
-                result_elements = soup.select(config["result_selector"])[:max_results]
-                
-                for idx, element in enumerate(result_elements):
-                    try:
-                        # Extract title
-                        title_elem = element.select_one(config["title_selector"])
-                        title = title_elem.get_text(strip=True) if title_elem else "No title"
-                        
-                        # Extract URL
-                        url_elem = element.select_one(config["url_selector"])
-                        url = url_elem.get('href', '') if url_elem else ''
-                        
-                        # Clean DuckDuckGo redirect URL
-                        if url.startswith('/l/?uddg='):
-                            # Extract actual URL from DuckDuckGo redirect
-                            import urllib.parse
-                            url = urllib.parse.unquote(url.split('uddg=')[1].split('&')[0])
-                        
-                        # Extract snippet
-                        snippet_elem = element.select_one(config["snippet_selector"])
-                        snippet = snippet_elem.get_text(strip=True) if snippet_elem else ""
-                        
-                        if url and title:
-                            # Parse domain
-                            domain = urlparse(url).netloc
-                            
-                            result = SearchResult(
-                                url=url,
-                                title=title,
-                                snippet=snippet,
-                                source_domain=domain,
-                                search_rank=idx + 1,
-                                search_query=query,
-                                search_provider=SearchProvider.DUCKDUCKGO
-                            )
-                            
-                            results.append(result)
-                    
-                    except Exception as e:
-                        logger.warning(f"Failed to parse search result {idx}: {e}")
-                        continue
-                
-                logger.info(f"DuckDuckGo search returned {len(results)} results for: {query}")
-                return results
-        
-        except Exception as e:
-            logger.error(f"DuckDuckGo search request failed: {e}")
+        params = {k: v.format(query=query) if isinstance(v, str) else v for k, v in config["params"].items()}
+
+        response = await self._http_get(config["search_url"], params=params, correlation_id=correlation_id)
+        if not response:
             return []
-    
-    async def _search_searxng(self, query: str, max_results: int) -> List[SearchResult]:
+        if response.status != 200:
+            logger.error("DuckDuckGo HTTP error", extra={"event": "provider_http_error", "status": response.status, "correlation_id": correlation_id})
+            return []
+
+        html = await response.text()
+        soup = BeautifulSoup(html, 'html.parser')
+
+        results: List[SearchResult] = []
+        result_elements = soup.select(config["result_selector"])[:max_results]
+
+        for idx, element in enumerate(result_elements):
+            try:
+                title_elem = element.select_one(config["title_selector"])
+                title = title_elem.get_text(strip=True) if title_elem else "No title"
+
+                url_elem = element.select_one(config["url_selector"])
+                url = url_elem.get('href', '') if url_elem else ''
+
+                if url.startswith('/l/?uddg='):
+                    import urllib.parse
+                    url = urllib.parse.unquote(url.split('uddg=')[1].split('&')[0])
+
+                snippet_elem = element.select_one(config["snippet_selector"])
+                snippet = snippet_elem.get_text(strip=True) if snippet_elem else ""
+
+                if url and title:
+                    domain = urlparse(url).netloc
+                    results.append(SearchResult(
+                        url=url,
+                        title=title,
+                        snippet=snippet,
+                        source_domain=domain,
+                        search_rank=idx + 1,
+                        search_query=query,
+                        search_provider=SearchProvider.DUCKDUCKGO
+                    ))
+            except Exception as e:
+                logger.warning("Failed to parse DDG result", extra={"event": "parse_result_failed", "idx": idx, "error": str(e), "correlation_id": correlation_id})
+                continue
+
+        logger.info("DuckDuckGo search completed", extra={"event": "search_completed", "provider": "duckduckgo", "count": len(results), "correlation_id": correlation_id})
+        return results
+
+    async def _search_searxng(self, query: str, max_results: int, correlation_id: str) -> List[SearchResult]:
         """Search using SearxNG instance"""
         config = self.providers[SearchProvider.SEARXNG]
-        
-        params = {k: v.format(query=query) if isinstance(v, str) else v 
-                 for k, v in config["params"].items()}
-        
-        try:
-            async with self.session.get(config["search_url"], params=params) as response:
-                if response.status != 200:
-                    logger.error(f"SearxNG search failed: HTTP {response.status}")
-                    return []
-                
-                data = await response.json()
-                results = []
-                
-                for idx, item in enumerate(data.get('results', [])[:max_results]):
-                    try:
-                        result = SearchResult(
-                            url=item.get('url', ''),
-                            title=item.get('title', 'No title'),
-                            snippet=item.get('content', ''),
-                            source_domain=urlparse(item.get('url', '')).netloc,
-                            search_rank=idx + 1,
-                            search_query=query,
-                            search_provider=SearchProvider.SEARXNG
-                        )
-                        
-                        results.append(result)
-                    
-                    except Exception as e:
-                        logger.warning(f"Failed to parse SearxNG result {idx}: {e}")
-                        continue
-                
-                logger.info(f"SearxNG search returned {len(results)} results for: {query}")
-                return results
-        
-        except Exception as e:
-            logger.error(f"SearxNG search request failed: {e}")
+        params = {k: v.format(query=query) if isinstance(v, str) else v for k, v in config["params"].items()}
+
+        response = await self._http_get(config["search_url"], params=params, correlation_id=correlation_id)
+        if not response:
             return []
-    
+        if response.status != 200:
+            logger.error("SearxNG HTTP error", extra={"event": "provider_http_error", "status": response.status, "correlation_id": correlation_id})
+            return []
+
+        data = await response.json()
+        results: List[SearchResult] = []
+
+        for idx, item in enumerate(data.get('results', [])[:max_results]):
+            try:
+                url_val = item.get('url', '')
+                results.append(SearchResult(
+                    url=url_val,
+                    title=item.get('title', 'No title'),
+                    snippet=item.get('content', ''),
+                    source_domain=urlparse(url_val).netloc,
+                    search_rank=idx + 1,
+                    search_query=query,
+                    search_provider=SearchProvider.SEARXNG
+                ))
+            except Exception as e:
+                logger.warning("Failed to parse SearxNG result", extra={"event": "parse_result_failed", "idx": idx, "error": str(e), "correlation_id": correlation_id})
+                continue
+
+        logger.info("SearxNG search completed", extra={"event": "search_completed", "provider": "searxng", "count": len(results), "correlation_id": correlation_id})
+        return results
+
     async def multi_provider_search(
-        self, 
-        query: str, 
+        self,
+        query: str,
         providers: List[SearchProvider] = None,
-        max_results_per_provider: int = 5
+        max_results_per_provider: int = 5,
+        correlation_id: Optional[str] = None
     ) -> List[SearchResult]:
         """
         Search across multiple providers and merge results.
-        
         Deduplicates and ranks results by relevance and credibility.
         """
+        corr = correlation_id or str(uuid4())
         providers = providers or [SearchProvider.DUCKDUCKGO, SearchProvider.SEARXNG]
-        
-        # Run searches concurrently
-        search_tasks = [
-            self.search(query, max_results_per_provider, provider)
-            for provider in providers
-        ]
-        
-        search_results = await asyncio.gather(*search_tasks, return_exceptions=True)
-        
-        # Merge and deduplicate results
-        all_results = []
+
+        tasks = [self.search(query, max_results_per_provider, provider, correlation_id=corr) for provider in providers]
+        search_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        all_results: List[SearchResult] = []
         seen_urls = set()
-        
+
         for provider_results in search_results:
             if isinstance(provider_results, Exception):
-                logger.error(f"Provider search failed: {provider_results}")
+                logger.error("Provider search failed", extra={"event": "provider_search_failed", "error": str(provider_results), "correlation_id": corr})
                 continue
-            
             for result in provider_results:
                 if result.url not in seen_urls:
                     seen_urls.add(result.url)
                     all_results.append(result)
-        
-        # Sort by search rank and provider priority
+
         all_results.sort(key=lambda r: (r.search_rank, providers.index(r.search_provider)))
-        
-        logger.info(f"Multi-provider search returned {len(all_results)} unique results")
+        logger.info("Multi-provider search merged results", extra={"event": "multi_search_done", "unique": len(all_results), "correlation_id": corr})
         return all_results
 
+    def open_in_local_browser(self, url: str) -> bool:
+        """Safely open a URL in the user's default OS browser (explicit action)."""
+        import webbrowser
+        parsed = urlparse(url or "")
+        if parsed.scheme not in ("http", "https"):
+            logger.warning("Blocked non-http(s) URL open", extra={"event": "open_blocked", "url": url})
+            return False
+        if not SystemWebAccess.is_enabled():
+            logger.info("Open blocked; system web access disabled", extra={"event": "web_access_blocked_open"})
+            return False
+        try:
+            return webbrowser.open(url)
+        except Exception as e:
+            logger.error("Failed to open local browser", extra={"event": "open_failed", "error": str(e)})
+            return False
+
+    @staticmethod
+    def to_vm_sources(results: List[SearchResult]) -> List[Dict[str, Any]]:
+        """Convert results to VM browser research system shape (sources_found)."""
+        vm_list: List[Dict[str, Any]] = []
+        for r in results:
+            vm_list.append({
+                "title": r.title,
+                "url": r.url,
+                "snippet": r.snippet,
+                "position": r.search_rank
+            })
+        return vm_list
 
 class ContentAnalyzer:
     """
@@ -450,7 +908,6 @@ class ContentAnalyzer:
     
     Provides credibility scoring, bias detection, and fact-checking capabilities.
     """
-    
     def __init__(self):
         # Domain credibility mapping
         self.domain_credibility = {
@@ -491,15 +948,14 @@ class ContentAnalyzer:
         Updates the SearchResult with analysis results.
         """
         try:
-            # Extract full content if not already done
             if not result.content:
                 result.content = await self._extract_content(result.url)
-            
-            # Basic content metrics
             if result.content:
                 result.word_count = len(result.content.split())
-                result.reading_level = flesch_reading_ease(result.content)
-            
+                try:
+                    result.reading_level = flesch_reading_ease(result.content)
+                except Exception:
+                    result.reading_level = None
             # Source type classification
             result.source_type = self._classify_source_type(result.source_domain, result.url)
             
@@ -520,25 +976,25 @@ class ContentAnalyzer:
             if result.publish_date:
                 result.age_days = (datetime.now(timezone.utc) - result.publish_date).days
             
-            logger.debug(f"Content analysis completed for: {result.url}")
+            logger.debug("Content analysis completed", extra={"event": "content_analyzed", "url": result.url})
             return result
         
         except Exception as e:
-            logger.error(f"Content analysis failed for {result.url}: {e}")
+            logger.error("Content analysis failed", extra={"event": "content_analysis_failed", "url": result.url, "error": str(e)})
             return result
     
     async def _extract_content(self, url: str) -> Optional[str]:
         """Extract clean text content from URL"""
         try:
-            # Use newspaper3k for content extraction
             article = Article(url)
-            await asyncio.to_thread(article.download)
-            await asyncio.to_thread(article.parse)
+            # Run parse steps with timeout to avoid hangs
+            await asyncio.wait_for(asyncio.to_thread(article.download), timeout=20)
+            await asyncio.wait_for(asyncio.to_thread(article.parse), timeout=20)
             
             return article.text
         
         except Exception as e:
-            logger.warning(f"Content extraction failed for {url}: {e}")
+            logger.warning("Content extraction failed", extra={"event": "content_extract_failed", "url": url, "error": str(e)})
             return None
     
     def _classify_source_type(self, domain: str, url: str) -> SourceType:
@@ -701,52 +1157,34 @@ class DeepResearchEngine:
     
     Implements comprehensive research workflows with quality assessment and synthesis.
     """
-    
     def __init__(self, search_engine: WebSearchEngine, content_analyzer: ContentAnalyzer):
         self.search_engine = search_engine
         self.content_analyzer = content_analyzer
-        
-        # Research configuration
         self.max_concurrent_analysis = 5
         self.analysis_semaphore = asyncio.Semaphore(self.max_concurrent_analysis)
-        
         logger.info("Deep research engine initialized")
-    
-    async def conduct_research(self, query: ResearchQuery) -> ResearchReport:
+
+    async def conduct_research(self, query: ResearchQuery) -> 'ResearchReport':
         """
         Conduct comprehensive research with multiple levels and analysis.
         
         Returns detailed research report with findings and citations.
         """
         start_time = time.time()
-        logger.info(f"Starting deep research for: {query.original_query}")
-        
+        correlation_id = str(query.session_id) if query and query.session_id else str(uuid4())
+        logger.info("Starting deep research", extra={"event": "research_start", "query": query.original_query[:120], "correlation_id": correlation_id})
+
         try:
-            # Level 1: Initial search
-            initial_results = await self._level_1_search(query)
-            
-            # Level 2: Expand based on initial findings
-            expanded_results = await self._level_2_expansion(query, initial_results)
-            
-            # Level 3: Deep dive into specific areas
-            deep_results = await self._level_3_deep_dive(query, expanded_results)
-            
-            # Combine all results
+            initial_results = await self._level_1_search(query, correlation_id)
+            expanded_results = await self._level_2_expansion(query, initial_results, correlation_id)
+            deep_results = await self._level_3_deep_dive(query, expanded_results, correlation_id)
             all_results = initial_results + expanded_results + deep_results
-            
-            # Analyze all content
             analyzed_results = await self._analyze_all_results(all_results)
-            
-            # Generate research report
             report = await self._generate_report(query, analyzed_results, start_time)
-            
-            logger.info(f"Research completed: {len(analyzed_results)} sources analyzed in {report.research_duration:.1f}s")
+            logger.info("Research completed", extra={"event": "research_done", "analyzed": len(analyzed_results), "duration_s": report.research_duration})
             return report
-        
         except Exception as e:
-            logger.error(f"Research failed for query '{query.original_query}': {e}")
-            
-            # Return error report
+            logger.error("Research failed", extra={"event": "research_failed", "error": str(e), "correlation_id": correlation_id})
             return ResearchReport(
                 query=query,
                 executive_summary=f"Research failed due to error: {str(e)}",
@@ -755,59 +1193,41 @@ class DeepResearchEngine:
                 total_sources=0,
                 credible_sources=0,
                 search_results=[],
+                # defaults for required metrics are provided by model
                 research_duration=time.time() - start_time
             )
-    
-    async def _level_1_search(self, query: ResearchQuery) -> List[SearchResult]:
-        """Level 1: Direct search on main query"""
+
+    async def _level_1_search(self, query: 'ResearchQuery', correlation_id: str) -> List[SearchResult]:
         results = await self.search_engine.multi_provider_search(
             query.original_query,
-            max_results_per_provider=query.max_sources // 2
+            max_results_per_provider=query.max_sources // 2,
+            correlation_id=correlation_id
         )
-        
-        logger.info(f"Level 1 search: {len(results)} results")
+        logger.info("Level 1 search", extra={"event": "level1_done", "count": len(results), "correlation_id": correlation_id})
         return results
-    
-    async def _level_2_expansion(self, query: ResearchQuery, initial_results: List[SearchResult]) -> List[SearchResult]:
-        """Level 2: Expand search based on initial findings"""
+
+    async def _level_2_expansion(self, query: 'ResearchQuery', initial_results: List[SearchResult], correlation_id: str) -> List[SearchResult]:
         if query.max_depth < 2:
             return []
-        
-        # Extract key terms from initial results
         expansion_queries = self._generate_expansion_queries(query, initial_results)
-        
-        # Search for expanded queries
-        expanded_results = []
-        for exp_query in expansion_queries[:3]:  # Limit expansion
-            results = await self.search_engine.search(exp_query, max_results=5)
-            expanded_results.extend(results)
-        
-        logger.info(f"Level 2 expansion: {len(expanded_results)} results from {len(expansion_queries)} queries")
+        expanded_results: List[SearchResult] = []
+        for exp_query in expansion_queries[:3]:
+            expanded_results.extend(await self.search_engine.search(exp_query, max_results=5, correlation_id=correlation_id))
+        logger.info("Level 2 expansion", extra={"event": "level2_done", "count": len(expanded_results), "correlation_id": correlation_id})
         return expanded_results
-    
-    async def _level_3_deep_dive(self, query: ResearchQuery, previous_results: List[SearchResult]) -> List[SearchResult]:
-        """Level 3: Deep dive into specific high-value sources"""
+
+    async def _level_3_deep_dive(self, query: 'ResearchQuery', previous_results: List[SearchResult], correlation_id: str) -> List[SearchResult]:
         if query.max_depth < 3:
             return []
-        
-        # Identify high-credibility sources for deep analysis
-        high_value_sources = [
-            result for result in previous_results
-            if result.credibility_score >= 0.7
-        ][:5]  # Top 5 high-value sources
-        
-        # Extract related topics and search for them
-        deep_results = []
+        high_value_sources = [r for r in previous_results if r.credibility_score >= 0.7][:5]
+        deep_results: List[SearchResult] = []
         for source in high_value_sources:
             if source.entities:
-                # Search for entities found in high-value sources
                 entity_query = f"{query.original_query} {' '.join(source.entities[:3])}"
-                results = await self.search_engine.search(entity_query, max_results=3)
-                deep_results.extend(results)
-        
-        logger.info(f"Level 3 deep dive: {len(deep_results)} results")
+                deep_results.extend(await self.search_engine.search(entity_query, max_results=3, correlation_id=correlation_id))
+        logger.info("Level 3 deep dive", extra={"event": "level3_done", "count": len(deep_results), "correlation_id": correlation_id})
         return deep_results
-    
+
     def _generate_expansion_queries(self, query: ResearchQuery, results: List[SearchResult]) -> List[str]:
         """Generate expansion queries based on initial results"""
         expansion_queries = []
@@ -860,35 +1280,22 @@ class DeepResearchEngine:
         return valid_results
     
     async def _generate_report(
-        self, 
-        query: ResearchQuery, 
-        results: List[SearchResult], 
+        self,
+        query: 'ResearchQuery',
+        results: List[SearchResult],
         start_time: float
-    ) -> ResearchReport:
+    ) -> 'ResearchReport':
         """Generate comprehensive research report"""
-        
-        # Filter by credibility threshold
         credible_results = [r for r in results if r.credibility_score >= query.min_credibility]
-        
-        # Generate executive summary
         executive_summary = self._generate_executive_summary(query, credible_results)
-        
-        # Extract key findings
         key_findings = self._extract_key_findings(credible_results)
-        
-        # Assess consensus and conflicts
         consensus_points, conflicts = self._analyze_consensus(credible_results)
-        
-        # Calculate metrics
         source_diversity = self._calculate_source_diversity(credible_results)
         confidence_level = self._calculate_confidence(credible_results)
-        
-        # Generate citations
         citations = self._generate_citations(credible_results)
-        
-        # Bias assessment
         bias_assessment = self._assess_overall_bias(credible_results)
-        
+        temporal_coverage = self._calculate_temporal_coverage(credible_results)
+
         return ResearchReport(
             query=query,
             executive_summary=executive_summary,
@@ -900,12 +1307,13 @@ class DeepResearchEngine:
             consensus_points=consensus_points,
             conflicting_information=conflicts,
             source_diversity=source_diversity,
+            temporal_coverage=temporal_coverage,
             bias_assessment=bias_assessment,
             citations=citations,
             reference_urls=[r.url for r in credible_results],
             research_duration=time.time() - start_time
         )
-    
+
     def _generate_executive_summary(self, query: ResearchQuery, results: List[SearchResult]) -> str:
         """Generate executive summary of research findings"""
         if not results:
@@ -1012,6 +1420,18 @@ class DeepResearchEngine:
         
         return bias_assessment
 
+    def _calculate_temporal_coverage(self, results: List[SearchResult]) -> float:
+        """Ratio of sources with a publish_date within the last year."""
+        if not results:
+            return 0.0
+        recent_year = 365
+        now = datetime.now(timezone.utc)
+        count_recent = 0
+        for r in results:
+            if r.publish_date and (now - r.publish_date).days <= recent_year:
+                count_recent += 1
+        return count_recent / len(results)
+
 
 # Factory function for easy integration
 async def create_research_system() -> Tuple[WebSearchEngine, DeepResearchEngine]:
@@ -1020,15 +1440,14 @@ async def create_research_system() -> Tuple[WebSearchEngine, DeepResearchEngine]
     
     Returns configured search engine and research engine.
     """
-    # Create and initialize search engine
     search_engine = WebSearchEngine()
     await search_engine.__aenter__()
-    
-    # Create content analyzer
     content_analyzer = ContentAnalyzer()
-    
-    # Create research engine
     research_engine = DeepResearchEngine(search_engine, content_analyzer)
-    
+    try:
+        controller = LocalBrowserController()
+        search_engine.attach_local_controller(controller)
+    except Exception:
+        pass
     logger.info("Research system created successfully")
     return search_engine, research_engine

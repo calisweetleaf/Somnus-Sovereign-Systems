@@ -6,6 +6,9 @@
 CONTEXT_README.md
 file-tree.md
 plugin_folder_structure.md
+GEMINI.md
+QWEN.md
+coding_requirements.instructions.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -34,7 +34,7 @@ import uvicorn
 # Import Morpheus components
 sys.path.append(str(Path(__file__).parent))
 
-from session_manager import SessionManager
+from core.session_manager import SessionManager
 from memory_core import MemoryManager, MemoryConfiguration
 from memory_integration import create_memory_enhanced_session_manager
 from model_loader import ModelLoader

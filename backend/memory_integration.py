@@ -17,9 +17,10 @@ from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timezone
 from uuid import UUID
 
-from core.memory_manager import (
+from core.memory_core import (
     MemoryManager, MemoryConfiguration, MemoryType, MemoryImportance, MemoryScope
 )
+from schemas.session import PromptEventMemoryObject, PromptEventType, PromptMemoryTags
 from schemas.session import SessionMetadata, SessionCreationRequest, SessionID, UserID
 
 logger = logging.getLogger(__name__)
@@ -299,6 +300,101 @@ class SessionMemoryContext:
         logger.info(f"Stored document memory for {filename}")
         return memory_id
     
+    async def store_prompt_event_memory(
+        self,
+        prompt_event: PromptEventMemoryObject
+    ) -> UUID:
+        """Store prompt event as first-class memory object with immediate semantic indexing"""
+        try:
+            # Generate content for semantic embedding
+            embedding_content = f"""Prompt Event: {prompt_event.event_type.value}
+User Input: {prompt_event.user_input or 'N/A'}
+Generated Prompt: {prompt_event.prompt_content}
+Response: {prompt_event.response_content or 'N/A'}
+Context Tags: {', '.join(prompt_event.memory_tags.semantic_tags)}
+Technical Context: {', '.join(prompt_event.memory_tags.technical_context)}
+Collaboration Context: {', '.join(prompt_event.memory_tags.collaboration_context)}"""
+            
+            # Determine importance based on event quality
+            if prompt_event.is_high_quality:
+                importance = MemoryImportance.HIGH
+            elif prompt_event.memory_priority == "medium":
+                importance = MemoryImportance.MEDIUM
+            else:
+                importance = MemoryImportance.LOW
+            
+            # Store in memory system with immediate semantic indexing
+            memory_id = await self.memory_manager.store_memory(
+                user_id=self.user_id,
+                content=embedding_content,
+                memory_type=MemoryType.SYSTEM_EVENT,  # Prompt events are system events
+                importance=importance,
+                scope=MemoryScope.PRIVATE,
+                source_session=self.session_id,
+                tags=self._generate_prompt_event_tags(prompt_event),
+                metadata={
+                    'prompt_event_id': str(prompt_event.event_id),
+                    'event_type': prompt_event.event_type.value,
+                    'generation_time_ms': prompt_event.generation_time_ms,
+                    'prompt_length': prompt_event.prompt_length,
+                    'quality_score': prompt_event.memory_tags.quality_score,
+                    'relevance_score': prompt_event.memory_tags.relevance_score,
+                    'adaptations_applied': prompt_event.adaptations_applied,
+                    'user_feedback_score': prompt_event.user_feedback_score,
+                    'semantic_similarity_scores': prompt_event.semantic_similarity_scores,
+                    'created_at': prompt_event.created_at.isoformat(),
+                    'is_high_quality': prompt_event.is_high_quality,
+                    'memory_priority': prompt_event.memory_priority
+                }
+            )
+            
+            # Update the prompt event with consolidation info
+            prompt_event.mark_consolidated(str(memory_id))
+            
+            logger.info(f"Stored prompt event {prompt_event.event_id} as memory {memory_id} with immediate semantic indexing")
+            return memory_id
+            
+        except Exception as e:
+            logger.error(f"Failed to store prompt event memory: {e}")
+            raise
+    
+    def _generate_prompt_event_tags(self, prompt_event: PromptEventMemoryObject) -> List[str]:
+        """Generate comprehensive tags for prompt event memory indexing"""
+        tags = [
+            'prompt_event',
+            prompt_event.event_type.value,
+            f'quality_{prompt_event.memory_priority}',
+        ]
+        
+        # Add semantic tags
+        tags.extend(prompt_event.memory_tags.semantic_tags)
+        
+        # Add technical context tags
+        tags.extend([f'tech_{tag}' for tag in prompt_event.memory_tags.technical_context])
+        
+        # Add collaboration context tags
+        tags.extend([f'collab_{tag}' for tag in prompt_event.memory_tags.collaboration_context])
+        
+        # Add quality-based tags
+        if prompt_event.is_high_quality:
+            tags.append('high_quality')
+        
+        if prompt_event.user_feedback_score and prompt_event.user_feedback_score > 0.7:
+            tags.append('positive_feedback')
+        
+        # Add adaptation tags
+        if prompt_event.adaptations_applied:
+            tags.extend([f'adaptation_{adapt}' for adapt in prompt_event.adaptations_applied])
+        
+        # Add performance tags
+        if prompt_event.generation_time_ms:
+            if prompt_event.generation_time_ms < 500:
+                tags.append('fast_generation')
+            elif prompt_event.generation_time_ms > 2000:
+                tags.append('slow_generation')
+        
+        return list(set(tags))  # Remove duplicates
+    
     async def enhance_context_with_query(self, query: str) -> List[Dict[str, Any]]:
         """
         Enhance current context by retrieving relevant memories for a specific query.
@@ -401,10 +497,11 @@ class EnhancedSessionManager:
         session_id: SessionID,
         user_message: str,
         assistant_response: str,
-        tools_used: Optional[List[str]] = None
+        tools_used: Optional[List[str]] = None,
+        prompt_event: Optional[PromptEventMemoryObject] = None
     ) -> Dict[str, Any]:
         """
-        Process conversation turn with automatic memory storage.
+        Process conversation turn with automatic memory storage and prompt event indexing.
         
         Returns memory processing results and context updates.
         """
@@ -414,12 +511,21 @@ class EnhancedSessionManager:
             return {'memory_stored': False, 'reason': 'no_context'}
         
         try:
+            results = {}
+            
             # Store conversation turn
             memory_id = await memory_context.store_conversation_turn(
                 user_message=user_message,
                 assistant_response=assistant_response,
                 turn_metadata={'tools_used': tools_used or []}
             )
+            results['conversation_memory_id'] = str(memory_id)
+            
+            # Store prompt event if provided (with immediate semantic indexing)
+            if prompt_event:
+                prompt_memory_id = await memory_context.store_prompt_event_memory(prompt_event)
+                results['prompt_event_memory_id'] = str(prompt_memory_id)
+                logger.info(f"Indexed prompt event {prompt_event.event_id} with immediate semantic embeddings")
             
             # Extract and store any user facts mentioned
             await self._extract_and_store_facts(memory_context, user_message)
@@ -427,16 +533,55 @@ class EnhancedSessionManager:
             # Get enhanced context for future messages
             enhanced_memories = await memory_context.enhance_context_with_query(user_message)
             
-            return {
+            results.update({
                 'memory_stored': True,
-                'memory_id': str(memory_id),
                 'enhanced_context_count': len(enhanced_memories),
                 'session_summary': await memory_context.get_session_summary()
-            }
+            })
+            
+            return results
             
         except Exception as e:
             logger.error(f"Failed to process message with memory: {e}")
             return {'memory_stored': False, 'reason': str(e)}
+    
+    async def index_prompt_event_immediately(
+        self,
+        session_id: SessionID,
+        prompt_event: PromptEventMemoryObject
+    ) -> Dict[str, Any]:
+        """
+        Immediately index a prompt event with semantic embeddings.
+        
+        This is called whenever a new prompt is generated to ensure
+        immediate semantic indexing for future retrieval.
+        """
+        memory_context = self.session_contexts.get(session_id)
+        if not memory_context:
+            logger.warning(f"No memory context found for session {session_id} for prompt indexing")
+            return {'indexed': False, 'reason': 'no_context'}
+        
+        try:
+            # Store with immediate semantic indexing
+            memory_id = await memory_context.store_prompt_event_memory(prompt_event)
+            
+            # Mark the indexing timestamp
+            prompt_event.indexed_at = datetime.now(timezone.utc)
+            
+            logger.info(f"Immediately indexed prompt event {prompt_event.event_id} as memory {memory_id}")
+            
+            return {
+                'indexed': True,
+                'memory_id': str(memory_id),
+                'prompt_event_id': str(prompt_event.event_id),
+                'indexing_time': prompt_event.indexed_at.isoformat(),
+                'quality_score': prompt_event.memory_tags.quality_score,
+                'semantic_tags_count': len(prompt_event.memory_tags.semantic_tags)
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to immediately index prompt event: {e}")
+            return {'indexed': False, 'reason': str(e)}
     
     async def _extract_and_store_facts(
         self, 

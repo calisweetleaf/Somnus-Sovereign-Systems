@@ -1,5 +1,5 @@
 """
-Somnus Sovereign Systems- Persistent Memory Management System
+Somnus Systems - Persistent Memory Management System for Virtual Machines
 Advanced cross-session memory with semantic indexing, encryption, and privacy controls.
 
 Memory Architecture:
@@ -17,8 +17,9 @@ import sqlite3
 import hashlib
 import json
 import time
+import yaml
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Set, Union
+from typing import Dict, List, Optional, Any, Tuple, Set, Union, TypeAlias
 from pathlib import Path
 from dataclasses import dataclass, field
 from enum import Enum
@@ -26,16 +27,18 @@ from uuid import UUID, uuid4
 from contextlib import asynccontextmanager
 
 import numpy as np
-import chromadb
-from chromadb.config import Settings
-from sentence_transformers import SentenceTransformer
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import base64
+from sklearn.cluster import KMeans
+import httpx
 
 from pydantic import BaseModel, Field, validator
-from schemas.session import SessionID, UserID
+import aiosqlite
+
+UserID: TypeAlias = str
+SessionID: TypeAlias = str
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +50,11 @@ class MemoryType(str, Enum):
     DOCUMENT = "document"             # Uploaded files and analysis
     CODE_SNIPPET = "code_snippet"    # Generated/executed code
     TOOL_RESULT = "tool_result"       # Plugin/tool outputs
-    CUSTOM_INSTRUCTION = "custom_instruction"  # User-defined behaviors
+    USER_DIRECTIVE = "user_directive"  # User-defined behaviors
     SYSTEM_EVENT = "system_event"     # Technical events and errors
+    CUSTOM_INSTRUCTION = "custom_instruction"  # Custom system/user instructions
+    INTERACTION = "interaction"       # General interaction events
+    DEV_SESSION = "dev_session"       # Development session objects
 
 
 class MemoryImportance(str, Enum):
@@ -157,6 +163,7 @@ class MemoryConfiguration(BaseModel):
     vector_db_path: str = Field(default="data/memory/vectors")
     metadata_db_path: str = Field(default="data/memory/metadata.db")
     max_memories_per_user: int = Field(default=50000, ge=1000)
+    max_storage_per_user_gb: float = Field(default=1.0, ge=0.1)
     
     # Embedding configuration
     embedding_model: str = Field(default="sentence-transformers/all-MiniLM-L6-v2")
@@ -177,6 +184,11 @@ class MemoryConfiguration(BaseModel):
     # Privacy and encryption
     encryption_enabled: bool = Field(default=True)
     user_data_isolation: bool = Field(default=True)
+    kms_enabled: bool = Field(default=False, description="Enable Key Management Service integration")
+    kms_type: Optional[str] = Field(default=None, description="Type of KMS (e.g., 'vault', 'aws_kms')")
+    kms_address: Optional[str] = Field(default=None, description="KMS server address")
+    kms_token: Optional[str] = Field(default=None, description="KMS authentication token (for Vault)")
+    kms_secret_path: Optional[str] = Field(default=None, description="Path to secret in KMS")
     
     # Performance tuning
     similarity_threshold: float = Field(default=0.7, ge=0.1, le=1.0)
@@ -189,48 +201,168 @@ class MemoryConfiguration(BaseModel):
     importance_learning: bool = Field(default=True)
 
 
+class EncryptionError(RuntimeError):
+    """Domain‑specific error for encryption/decryption failures."""
+    pass
+
+
 class MemoryEncryption:
-    """Advanced encryption for user memory with key derivation"""
-    
-    def __init__(self, master_key: Optional[bytes] = None):
-        self.master_key = master_key or Fernet.generate_key()
-        self.user_keys: Dict[UserID, Fernet] = {}
-    
-    def _derive_user_key(self, user_id: UserID, password: Optional[str] = None) -> Fernet:
-        """Derive user-specific encryption key"""
-        if user_id in self.user_keys:
-            return self.user_keys[user_id]
-        
-        # Use master key + user_id for key derivation
-        salt = hashlib.sha256(user_id.encode()).digest()[:16]
-        
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=salt,
-            iterations=100000,
-        )
-        
-        # Derive key from master key + user_id
-        key_material = self.master_key + user_id.encode()
-        key = base64.urlsafe_b64encode(kdf.derive(key_material))
-        
-        fernet = Fernet(key)
-        self.user_keys[user_id] = fernet
-        return fernet
-    
-    def encrypt_memory(self, content: str, user_id: UserID) -> Tuple[bytes, str]:
-        """Encrypt memory content for user"""
-        fernet = self._derive_user_key(user_id)
-        encrypted = fernet.encrypt(content.encode())
-        key_id = hashlib.sha256(user_id.encode()).hexdigest()[:16]
-        return encrypted, key_id
-    
-    def decrypt_memory(self, encrypted_content: bytes, user_id: UserID) -> str:
-        """Decrypt memory content for user"""
-        fernet = self._derive_user_key(user_id)
-        decrypted = fernet.decrypt(encrypted_content)
-        return decrypted.decode()
+    """
+    Production‑grade encryption for per‑user memory.
+
+    Guarantees:
+    - Deterministic key derivation per user (no hard‑coded secrets).
+    - Thread‑safe access to internal key cache.
+    - Full input validation and explicit error handling.
+    - Secure logging (no secret material is ever logged).
+    - Optional master‑key rotation with automatic re‑derivation of user keys.
+    """
+
+    def __init__(self, master_key: Optional[bytes] = None) -> None:
+        """
+        Initialise the encryption helper.
+
+        Args:
+            master_key: 32‑byte base key. If ``None``, a fresh key is generated.
+                        The key must be stored securely by the caller (e.g. env var,
+                        secret manager).  No secrets are persisted to disk by this class.
+        """
+        if master_key is not None:
+            if not isinstance(master_key, (bytes, bytearray)):
+                raise TypeError("master_key must be bytes")
+            if len(master_key) != 32:
+                raise ValueError("master_key must be exactly 32 bytes for Fernet compatibility")
+            self._master_key = master_key
+        else:
+            # Generate a fresh master key; callers are responsible for persisting it securely.
+            self._master_key = Fernet.generate_key()
+
+        self._user_keys: Dict[UserID, Fernet] = {}
+        self._lock = asyncio.Lock()   # async‑compatible lock for concurrent access
+        self._logger = logging.getLogger(__name__)
+
+    # --------------------------------------------------------------------- #
+    # Internal helpers
+    # --------------------------------------------------------------------- #
+
+    async def _derive_user_key(self, user_id: UserID, password: Optional[str] = None) -> Fernet:
+        """
+        Derive (or retrieve cached) a user‑specific Fernet instance.
+
+        The derivation uses PBKDF2HMAC with a per‑user salt derived from the
+        ``user_id``.  ``password`` is currently unused but kept for future
+        extensibility (e.g. user‑provided passphrase).
+
+        Args:
+            user_id: Identifier of the user – must be a non‑empty string.
+            password: Optional additional secret material (currently ignored).
+
+        Returns:
+            Fernet instance ready for encrypt/decrypt operations.
+        """
+        if not isinstance(user_id, str) or not user_id:
+            raise ValueError("user_id must be a non‑empty string")
+
+        async with self._lock:
+            if user_id in self._user_keys:
+                return self._user_keys[user_id]
+
+            # Derive a deterministic per‑user key
+            salt = hashlib.sha256(user_id.encode()).digest()[:16]
+
+            kdf = PBKDF2HMAC(
+                algorithm=hashes.SHA256(),
+                length=32,
+                salt=salt,
+                iterations=100_000,
+            )
+
+            # Combine master key with user identifier for key material
+            key_material = self._master_key + user_id.encode()
+            derived_key = kdf.derive(key_material)
+            fernet_key = base64.urlsafe_b64encode(derived_key)
+
+            fernet = Fernet(fernet_key)
+            self._user_keys[user_id] = fernet
+            return fernet
+
+    # --------------------------------------------------------------------- #
+    # Public API
+    # --------------------------------------------------------------------- #
+
+    async def encrypt_memory(self, content: str, user_id: UserID) -> Tuple[bytes, str]:
+        """
+        Encrypt ``content`` for ``user_id``.
+
+        Returns a tuple ``(encrypted_bytes, key_id)`` where ``key_id`` is a
+        deterministic identifier derived from the ``user_id`` (first 16 hex
+        characters of its SHA‑256 hash).  ``key_id`` can be stored for lookup
+        without exposing the actual key.
+
+        Raises:
+            EncryptionError: on any cryptographic failure.
+            ValueError: if ``content`` is empty.
+        """
+        if not isinstance(content, str) or not content:
+            raise ValueError("content must be a non‑empty string")
+
+        try:
+            fernet = await self._derive_user_key(user_id)
+            encrypted = fernet.encrypt(content.encode())
+            key_id = hashlib.sha256(user_id.encode()).hexdigest()[:16]
+            return encrypted, key_id
+        except Exception as exc:
+            self._logger.exception(
+                "Encryption failed for user_id=%s", user_id
+            )
+            raise EncryptionError("Failed to encrypt memory") from exc
+
+    async def decrypt_memory(self, encrypted_content: bytes, user_id: UserID) -> str:
+        """
+        Decrypt ``encrypted_content`` for ``user_id``.
+
+        Returns the original plaintext string.
+
+        Raises:
+            EncryptionError: on any cryptographic failure.
+            ValueError: if ``encrypted_content`` is empty.
+        """
+        if not isinstance(encrypted_content, (bytes, bytearray)) or not encrypted_content:
+            raise ValueError("encrypted_content must be non‑empty bytes")
+
+        try:
+            fernet = await self._derive_user_key(user_id)
+            decrypted = fernet.decrypt(encrypted_content)
+            return decrypted.decode()
+        except Exception as exc:
+            self._logger.exception(
+                "Decryption failed for user_id=%s", user_id
+            )
+            raise EncryptionError("Failed to decrypt memory") from exc
+
+    async def rotate_master_key(self, new_master_key: bytes) -> None:
+        """
+        Rotate the master key used for all user‑key derivations.
+
+        All cached user keys are cleared; subsequent operations will lazily
+        re‑derive keys using the new master key.  The caller must ensure the new
+        key is stored securely before invoking this method.
+
+        Args:
+            new_master_key: 32‑byte key.
+
+        Raises:
+            ValueError: if the key length is invalid.
+        """
+        if not isinstance(new_master_key, (bytes, bytearray)):
+            raise TypeError("new_master_key must be bytes")
+        if len(new_master_key) != 32:
+            raise ValueError("new_master_key must be exactly 32 bytes")
+
+        async with self._lock:
+            self._master_key = new_master_key
+            self._user_keys.clear()
+            self._logger.info("Master key rotated; user key cache cleared")
 
 
 class MemoryManager:
@@ -241,14 +373,14 @@ class MemoryManager:
     for cross-session user memory with privacy controls and performance optimization.
     """
     
-    def __init__(self, config: MemoryConfiguration):
-        self.config = config
+    def __init__(self, config: Optional[MemoryConfiguration] = None):
+        self.config = config or MemoryConfiguration()
         self.encryption = MemoryEncryption()
         self.embedding_model = None
         
         # Storage components
         self.vector_db = None
-        self.metadata_db_path = Path(config.metadata_db_path)
+        self.metadata_db_path = Path(self.config.metadata_db_path)
         self.metadata_db_path.parent.mkdir(parents=True, exist_ok=True)
         
         # Performance tracking
@@ -270,8 +402,15 @@ class MemoryManager:
         """Initialize memory system components"""
         try:
             # Initialize embedding model
-            logger.info(f"Loading embedding model: {self.config.embedding_model}")
-            self.embedding_model = SentenceTransformer(self.config.embedding_model)
+            if self.embedding_model is None:
+                logger.info(f"Loading embedding model: {self.config.embedding_model}")
+                # Lazy import to avoid heavy deps at module import
+                try:
+                    from sentence_transformers import SentenceTransformer  # type: ignore
+                except Exception as e:
+                    logger.error(f"Failed to import sentence_transformers: {e}")
+                    raise
+                self.embedding_model = SentenceTransformer(self.config.embedding_model)
             
             # Initialize vector database
             await self._initialize_vector_db()
@@ -290,6 +429,13 @@ class MemoryManager:
     
     async def _initialize_vector_db(self):
         """Initialize ChromaDB for vector storage"""
+        # Lazy import to avoid heavy dependency import during module import
+        try:
+            import chromadb  # type: ignore
+            from chromadb.config import Settings  # type: ignore
+        except Exception as e:
+            logger.error(f"Failed to import chromadb: {e}")
+            raise
         vector_path = Path(self.config.vector_db_path)
         vector_path.mkdir(parents=True, exist_ok=True)
         
@@ -352,12 +498,12 @@ class MemoryManager:
     @asynccontextmanager
     async def _get_db_connection(self):
         """Get async database connection with proper error handling"""
-        conn = sqlite3.connect(self.metadata_db_path)
-        conn.row_factory = sqlite3.Row
+        conn = await aiosqlite.connect(self.metadata_db_path)
+        conn.row_factory = aiosqlite.Row
         try:
             yield conn
         finally:
-            conn.close()
+            await conn.close()
     
     async def store_memory(
         self, 
@@ -412,17 +558,22 @@ class MemoryManager:
             collection = await self._get_or_create_collection(collection_name)
             
             vector_id = str(memory_entry.memory_id)
-            collection.add(
-                embeddings=[embedding.tolist()],
-                documents=[content[:1000]],  # Truncate for ChromaDB
-                metadatas=[{
-                    'memory_type': memory_type.value,
-                    'importance': importance.value,
-                    'created_at': memory_entry.created_at.isoformat(),
-                    'tags': json.dumps(tags or [])
-                }],
-                ids=[vector_id]
-            )
+            try:
+                collection.add(
+                    embeddings=[embedding.tolist()],
+                    documents=[content[:1000]],  # Truncate for ChromaDB
+                    metadatas=[{
+                        'memory_type': memory_type.value,
+                        'importance': importance.value,
+                        'created_at': memory_entry.created_at.isoformat(),
+                        'tags': json.dumps(tags or [])
+                    }],
+                    ids=[vector_id]
+                )
+            except Exception as e:
+                logger.error(f"Failed to add vector to ChromaDB for memory {memory_entry.memory_id}: {e}", exc_info=True)
+                # If vector storage fails, we should not proceed to store metadata.
+                raise
             
             memory_entry.vector_id = vector_id
             
@@ -440,7 +591,7 @@ class MemoryManager:
                     memory_type.value, importance.value, scope.value,
                     memory_entry.created_at.isoformat(), memory_entry.last_accessed.isoformat(),
                     memory_entry.access_count, str(source_session) if source_session else None,
-                    memory_entry.source_type, json.dumps(memory_entry.related_memories),
+                    memory_entry.source_type, json.dumps([str(uuid) for uuid in memory_entry.related_memories]),
                     json.dumps(memory_entry.tags), memory_entry.is_encrypted,
                     memory_entry.encryption_key_id, vector_id,
                     json.dumps(metadata or {})
@@ -460,7 +611,7 @@ class MemoryManager:
             return memory_entry.memory_id
             
         except Exception as e:
-            logger.error(f"Failed to store memory for user {user_id}: {e}")
+            logger.error(f"Failed to store memory for user {user_id}: {e}", exc_info=True)
             raise
     
     async def retrieve_memories(
@@ -498,30 +649,41 @@ class MemoryManager:
                 'importance': {'$in': [imp.value for imp in valid_importance]}
             })
             
-            where_filter = {'$and': where_conditions} if where_conditions else None
-            
+            where_filter = {'$and': where_conditions} if len(where_conditions) > 1 else where_conditions[0] if where_conditions else None
+
             # Perform semantic search if query provided
             if query:
                 query_embedding = await self._generate_embedding(query)
-                results = collection.query(
-                    query_embeddings=[query_embedding.tolist()],
-                    n_results=min(limit, self.config.max_retrieval_results),
-                    where=where_filter,
-                    include=['documents', 'metadatas', 'distances']
-                )
+                try:
+                    results = collection.query(
+                        query_embeddings=[query_embedding.tolist()],
+                        n_results=min(limit, self.config.max_retrieval_results),
+                        where=where_filter,
+                        include=['documents', 'metadatas', 'distances']
+                    )
+                except Exception as e:
+                    logger.error(f"ChromaDB query failed for user {user_id}: {e}", exc_info=True)
+                    return []
                 
-                memory_ids = results['ids'][0] if results['ids'] else []
-                similarities = [1 - d for d in results['distances'][0]] if results['distances'] else []
+                memory_ids = results['ids'][0] if results and results['ids'] else []
+                similarities = [1 - d for d in results['distances'][0]] if results and results['distances'] else []
             else:
-                # Get all memories for user with filters
-                all_results = collection.get(
-                    where=where_filter,
-                    include=['documents', 'metadatas']
-                )
-                memory_ids = all_results['ids'][:limit] if all_results['ids'] else []
+                try:
+                    # Get all memories for user with filters
+                    all_results = collection.get(
+                        where=where_filter,
+                        include=['documents', 'metadatas']
+                    )
+                except Exception as e:
+                    logger.error(f"ChromaDB get failed for user {user_id}: {e}", exc_info=True)
+                    return []
+                memory_ids = all_results['ids'][:limit] if all_results and all_results['ids'] else []
                 similarities = [1.0] * len(memory_ids)  # No semantic ranking
             
             # Retrieve full memory data from metadata database
+            if not memory_ids:
+                return []
+
             memories = []
             for memory_id, similarity in zip(memory_ids, similarities):
                 memory_data = await self._get_memory_by_id(memory_id, user_id, include_content)
@@ -542,7 +704,7 @@ class MemoryManager:
             return memories
             
         except Exception as e:
-            logger.error(f"Failed to retrieve memories for user {user_id}: {e}")
+            logger.error(f"Failed to retrieve memories for user {user_id}: {e}", exc_info=True)
             return []
     
     async def _generate_embedding(self, text: str) -> np.ndarray:
@@ -560,14 +722,15 @@ class MemoryManager:
     async def _get_or_create_collection(self, collection_name: str):
         """Get or create ChromaDB collection for user"""
         try:
-            collection = self.vector_db.get_collection(collection_name)
-        except ValueError:
-            # Collection doesn't exist, create it
-            collection = self.vector_db.create_collection(
+            # Use get_or_create for atomicity
+            collection = self.vector_db.get_or_create_collection(
                 name=collection_name,
                 metadata={"description": f"Memory vectors for user collection {collection_name}"}
             )
-        return collection
+            return collection
+        except Exception as e:
+            logger.error(f"Failed to get or create ChromaDB collection {collection_name}: {e}", exc_info=True)
+            raise
     
     async def _find_duplicate_memory(self, user_id: UserID, content_hash: str) -> Optional[Dict[str, Any]]:
         """Find existing memory with same content hash"""
@@ -577,7 +740,7 @@ class MemoryManager:
                 WHERE user_id = ? AND content_hash = ?
                 ORDER BY created_at DESC LIMIT 1
             """, (user_id, content_hash))
-            row = cursor.fetchone()
+            row = await cursor.fetchone()
             return dict(row) if row else None
     
     async def _get_memory_by_id(
@@ -594,7 +757,7 @@ class MemoryManager:
                 LEFT JOIN encrypted_content ec ON m.memory_id = ec.memory_id
                 WHERE m.memory_id = ? AND m.user_id = ?
             """, (memory_id, user_id))
-            row = cursor.fetchone()
+            row = await cursor.fetchone()
             
             if not row:
                 return None
@@ -616,7 +779,7 @@ class MemoryManager:
                     memory_data['content'] = memory_data['encrypted_data'].decode()
             
             # Parse JSON fields
-            memory_data['related_memories'] = json.loads(memory_data.get('related_memories', '[]'))
+            memory_data['related_memories'] = [UUID(uuid_str) for uuid_str in json.loads(memory_data.get('related_memories', '[]'))]
             memory_data['tags'] = json.loads(memory_data.get('tags', '[]'))
             memory_data['metadata'] = json.loads(memory_data.get('metadata', '{}'))
             
@@ -631,6 +794,20 @@ class MemoryManager:
             memory_data['importance_rank'] = importance_ranks.get(memory_data['importance'], 5)
             
             return memory_data
+
+    async def get_memory_by_id(self, memory_id: str, user_id: UserID, include_content: bool = True) -> Optional[Dict[str, Any]]:
+        """
+        Public method to retrieve memory by ID with optional content decryption.
+        
+        Args:
+            memory_id: The ID of the memory to retrieve
+            user_id: The user ID associated with the memory
+            include_content: Whether to include the decrypted content
+            
+        Returns:
+            Dictionary containing memory data or None if not found
+        """
+        return await self._get_memory_by_id(memory_id, user_id, include_content)
     
     async def _update_memory_access(self, memory_id: str):
         """Update memory access tracking"""
@@ -646,59 +823,131 @@ class MemoryManager:
         """Background cleanup task for expired and low-importance memories"""
         while not self._shutdown_event.is_set():
             try:
-                cleanup_interval = self.config.background_cleanup_interval
+                await asyncio.sleep(self.config.background_cleanup_interval)
                 
+                logger.info("Starting memory cleanup cycle.")
                 # Find memories to cleanup based on retention policies
                 await self._cleanup_expired_memories()
                 await self._cleanup_low_relevance_memories()
                 
                 self.metrics['retention_cleanups'] += 1
-                logger.debug("Memory cleanup completed")
-                
-                await asyncio.sleep(cleanup_interval)
+                logger.info("Memory cleanup cycle completed.")
                 
             except asyncio.CancelledError:
+                logger.info("Memory cleanup loop cancelled.")
                 break
             except Exception as e:
-                logger.error(f"Error in memory cleanup loop: {e}")
-                await asyncio.sleep(300)  # Wait before retrying
+                logger.error(f"Error in memory cleanup loop: {e}", exc_info=True)
+                await asyncio.sleep(300)  # Wait before retrying on unexpected error
     
     async def _cleanup_expired_memories(self):
         """Remove expired memories based on retention policies"""
         current_time = datetime.now(timezone.utc)
         
         async with self._get_db_connection() as conn:
-            # Find expired memories
+            # Find expired memories based on expires_at or retention policies for TEMPORARY
+            # This query is simplified to be more robust.
             cursor = await conn.execute("""
-                SELECT memory_id, user_id, importance, created_at, vector_id
-                FROM memories
-                WHERE expires_at IS NOT NULL AND expires_at < ?
+                SELECT memory_id, user_id, vector_id FROM memories
+                WHERE (expires_at IS NOT NULL AND expires_at < ?)
                    OR (importance = ? AND created_at < ?)
             """, (
                 current_time.isoformat(),
                 MemoryImportance.TEMPORARY.value,
-                (current_time - timedelta(days=1)).isoformat()
+                (current_time - timedelta(days=self.config.retention_policies.get(MemoryImportance.TEMPORARY, 1))).isoformat()
             ))
             
-            expired_memories = cursor.fetchall()
-            
+            expired_memories = await cursor.fetchall()
+            if not expired_memories:
+                return
+
+            logger.info(f"Found {len(expired_memories)} expired memories to remove.")
             for memory in expired_memories:
                 await self._delete_memory(memory['memory_id'], memory['user_id'], memory['vector_id'])
     
     async def _cleanup_low_relevance_memories(self):
-        """Remove low-relevance memories when approaching storage limits"""
-        # This would implement more sophisticated cleanup based on user limits
-        # and relevance scoring - placeholder for now
-        pass
-    
+        """Remove low-relevance memories when approaching storage limits."""
+        user_ids = set()
+        async with self._get_db_connection() as conn:
+            cursor = await conn.execute("SELECT DISTINCT user_id FROM memories")
+            rows = await cursor.fetchall()
+            for row in rows:
+                user_ids.add(row['user_id'])
+
+        for user_id in user_ids:
+            try:
+                current_usage_bytes = await self._calculate_user_storage_usage(user_id)
+                max_usage_bytes = self.config.max_storage_per_user_gb * (1024**3)
+
+                if current_usage_bytes > max_usage_bytes:
+                    logger.info(f"User {user_id} is over storage limit. Current: {current_usage_bytes / (1024**3):.2f} GB, Max: {self.config.max_storage_per_user_gb:.2f} GB. Initiating cleanup.")
+                    
+                    memories_to_consider = []
+                    async with self._get_db_connection() as conn:
+                        # Fetch all non-critical memories for the user to evaluate for cleanup
+                        cursor = await conn.execute("""
+                            SELECT m.memory_id, m.user_id, m.importance, m.memory_type, m.created_at, 
+                                   m.last_accessed, m.access_count, m.vector_id,
+                                   LENGTH(ec.encrypted_data) as content_size
+                            FROM memories m
+                            LEFT JOIN encrypted_content ec ON m.memory_id = ec.memory_id
+                            WHERE m.user_id = ? AND m.importance != ?
+                        """, (user_id, MemoryImportance.CRITICAL.value))
+                        
+                        rows = await cursor.fetchall()
+                        for row in rows:
+                            try:
+                                temp_entry = MemoryEntry(
+                                    memory_id=UUID(row['memory_id']),
+                                    user_id=row['user_id'],
+                                    content="",
+                                    content_hash="",
+                                    memory_type=MemoryType(row['memory_type']),
+                                    importance=MemoryImportance(row['importance']),
+                                    scope=MemoryScope.PRIVATE,
+                                    created_at=datetime.fromisoformat(row['created_at']),
+                                    last_accessed=datetime.fromisoformat(row['last_accessed']) if row['last_accessed'] else datetime.now(timezone.utc),
+                                    access_count=row['access_count'] or 0
+                                )
+                                score = temp_entry.calculate_retention_score()
+                                estimated_size = (row['content_size'] or 0) + 1024  # 1KB for metadata overhead
+                                memories_to_consider.append((score, row['memory_id'], row['user_id'], row['vector_id'], estimated_size))
+                            except (ValueError, TypeError) as e:
+                                logger.warning(f"Skipping memory {row['memory_id']} during cleanup due to data issue: {e}")
+                                continue
+                    
+                    memories_to_consider.sort(key=lambda x: x[0])
+
+                    deleted_count = 0
+                    target_usage_bytes = max_usage_bytes * 0.95;
+                    
+                    for score, mem_id, u_id, vec_id, est_size in memories_to_consider:
+                        if current_usage_bytes <= target_usage_bytes:
+                            break
+                        
+                        await self._delete_memory(mem_id, u_id, vec_id)
+                        current_usage_bytes -= est_size
+                        deleted_count += 1
+                    
+                    if deleted_count > 0:
+                        final_usage_gb = (await self._calculate_user_storage_usage(user_id)) / (1024**3)
+                        logger.info(f"Cleaned up {deleted_count} low-relevance memories for user {user_id}. New usage: {final_usage_gb:.2f} GB.")
+            except Exception as e:
+                logger.error(f"Failed to perform low-relevance cleanup for user {user_id}: {e}", exc_info=True)
+
     async def _delete_memory(self, memory_id: str, user_id: UserID, vector_id: Optional[str]):
         """Delete memory from all storage systems"""
         try:
             # Remove from vector database
             if vector_id:
-                collection_name = f"user_{hashlib.sha256(user_id.encode()).hexdigest()[:16]}"
-                collection = await self._get_or_create_collection(collection_name)
-                collection.delete(ids=[vector_id])
+                try:
+                    collection_name = f"user_{hashlib.sha256(user_id.encode()).hexdigest()[:16]}"
+                    # Use get_collection to avoid creating it if it doesn't exist on deletion
+                    collection = self.vector_db.get_collection(name=collection_name)
+                    collection.delete(ids=[vector_id])
+                except Exception as e:
+                    # Log as a warning because metadata deletion should still proceed.
+                    logger.warning(f"Failed to delete vector {vector_id} from ChromaDB for memory {memory_id}. Error: {e}")
             
             # Remove from metadata database
             async with self._get_db_connection() as conn:
@@ -709,7 +958,7 @@ class MemoryManager:
             logger.debug(f"Deleted memory {memory_id}")
             
         except Exception as e:
-            logger.error(f"Failed to delete memory {memory_id}: {e}")
+            logger.error(f"Failed to delete memory {memory_id}: {e}", exc_info=True)
     
     async def get_user_memory_stats(self, user_id: UserID) -> Dict[str, Any]:
         """Get comprehensive memory statistics for user"""
@@ -721,7 +970,7 @@ class MemoryManager:
                 WHERE user_id = ?
                 GROUP BY memory_type, importance
             """, (user_id,))
-            type_stats = cursor.fetchall()
+            type_stats = await cursor.fetchall()
             
             # Recent activity
             cursor = await conn.execute("""
@@ -731,15 +980,59 @@ class MemoryManager:
                 FROM memories
                 WHERE user_id = ?
             """, (user_id,))
-            activity_stats = cursor.fetchone()
+            activity_stats = await cursor.fetchone()
             
             return {
                 'total_memories': activity_stats['total'] if activity_stats else 0,
                 'last_access': activity_stats['last_access'] if activity_stats else None,
                 'total_accesses': activity_stats['total_accesses'] if activity_stats else 0,
                 'by_type': [dict(row) for row in type_stats],
-                'storage_usage': 'TODO: Calculate storage usage'
+                'storage_usage_bytes': await self._calculate_user_storage_usage(user_id)
             }
+    
+    async def _calculate_user_storage_usage(self, user_id: UserID) -> int:
+        """Calculate the total storage usage for a given user in bytes."""
+        total_bytes = 0
+
+        # 1. Calculate SQLite database usage for the user
+        async with self._get_db_connection() as conn:
+            # Estimate size of user's entries in 'memories' table
+            cursor = await conn.execute("""
+                SELECT LENGTH(memory_id) + LENGTH(user_id) + LENGTH(content_hash) +
+                       LENGTH(memory_type) + LENGTH(importance) + LENGTH(scope) +
+                       LENGTH(created_at) + LENGTH(last_accessed) + LENGTH(expires_at) +
+                       LENGTH(access_count) + LENGTH(relevance_score) + LENGTH(source_session) +
+                       LENGTH(source_type) + LENGTH(related_memories) + LENGTH(tags) +
+                       LENGTH(is_encrypted) + LENGTH(encryption_key_id) + LENGTH(vector_id) +
+                       LENGTH(metadata) AS row_size
+                FROM memories
+                WHERE user_id = ?
+            """, (user_id,))
+            for row in await cursor.fetchall():
+                total_bytes += row['row_size']
+
+            # Estimate size of user's encrypted content in 'encrypted_content' table
+            cursor = await conn.execute("""
+                SELECT LENGTH(encrypted_data) AS data_size
+                FROM encrypted_content ec
+                JOIN memories m ON ec.memory_id = m.memory_id
+                WHERE m.user_id = ?
+            """, (user_id,))
+            for row in await cursor.fetchall():
+                total_bytes += row['data_size']
+
+        # 2. Calculate ChromaDB storage usage for the user
+        # ChromaDB stores data in a directory structure. We need to find the user's collection directory.
+        # The collection name is derived from the user_id hash.
+        user_collection_hash = hashlib.sha256(user_id.encode()).hexdigest()[:16]
+        chroma_user_path = Path(self.config.vector_db_path) / f"chroma_{user_collection_hash}"
+        
+        if chroma_user_path.exists() and chroma_user_path.is_dir():
+            for item in chroma_user_path.rglob('*'):
+                if item.is_file():
+                    total_bytes += item.stat().st_size
+        
+        return total_bytes
     
     async def export_user_memories(self, user_id: UserID) -> Dict[str, Any]:
         """Export all user memories for backup/migration"""
@@ -750,11 +1043,99 @@ class MemoryManager:
         )
         
         return {
-            'user_id': user_id,
-            'export_timestamp': datetime.now(timezone.utc).isoformat(),
             'memory_count': len(memories),
             'memories': memories
         }
+
+    async def synthesize_topic(self, user_id: UserID, topic_query: str, num_clusters: int = 3) -> Dict[str, Any]:
+        """
+        Synthesizes a topic by retrieving relevant memories, clustering them,
+        and providing a summary for each identified sub-topic.
+        """
+        if not self.config.semantic_clustering:
+            logger.warning("Semantic clustering is disabled in configuration.")
+            return {"error": "Semantic clustering is disabled."}
+
+        logger.info(f"Synthesizing topic '{topic_query}' for user {user_id} with {num_clusters} clusters.")
+
+        # 1. Retrieve a large number of relevant memories
+        # Increase limit to get enough data for clustering
+        raw_memories = await self.retrieve_memories(
+            user_id=user_id,
+            query=topic_query,
+            limit=self.config.max_memories_per_user, # Retrieve as many as possible
+            include_content=True
+        )
+
+        if not raw_memories:
+            return {"message": "No relevant memories found for the given topic."}
+
+        # Filter out memories without content or that failed decryption
+        processable_memories = [m for m in raw_memories if m.get('content') and "[DECRYPTION_FAILED]" not in m['content']]
+        if not processable_memories:
+            return {"message": "No processable memories found for the given topic."}
+
+        # 2. Generate embeddings for these memories
+        contents = [m['content'] for m in processable_memories]
+        embeddings = await self._generate_embedding_batch(contents)
+
+        if len(embeddings) < num_clusters:
+            logger.warning(f"Not enough memories ({len(embeddings)}) to form {num_clusters} clusters. Reducing cluster count.")
+            num_clusters = max(1, len(embeddings)) # Ensure at least 1 cluster if memories exist
+
+        # 3. Use KMeans to cluster the embeddings
+        try:
+            kmeans = KMeans(n_clusters=num_clusters, random_state=0, n_init=10)
+            kmeans.fit(embeddings)
+            labels = kmeans.labels_
+        except Exception as e:
+            logger.error(f"KMeans clustering failed: {e}")
+            return {"error": f"Failed to cluster memories: {e}"}
+
+        clustered_topics = []
+        for i in range(num_clusters):
+            cluster_indices = np.where(labels == i)[0]
+            cluster_memories = [processable_memories[j] for j in cluster_indices]
+
+            if not cluster_memories:
+                continue
+
+            # Sort memories within cluster by relevance/importance to pick a good representative
+            cluster_memories.sort(key=lambda m: m.get('relevance_score', 0) * m.get('importance_rank', 0), reverse=True)
+
+            # For simplicity, take the most relevant memory as a representative
+            # In a more advanced system, you might use an LLM to summarize the cluster
+            representative_memory = cluster_memories[0]
+            
+            # Basic summary: combine content of top N memories or use representative
+            summary_content = " ".join([m['content'] for m in cluster_memories[:min(3, len(cluster_memories))]]) # Top 3 memories
+
+            clustered_topics.append({
+                "cluster_id": i,
+                "representative_memory_id": str(representative_memory['memory_id']),
+                "representative_content_snippet": representative_memory['content'][:200] + "..." if len(representative_memory['content']) > 200 else representative_memory['content'],
+                "memory_count": len(cluster_memories),
+                "summary": summary_content, # This could be improved with LLM summarization
+                "example_tags": list(set(tag for m in cluster_memories for tag in m.get('tags', [])))
+            })
+        
+        return {
+            "topic_query": topic_query,
+            "total_memories_considered": len(processable_memories),
+            "num_clusters_formed": len(clustered_topics),
+            "clusters": clustered_topics
+        }
+
+    async def _generate_embedding_batch(self, texts: List[str]) -> np.ndarray:
+        """Generate semantic embeddings for a batch of texts"""
+        if not self.embedding_model:
+            raise RuntimeError("Embedding model not initialized")
+        
+        loop = asyncio.get_event_loop()
+        embeddings = await loop.run_in_executor(
+            None, self.embedding_model.encode, texts, {'show_progress_bar': False}
+        )
+        return embeddings
     
     async def shutdown(self):
         """Graceful shutdown of memory system"""
